@@ -1,6 +1,8 @@
 
 let count = 0;
 let gCount = 0;
+let powerCount = 0;
+let eatenCount = 0;
 let stop = false;
 let started = false;
 let restarted = false;
@@ -162,7 +164,7 @@ function updateGhosts() {
 
   ghosts.forEach(ghost=> {
 
-    if (ghost.free === true) {
+    if (ghost.free === 'free') {
 
       if (ghost.position.x % ghost.speed > 0) {
         ghost.position.x = ghost.position.x + ghost.position.x % ghost.speed;
@@ -181,7 +183,7 @@ function updateGhosts() {
 
     ghosts.forEach(ghost=> {
 
-      if(ghost.free === true) {
+      if(ghost.free === 'free') {
   
         // check if the ghost can change direction 
         checkGhostMoves(ghost);
@@ -202,6 +204,34 @@ function updateGhosts() {
         ghost.rcPos.colM = Math.floor(ghost.position.x / cellW) + 1;
       
       }
+
+      else {
+
+        let ghostLeft = ghost.rcPos.col;
+        let ghostTop = ghost.rcPos.row;
+        if (ghostLeft >= 11 && ghostLeft <= 17 && ghostTop >= 13 && ghostTop <= 16) { 
+          console.log('inside');
+        }
+        else {
+
+          checkReturnMoves(ghost);
+
+          if (ghost.direction === 'left' || ghost.direction === 'right' ) {
+            ghost.position.x += ghost.speed;
+            ghost.item.style.left = ghost.position.x;
+          } else if (ghost.direction === 'up' || ghost.direction === 'down' ){
+              ghost.position.y += ghost.speed;
+              ghost.item.style.top = ghost.position.y;
+          }
+  
+          ghost.rcPos.row = Math.floor(ghost.position.y / cellW);
+          ghost.rcPos.rowM = Math.floor(ghost.position.y / cellW) + 1;
+          ghost.rcPos.col = Math.floor(ghost.position.x / cellW);
+          ghost.rcPos.colM = Math.floor(ghost.position.x / cellW) + 1;
+
+        }
+      }
+
   
     })
 
@@ -253,6 +283,7 @@ function checkDots(item) {
       if (removedDot !== '') {
         if (removedDot.classList.contains('big')) {
           score += 50;
+          munchMode();
         }
         else {score += 10;}
         let scoreDiv = document.getElementById('score');
@@ -261,7 +292,31 @@ function checkDots(item) {
     }
 
     if (dotLeft > leftBoundary && dotRight < rightBoundary && dotTop > topBoundary && dotBottom < bottomBoundary) {
-      removeDot(dot.id);
+      removeDot(dot.id); eatenCount++;
+      if (eatenCount === dotCount) {
+
+            // stop movement
+            stop = true;
+
+            // disappear ghosts
+            ghosts.forEach(ghost => {
+              if (ghost.free === 'free') {
+                ghost.item.style.display = 'none';
+              }
+            })
+
+            // appear 'winner'
+            let win = document.getElementById('winner');
+            win.style.display = '';
+
+            // change button to 'restart'
+            let stopButton = document.getElementById('stop');
+            stopButton.style.display = 'none';
+
+            let restart = document.getElementById('restart');
+            restart.style.display = '';
+
+      }
     }
 
   }
@@ -273,6 +328,7 @@ function checkGhostCollision() {
   // if collided with a ghost, end game
 
   let ghostCollision = false;
+  let collidedGhosts = [];
   let leftBound = parseInt(msPacMan.newimg.style.left) + parseInt(msPacMan.newimg.style.margin);
   let rightBound = parseInt(msPacMan.newimg.style.left) + parseInt(msPacMan.newimg.style.margin) + parseInt(msPacMan.newimg.width);
   let topBound = parseInt(msPacMan.newimg.style.top) + parseInt(msPacMan.newimg.style.margin);
@@ -280,7 +336,7 @@ function checkGhostCollision() {
 
   ghosts.forEach(ghost => {
 
-    if (ghost.free === true) {
+    if (ghost.free === 'free') {
 
       let ghostLeft = parseInt(ghost.item.style.left) + parseInt(ghost.item.style.margin);
       let ghostRight = parseInt(ghost.item.style.left) + parseInt(ghost.item.style.margin) + parseInt(ghost.item.style.width);
@@ -289,7 +345,8 @@ function checkGhostCollision() {
     
       if (ghostRight >= leftBound && ghostRight <= rightBound) {
         if (ghostTop <= bottomBound && ghostTop >= topBound) { ghostCollision = true; }
-        else if (ghostBottom >= topBound && ghostBottom <= bottomBound) { ghostCollision = true; }
+        else if (ghostBottom >= topBound && ghostBottom <= bottomBound) { 
+          ghostCollision = true; }
       }
 
       if (ghostLeft <= rightBound && ghostLeft >= leftBound) {
@@ -297,14 +354,20 @@ function checkGhostCollision() {
         else if (ghostBottom >= topBound && ghostBottom <= bottomBound) { ghostCollision = true; }
       }
 
+      if (ghostCollision === true) {
+        collidedGhosts.push(ghost.item.id); 
+        console.log(collidedGhosts);
+      }
     }
 
   })
 
-  if (ghostCollision === true) {
+  if (ghostCollision === true && powerCount === 0) {
     
     // stop movement
     stop = true;
+    eatenCount = 0;
+    dotCount = 0;
 
     // disappear msPacMan
     msPacMan.newimg.style.display = 'none';
@@ -321,7 +384,46 @@ function checkGhostCollision() {
     restart.style.display = '';
 
   }
+  else if (ghostCollision === true && powerCount > 0) {
 
+    collidedGhosts.forEach(id=>{
+      let ghost = document.getElementById(id);
+      console.log(ghost);
+      let ghostEaten = false;
+      let ghostLeft = ghost.style.left;
+      let ghostTop = ghost.style.top;
+      if (ghostLeft < msPacMan.newimg.style.left && msPacMan.direction === 'left') {ghostEaten = true;}
+      if (ghostLeft > msPacMan.newimg.style.left + msPacMan.newimg.style.margin + msPacMan.newimg.style.width && msPacMan.direction === 'right') {ghostEaten = true;}
+      if (ghostTop < msPacMan.newimg.style.top && msPacMan.direction === 'up') {ghostEaten = true;}
+      if (ghostLeft > msPacMan.newimg.style.top + msPacMan.newimg.style.margin + msPacMan.newimg.style.height && msPacMan.direction === 'down') {ghostEaten = true;}
+
+      if (ghostEaten === true) {
+
+        ghosts.forEach(x=> {
+          if (x.item.id = id) {x.free = 'returning';}
+        })
+
+        ghost.style.backgroundColor = 'transparent';
+        let fringes = Array.from(ghost.getElementsByClassName('fringe'));
+        fringes.forEach(fringe=> fringe.style.display = 'none')
+
+        let eyeballs = Array.from(ghost.getElementsByClassName('eyeball'));
+        eyeballs.forEach(eye => eye.style.display = '');
+
+        let pupils = Array.from(ghost.getElementsByClassName('pupil'));
+        pupils.forEach(pupil=> pupil.style.display = '');
+
+        let frowns = Array.from(ghost.getElementsByClassName('blue-frown'));
+        frowns.forEach(frown=> frown.style.display = 'none');
+
+        let frownEyes = Array.from(ghost.getElementsByClassName('blue-pupil'));
+        frownEyes.forEach(eye=> eye.style.display = 'none');
+
+      }
+
+    })
+
+  }
 
 }
 
@@ -349,15 +451,15 @@ function checkCollisions(item) {
           let currDir = item.direction;
 
           let currTransform = item.newimg.style.transform;
-          if (item.cache === 'down' && currDir === 'left') {transformStr = "rotate(270deg) rotateY(180deg)";}
-          else if (item.cache === 'down' && currDir === 'right') {transformStr = "rotate(90deg)";}
-          else if (item.cache === 'up' && currDir === 'left') {transformStr = "rotate(90deg) rotateY(180deg)";}
-          else if (item.cache === 'up' && currDir === 'right') {transformStr = "rotate(-90deg)";}
+          if (item.cache === 'down' && currDir === 'left') {transformStr = 'rotate(270deg) rotateY(180deg)';}
+          else if (item.cache === 'down' && currDir === 'right') {transformStr = 'rotate(90deg)';}
+          else if (item.cache === 'up' && currDir === 'left') {transformStr = 'rotate(90deg) rotateY(180deg)';}
+          else if (item.cache === 'up' && currDir === 'right') {transformStr = 'rotate(-90deg)';}
           else if (item.cache === 'up' && currDir === 'down') {
-            if (currTransform.includes("rotate(270deg) rotateY(180deg)")) {transformStr = "rotate(270deg)";}
+            if (currTransform.includes('rotate(270deg) rotateY(180deg)')) {transformStr = 'rotate(270deg)';}
           }
           else if (item.cache === 'down' && currDir === 'up') {
-            if (currTransform.includes("rotate(90deg) rotateY(180deg)")) {transformStr = "rotate(90deg)";}
+            if (currTransform.includes('rotate(90deg) rotateY(180deg)')) {transformStr = 'rotate(90deg)';}
           }
           item.newimg.style.transform = transformStr;
           item.speed = stats.speed;
@@ -382,7 +484,7 @@ function checkCollisions(item) {
 
 }
 
-// Check if the ghost can move, and move him closer to pacman if so
+// Check if the free ghost can move, and move him closer to pacman if so
 function checkGhostMoves(item) {
 
   // only do the calculations if the ghost has hit a tile square-on
@@ -462,6 +564,235 @@ function checkGhostMoves(item) {
     teleport(item);
 
   }
+
+}
+
+// Check if the returning ghost can move, and move him closer to pacman if so
+function checkReturnMoves(item) {
+
+  let targetPosX = 14 * cellW - cellW / 2;
+  let targetPosY = 11 * cellW;
+  let targetPosRow = 11;
+  let targetPosCol = 14;
+
+  // only do the calculations if the ghost has hit a tile square-on
+  if (item.position.x % cellW === 0 && item.position.y % cellW === 0) {
+
+    let dirs = ['left','right','up','down'];
+
+    // remove reversing direction as an option
+    let rev = d[item.direction].reverse;
+
+    dirs.splice(dirs.indexOf(rev),1);
+
+    // filter out any directions that have walls
+    dirs = dirs.filter(dir => {
+      if (isWall(nextPos(item.rcPos,dir),dir) === false) {return true;}
+      else {return false;}
+    })
+
+    if (dirs.length === 1) {
+      item.direction = dirs[0]; 
+      item.speed = d[dirs[0]].speed;
+    }
+    else {
+
+      tempDir = ''
+      // find pacPos relative to item
+      let targetRow = targetPosY > item.item.style.top ? 'down' : targetPosY < item.item.style.top ? 'up' : 'same'
+      let targetCol = targetPosX > item.item.style.left ? 'right' : targetPosY < item.item.style.left ? 'left' : 'same'
+
+
+      // if the item is in a portal row, see if it would be better to go through the portal
+      if (portals.includes(item.rcPos.row)) {
+        let optA = Math.abs(targetPosCol - item.rcPos.col);
+        let optB = Math.min(targetPosCol, (board[0].length - targetPosCol));
+        optB += Math.min(item.rcPos.col,(board[0].length - item.rcPos.col));
+
+        if (optB < optA && pacCol !== 'same') { targetCol = d[targetCol].reverse; }
+      }
+
+      // if both directions are available, pick the one with the longest run 
+
+      if (dirs.includes(targetRow) && dirs.includes(targetCol)) {
+
+        let checkRun = (pos,dir) => {
+          let hitWall = false;
+          let tempPos = pos;
+          let count = 0;
+          while (hitWall == false) {
+            if (board[tempPos.row].charAt(tempPos.col) === 'X' || board[tempPos.row].charAt(tempPos.col) === 'X' ) {
+              hitWall = true;
+            }
+            else {count++; tempPos.row += d[dir].row; tempPos.col += d[dir].col;}
+          }
+        }
+
+        if (checkRun(item.rcPos,targetRow) > checkRun(item.rcPos,targetCol)) {
+          tempDir = targetRow;
+        }
+        else if (checkRun(item.rcPos,targetRow) < checkRun(item.rcPos,targetCol)) {
+          tempDir = targetCol;
+        }
+        // if both runs are equal, pick at random
+        else if (Math.random() < 0.5) {tempDir = targetRow} else {tempDir = targetCol}
+
+      }
+      else if (dirs.includes(targetRow)) {tempDir = targetRow}
+      else if (dirs.includes(targetCol)) {tempDir = targetCol}
+      else {
+        let index = Math.floor(Math.random() * dirs.length);
+        tempDir = dirs[index];
+      }
+
+      item.direction = tempDir;
+      item.speed = d[tempDir].speed;
+
+    }
+    teleport(item);
+
+  }
+
+  else if (item.position.x === targetPosX && item.position.y === targetPosY) {
+    // if it has hit the way to get into the ghost box, move down until inside the ghost box
+    item.direction = 'down';
+  }
+  else if (item.position.x === targetPosX && item.position.y < 13 * cellW) {
+    item.direction = 'down';
+  }
+  else if (item.position.x === targetPosX && item.position.y >= 13* cellW) {
+    let countNotFree = 0;
+    ghosts.forEach(x=> {if (x.free === 'notfree') {countNotFree++}});
+    if (countNotFree === 4) {
+      // if there are four un-free ghosts, make the eyes display none
+      let eyeballs = Array.from(item.item.getElementsByClassName('eyeball'));
+      let pupils = Array.from(item.item.getElementsByClassName('pupil'));
+      eyeballs.forEach(x=>x.style.display = 'none');
+      pupils.forEach(x=>x.style.display = 'none');
+    }
+    else if (countNotFree < 4) {
+      // else make everything else display
+      item.item.backgroundColor = item.color;
+      let fringes = Array.from(item.item.getElementsByClassName('fringe'))
+      fringes.forEach(fringe => {
+        if (fringe.style.backgroundColor !== '' && fringe.style.backgroundColor !== 'transparent') {
+          fringe.style.backgroundColor = item.color;
+          fringe.style.display = '';
+        } else {
+          let bgimage = fringe.style.backgroundImage;
+          let newBgimage = bgimage.replace('blue',item.color);
+          fringe.style.backgroundImage = newBgimage;
+          fringe.style.display = '';
+        }
+      })
+      let frowns = Array.from(item.item.getElementsByClassName('blue-frown'));
+      frowns.forEach(frown => frown.style.display = 'none')
+      let blueeyes = Array.from(item.item.getElementsByClassName('blue-pupil'));
+      blueeyes.forEach(eye => eye.style.display = 'none')
+
+    }
+
+  }
+
+}
+
+
+
+function munchMode() {
+
+  if (stop === false) {
+
+    // make free ghosts blue, turn off their eyes and turn on their frowns
+    if (powerCount === 0) {
+      ghosts.forEach(ghost=>{
+
+        if (ghost.free === 'free') {
+
+          ghost.item.style.backgroundColor = 'blue';
+
+          let fringes = Array.from(ghost.item.getElementsByClassName('fringe'));
+          fringes.forEach(fringe=> {
+            if (fringe.style.backgroundColor === ghost.color) {fringe.style.backgroundColor = 'blue';}
+            else {
+              let gradient = fringe.style.backgroundImage;
+              let newGradient = gradient.replace(ghost.color,'blue');
+              fringe.style.backgroundImage = newGradient;
+            }
+            
+          })
+
+          let eyeballs = Array.from(ghost.item.getElementsByClassName('eyeball'));
+          eyeballs.forEach(eye => eye.style.display = 'none');
+
+          let pupils = Array.from(ghost.item.getElementsByClassName('pupil'));
+          pupils.forEach(pupil=> pupil.style.display = 'none');
+
+          let frowns = Array.from(ghost.item.getElementsByClassName('blue-frown'));
+          frowns.forEach(frown=> frown.style.display = '');
+
+          let frownEyes = Array.from(ghost.item.getElementsByClassName('blue-pupil'));
+          frownEyes.forEach(eye=> eye.style.display = '');
+
+        }
+
+      })
+    }
+
+  else if (powerCount < 80) {
+      console.log('woo');
+    }
+
+    // flashing while winding down - count 80 (4 seconds)
+    else if (powerCount < 120) {
+      console.log("rut roh");
+    }
+
+    // done - count 120 (6 seconds)
+    else if (powerCount >= 120) {
+
+      // make everything normal again
+      ghosts.forEach(ghost=>{
+
+        if (ghost.free === 'free') {
+          ghost.item.style.backgroundColor = ghost.color;
+
+          let fringes = Array.from(ghost.item.getElementsByClassName('fringe'));
+          fringes.forEach(fringe=> {
+            if (fringe.style.backgroundColor === 'blue') {fringe.style.backgroundColor = ghost.color;}
+            else {
+              let gradient = fringe.style.backgroundImage;
+              let newGradient = gradient.replace('blue',ghost.color);
+              fringe.style.backgroundImage = newGradient;
+            }
+            
+          })
+          let eyeballs = Array.from(ghost.item.getElementsByClassName('eyeball'));
+          eyeballs.forEach(eye => eye.style.display = '');
+
+          let pupils = Array.from(ghost.item.getElementsByClassName('pupil'));
+          pupils.forEach(pupil=> pupil.style.display = '');
+
+          let frowns = Array.from(ghost.item.getElementsByClassName('blue-frown'));
+          frowns.forEach(frown=> frown.style.display = 'none');
+
+          let frownEyes = Array.from(ghost.item.getElementsByClassName('blue-pupil'));
+          frownEyes.forEach(eye=> eye.style.display = 'none');
+
+        }
+
+      })
+
+      // stop function
+      powerCount = 0;
+      return true;
+
+    }
+
+    powerCount++
+
+  }
+
+  setTimeout(munchMode,50);
 
 }
 

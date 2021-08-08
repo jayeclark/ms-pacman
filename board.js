@@ -1,6 +1,7 @@
 const speed = 6;
 const ghosts = [];
 const portals = [];
+let dotCount = 0;
 
 let board = ['XXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
              'X-------X-----------X-------X',
@@ -97,7 +98,6 @@ function checkNeighbors(pos) {
 
 function drawBoard(board) {
 
-  dotCount = 0;
   let game = document.getElementById('game');
   let scoreDiv = document.getElementById('score-board');
   let ghostStartRow = -1;
@@ -122,6 +122,7 @@ function drawBoard(board) {
         block.style.left = cellW * j;
         block.style.height = cellW;
         block.style.width = cellW;
+        block.style.margin = '0px';
 
         let corners = checkCorners({'col' : j,'row' : i});
 
@@ -264,6 +265,29 @@ function drawBoard(board) {
   game.appendChild(overDiv);
 
 
+  // Make the 'Winner' div
+
+  let winDiv = document.createElement('div');
+  winDiv.id = 'winner';
+  winDiv.style.position = 'absolute';
+  winDiv.style.display = 'none';
+  winDiv.style.zIndex = 1000;
+  winDiv.style.backgroundColor = 'none';
+  winDiv.style.top = cellW * (ghostStartRow + 1);
+  winDiv.style.left = cellW * (ghostStartCol - 4);
+  winDiv.style.height = cellW * 2;
+  winDiv.style.width = cellW * 7;
+  winDiv.style.padding = cellW / 4;
+  winDiv.style.fontFamily = '\'Press Start 2P\',cursive';
+  winDiv.style.fontSize = '3.5rem';
+  winDiv.style.color = 'yellow';
+  winDiv.style.textAlign = 'center';
+  winDiv.style.alignContent = 'center';
+  winDiv.innerHTML = 'WINNER!!';
+
+  game.appendChild(winDiv);
+
+
   // Make the ghost div
 
   let block = document.createElement('div');
@@ -304,10 +328,12 @@ function drawBoard(board) {
 
   game.appendChild(block);
 
-  function makeGhost(pos,gColor,eyepos,id,free) {
+  function makeGhost(pos,gColor,dir,id,free) {
 
     pos['rowM'] = pos.row + 1;
     pos['colM'] = pos.col + 1;
+
+    let ghost = {};
 
     const fringeW = Math.floor(cellW * 1.5 / 12);
 
@@ -326,125 +352,205 @@ function drawBoard(board) {
     ghostDiv.style.top = cellW * (pos.row);
     ghostDiv.style.left = cellW * (pos.col) - cellW / 2;
 
-    const createGhostDivChild = (height, width, margin, top, left, bgcolor, bgimage, borderCorners) => {
+    const createGhostDivChild = (args) => {
       const item = document.createElement('div');
-      item.style.backgroundColor = bgcolor;
-      item.style.backgroundImage = bgimage;
       item.style.position = 'absolute';
-      item.style.height = height;
-      item.style.width = width;
-      item.style.borderTopRightRadius = borderCorners[0];
-      item.style.borderBottomRightRadius = borderCorners[1];
-      item.style.borderBottomLeftRadius = borderCorners[2];
-      item.style.borderTopLeftRadius = borderCorners[3];
-      item.style.margin = margin;
-      item.style.top = top;
-      item.style.left = left;
+      if (args.hasOwnProperty('bgcolor')) { item.style.backgroundColor = args.bgcolor; }
+      if (args.hasOwnProperty('bgimage')) { item.style.backgroundImage = args.bgimage; }
+      if (args.hasOwnProperty('height')) { item.style.height = args.height; }
+      if (args.hasOwnProperty('width')) { item.style.width = args.width; }
+      if (args.hasOwnProperty('display')) { item.style.display = args.display; }
+      if (args.hasOwnProperty('margin')) { item.style.margin = args.margin; }
+      if (args.hasOwnProperty('top')) { item.style.top = args.top; }
+      if (args.hasOwnProperty('left')) { item.style.left = args.left; }
+      if (args.hasOwnProperty('borderLeft')) { item.style.borderLeft = args.borderLeft; }
+      if (args.hasOwnProperty('borderBottom')) { item.style.borderBottom = args.borderBottom; }
+      if (args.hasOwnProperty('transform')) { item.style.transform = args.transform; }
+      if (args.hasOwnProperty('class')) { item.classList.add(args.class); }
+      if (args.hasOwnProperty('borders')) {
+        item.style.borderTop = args.borders[0];
+        item.style.borderBottom = args.borders[1];
+      }
+      if (args.hasOwnProperty('borderCorners')) {
+        item.style.borderTopRightRadius = args.borderCorners[0];
+        item.style.borderBottomRightRadius = args.borderCorners[1];
+        item.style.borderBottomLeftRadius = args.borderCorners[2];
+        item.style.borderTopLeftRadius = args.borderCorners[3];
+      }
       return item;
+
     }
 
     let eyetop = '';
     let eyeleft = '';
     let pupiltop = '';
     let pupilleft = '';
-    if (eyepos === 'L') {
+    if (dir === 'left') {
       eyetop = ((cellW / 6) + fringeW) + 'px';
       eyeleft = (fringeW * 2) + 'px';
       pupiltop = ((cellW / 6) + fringeW * 2.5) + 'px';
       pupilleft = (fringeW * 2) + 'px';
     }
-    else if (eyepos === 'U') {
+    else if (dir === 'up') {
       eyetop = ((cellW / 6) + fringeW) + 'px';
       eyeleft = (fringeW * 2.5) + 'px';
       pupiltop = ((cellW / 6) + fringeW * 0.5) + 'px';
       pupilleft = (fringeW * 3) + 'px';
     }
-    else if (eyepos === 'D') {
+    else if (dir === 'down') {
       eyetop = ((cellW / 6) + fringeW) + 'px';
       eyeleft = (fringeW * 2.5) + 'px';
       pupiltop = ((cellW / 6) + fringeW * 2.5) + 'px';
       pupilleft = (fringeW * 3) + 'px';
     }
+    else if (dir === 'right') {
+      eyetop = ((cellW / 6) + fringeW) + 'px';
+      eyeleft = (fringeW * 3) + 'px';
+      pupiltop = ((cellW / 6) + fringeW * 2.5) + 'px';
+      pupilleft = (fringeW * 4) + 'px';
+    }
 
     let ghostDivArr = [];
     ghostDivArr.push({'height': fringeW * 2, 'width': fringeW, 
-                      'margin' : '0px', 'top' : ((cellW / 4) + cellW * 1.5 - fringeW * 4) + 'px', 
-                      'left': '0px', 'bgcolor' : gColor, 'bgimage' : 'none',
+                      'class' : 'fringe', 'margin' : '0px', 
+                      'top' : ((cellW / 4) + cellW * 1.5 - fringeW * 4) + 'px', 
+                      'left': '0px', 'bgcolor' : gColor,
                       'borderCorners' : ['0%', '50%', '0%', '0%']});
     ghostDivArr.push({'height': fringeW * 2, 'width': fringeW * 2, 
-                      'margin' : '0px', 'top' : ((cellW / 4) + cellW * 1.5 - fringeW * 4) + 'px', 
+                      'class' : 'fringe', 'margin' : '0px', 
+                      'top' : ((cellW / 4) + cellW * 1.5 - fringeW * 4) + 'px', 
                       'left': fringeW + 'px', 
                       'bgcolor' : 'none', 
-                      'bgimage' : 'radial-gradient(circle at top 50% left 50%, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 70%, '+gColor+' 70%)',
+                      'bgimage' : 'radial-gradient(circle at top 51% left 50%, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 70%, '+gColor+' 70%)',
                       'borderCorners' : ['0%', '50%', '50%', '0%']});
     ghostDivArr.push({'height': fringeW * 2, 'width': fringeW * 2, 
-                      'margin' : '0px', 'top' : ((cellW / 4) + cellW * 1.5 - fringeW * 4) + 'px', 
+                      'class' : 'fringe', 'margin' : '0px', 
+                      'top' : ((cellW / 4) + cellW * 1.5 - fringeW * 4) + 'px', 
                       'left': (fringeW * 3) + 'px', 
-                      'bgcolor' : gColor, 
-                      'bgimage' : 'none',
-                      'borderCorners' : ['0%', '50%', '50%', '0%']});
+                      'bgcolor' : gColor, 'borderCorners' : ['0%', '50%', '50%', '0%']});
     ghostDivArr.push({'height': fringeW * 2, 'width': cellW * 1.5 - fringeW * 10, 
-                      'margin' : '0px', 'top' : ((cellW / 4) + cellW * 1.5 - fringeW * 4) + 'px', 
+                      'class' : 'fringe', 'margin' : '0px', 
+                      'top' : ((cellW / 4) + cellW * 1.5 - fringeW * 4) + 'px', 
                       'left': (fringeW * 5) + 'px', 
                       'bgcolor' : 'none', 
-                      'bgimage' : 'radial-gradient(ellipse at top 50% left 50%, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 70%, '+gColor+' 70%)',
+                      'bgimage' : 'radial-gradient(ellipse at top 51% left 50%, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 70%, '+gColor+' 70%)',
                       'borderCorners' : ['0%', '50%', '50%', '0%']});
     ghostDivArr.push({'height': fringeW * 2, 'width': fringeW * 2, 
-                      'margin' : '0px', 'top' : ((cellW / 4) + cellW * 1.5 - fringeW * 4) + 'px', 
+                      'class' : 'fringe', 'margin' : '0px', 
+                      'top' : ((cellW / 4) + cellW * 1.5 - fringeW * 4) + 'px', 
                       'left': (fringeW * 5 + cellW * 1.5 - fringeW * 10) + 'px', 
-                      'bgcolor' : gColor, 
-                      'bgimage' : 'none',
-                      'borderCorners' : ['0%', '50%', '50%', '0%']});
+                      'bgcolor' : gColor, 'borderCorners' : ['0%', '50%', '50%', '0%']});
     ghostDivArr.push({'height': fringeW * 2, 'width': fringeW * 2, 
-                      'margin' : '0px', 'top' : ((cellW / 4) + cellW * 1.5 - fringeW * 4) + 'px', 
+                      'class' : 'fringe', 'margin' : '0px', 
+                      'top' : ((cellW / 4) + cellW * 1.5 - fringeW * 4) + 'px', 
                       'left': (fringeW * 7 + cellW * 1.5 - fringeW * 10) + 'px', 
                       'bgcolor' : 'none', 
-                      'bgimage' : 'radial-gradient(circle at top 50% left 50%, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 70%, '+gColor+' 70%)',
+                      'bgimage' : 'radial-gradient(circle at top 51% left 50%, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 70%, '+gColor+' 70%)',
                       'borderCorners' : ['0%', '50%', '50%', '0%']});
     ghostDivArr.push({'height': fringeW * 2, 'width': fringeW, 
-                      'margin' : '0px', 'top' : ((cellW / 4) + cellW * 1.5 - fringeW * 4) + 'px', 
+                      'class' : 'fringe', 'margin' : '0px', 
+                      'top' : ((cellW / 4) + cellW * 1.5 - fringeW * 4) + 'px', 
                       'left': ((cellW/4) + cellW * 1.5 - fringeW * 3) + 'px', 
-                      'bgcolor' : gColor, 'bgimage' : 'none',
-                      'borderCorners' : ['0%', '0%', '50%', '0%']});
+                      'bgcolor' : gColor, 'borderCorners' : ['0%', '0%', '50%', '0%']});
     ghostDivArr.push({'height': fringeW * 4, 'width': fringeW * 3, 
-                      'margin' : '0px', 'top' : eyetop, 
-                      'left': eyeleft, 
-                      'bgcolor' : 'white', 'bgimage' : 'none',
+                      'class' : 'eyeball', 'margin' : '0px', 'top' : eyetop, 
+                      'left': eyeleft, 'bgcolor' : 'white',
                       'borderCorners' : ['50%', '50%', '50%', '50%']});
     ghostDivArr.push({'height': fringeW * 4, 'width': fringeW * 3, 
-                      'margin' : '0px', 'top' : eyetop, 
+                      'class' : 'eyeball', 'margin' : '0px', 'top' : eyetop, 
                       'left': (fringeW * 5 + parseInt(eyeleft)) + 'px', 
-                      'bgcolor' : 'white', 'bgimage' : 'none',
+                      'bgcolor' : 'white', 'borderCorners' : ['50%', '50%', '50%', '50%']});
+    ghostDivArr.push({'height': fringeW * 2, 'width': fringeW * 2, 
+                      'class' : 'pupil', 'margin' : '0px', 'top' : pupiltop, 
+                      'left': pupilleft, 'bgcolor' : 'blue',
                       'borderCorners' : ['50%', '50%', '50%', '50%']});
     ghostDivArr.push({'height': fringeW * 2, 'width': fringeW * 2, 
-                      'margin' : '0px', 'top' : pupiltop, 
-                      'left': pupilleft, 
-                      'bgcolor' : 'blue', 'bgimage' : 'none',
-                      'borderCorners' : ['50%', '50%', '50%', '50%']});
-    ghostDivArr.push({'height': fringeW * 2, 'width': fringeW * 2, 
-                      'margin' : '0px', 'top' : pupiltop, 
+                      'class' : 'pupil', 'margin' : '0px', 'top' : pupiltop, 
                       'left': (fringeW * 5 + parseInt(pupilleft)) + 'px', 
-                      'bgcolor' : 'blue', 'bgimage' : 'none',
+                      'bgcolor' : 'blue', 'borderCorners' : ['50%', '50%', '50%', '50%']});
+    // eyes and mouth for blue mode, display = none
+    let adj = Math.round(cellW * 0.75 - fringeW * 5)/4;
+    let hyp = (fringeW * 3) ** 2;
+    let sideSq = hyp / 2;
+    let side = sideSq ** 0.5;
+    ghostDivArr.push({'height': fringeW * 2, 'width': fringeW * 2, 
+                      'display' : 'none', 'class' : 'blue-pupil',
+                      'margin' : '0px', 'top' : ((cellW / 6) + fringeW * 2) + 'px', 
+                      'left': (fringeW * 3) + 'px', 
+                      'bgcolor' : 'lightgray', 'bgimage' : 'none',
                       'borderCorners' : ['50%', '50%', '50%', '50%']});
-                        
+    ghostDivArr.push({'height': fringeW * 2, 'width': fringeW * 2, 
+                      'display' : 'none', 'class' : 'blue-pupil',
+                      'margin' : '0px', 'top' : ((cellW / 6) + fringeW * 2) + 'px', 
+                      'left': (fringeW * 8) + 'px', 
+                      'bgcolor' : 'lightgray', 'bgimage' : 'none',
+                      'borderCorners' : ['50%', '50%', '50%', '50%']});
+
+    ghostDivArr.push({'height': side, 'width': side, 
+                      'display' : 'none', 'class' : 'blue-frown',
+                      'margin' : '0px', 'top' : ((cellW / 4) + cellW * 1.5 - fringeW * 8) + 'px', 
+                      'left': (adj * 2 + fringeW) + 'px', 
+                      'bgcolor' : 'none', 
+                      'borderLeft' : 'solid 1px lightgray',
+                      'borderBottom' : 'solid 1px lightgray',
+                      'transform' :  'rotate(-45deg)'});
+    ghostDivArr.push({'height': side, 'width': side, 
+                      'display' : 'none', 'class' : 'blue-frown',
+                      'margin' : '0px', 'top' : ((cellW / 4) + cellW * 1.5 - fringeW * 8) + 'px', 
+                      'left': (adj + fringeW * 4) + 'px', 
+                      'bgcolor' : 'none', 
+                      'borderLeft' : 'solid 1px lightgray',
+                      'borderBottom' : 'solid 1px lightgray',
+                      'transform' :  'rotate(-45deg)'});
+    ghostDivArr.push({'height': side, 'width': side, 
+                      'display' : 'none', 'class' : 'blue-frown',
+                      'margin' : '0px', 'top' : ((cellW / 4) + cellW * 1.5 - fringeW * 8) + 'px', 
+                      'left': (fringeW * 7) + 'px', 
+                      'bgcolor' : 'none', 
+                      'borderLeft' : 'solid 1px lightgray',
+                      'borderBottom' : 'solid 1px lightgray',
+                      'transform' :  'rotate(-45deg)'});
+    ghostDivArr.push({'height': side, 'width': side, 
+                      'display' : 'none', 'class' : 'blue-frown',
+                      'margin' : '0px', 'top' : ((cellW / 4) + cellW * 1.5 - fringeW * 8) + 'px', 
+                      'left': (fringeW * 10 - adj) + 'px', 
+                      'bgcolor' : 'none', 
+                      'borderLeft' : 'solid 1px lightgray',
+                      'borderBottom' : 'solid 1px lightgray',
+                      'transform' :  'rotate(-45deg)'});
 
     ghostDivArr.forEach(x => {
 
-      let tempDiv = createGhostDivChild(x.height, x.width, x.margin,x.top,x.left,x.bgcolor,x.bgimage,x.borderCorners);
+      let tempDiv = createGhostDivChild(x);
       ghostDiv.appendChild(tempDiv);
 
     })
 
-    let game = document.getElementById('game');
-    game.appendChild(ghostDiv);
-    return {'item': ghostDiv, 'lastCorner': '','cache':'', 'speed': -speed, 'direction' : 'left', 'free' : free, 'rcPos' : pos, 'position':{'x': (cellW * (pos.col) - cellW / 2),'y': cellW * (pos.row)}};
+    ghost.item = ghostDiv;
+    ghost.color = ghostDiv.style.backgroundColor;
+    ghost.lastCorner = '';
+    ghost.cache = '';
+    ghost.speed = (dir === 'left' || dir === 'up') ? -speed : speed
+    ghost.direction = dir;
+    ghost.free = free;
+    ghost.rcPos = pos;
+    ghost.position = {'x': (cellW * (pos.col) - cellW / 2),'y': cellW * (pos.row)};
+
+    return ghost;
 
   }
 
-  ghosts.push(makeGhost({'row':11,'col':14},'red','L','inky',true));
-  ghosts.push(makeGhost({'row':14,'col':12},'aqua','U','blinky',false));
-  ghosts.push(makeGhost({'row':14,'col':14},'plum','D','pinky',false));
-  ghosts.push(makeGhost({'row':14,'col':16},'orange','U','clyde',false));
+  const inky = makeGhost({'row':11,'col':14},'red','left','inky','free');
+  const blinky = makeGhost({'row':14,'col':12},'aqua','up','blinky','notfree');
+  const pinky = makeGhost({'row':14,'col':14},'plum','down','pinky','notfree');
+  const clyde = makeGhost({'row':14,'col':16},'orange','right','clyde','notfree');
+
+  game.appendChild(inky.item);
+  game.appendChild(blinky.item);
+  game.appendChild(pinky.item);
+  game.appendChild(clyde.item);
+
+  ghosts.push(inky, blinky, pinky, clyde);
 
 }
 
