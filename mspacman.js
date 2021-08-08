@@ -1,4 +1,3 @@
-
 let count = 0;
 let gCount = 0;
 let dCount = 0;
@@ -11,11 +10,42 @@ let restarted = false;
 let restartGhosts = false;
 let score = 0;
 
-let d = {'left' : {'transform' : 'rotateY(180deg)','speed' : -speed,'row':0,'col':-1, 'reverse' : 'right'},
-         'right' : {'transform' : 'rotate(0deg)','speed' : speed,'row':0,'col':1, 'reverse' : 'left'},
-         'up' : {'transform' : 'rotate(90deg) rotateY(180deg)','speed' : -speed,'row':-1,'col':0, 'reverse' : 'down'},
-         'down' : {'transform' : 'rotate(90deg)','speed' : speed,'row':1,'col':0, 'reverse' : 'up'}}
-
+let d = {'left' : {'transform' : 'rotateY(180deg)',
+                   'speed' : -speed,
+                   'row' : 0,
+                   'col' : -1, 
+                   'reverse' : 'right',
+                   'eyetop' : ((cellW / 6) + fringeW) + 'px',
+                   'eyeleft' : (fringeW * 2) + 'px',
+                   'pupiltop' : ((cellW / 6) + fringeW * 2.5) + 'px',
+                   'pupilleft' : (fringeW * 2) + 'px'},
+         'right' : {'transform' : 'rotate(0deg)',
+                    'speed' : speed,
+                    'row':0,
+                    'col':1, 
+                    'reverse' : 'left',
+                    'eyetop' : ((cellW / 6) + fringeW) + 'px',
+                    'eyeleft' : (fringeW * 3) + 'px',
+                    'pupiltop' : ((cellW / 6) + fringeW * 2.5) + 'px',
+                    'pupilleft' : (fringeW * 4) + 'px'},
+         'up' : {'transform' : 'rotate(90deg) rotateY(180deg)',
+                 'speed' : -speed,
+                 'row':-1,
+                 'col':0, 
+                 'reverse' : 'down',
+                 'eyetop' : ((cellW / 6) + fringeW) + 'px',
+                 'eyeleft' : (fringeW * 2.5) + 'px',
+                 'pupiltop' : ((cellW / 6) + fringeW * 0.5) + 'px',
+                 'pupilleft' : (fringeW * 3) + 'px'},
+         'down' : {'transform' : 'rotate(90deg)',
+                   'speed' : speed,
+                   'row':1,
+                   'col':0, 
+                   'reverse' : 'up',
+                   'eyetop' : ((cellW / 6) + fringeW) + 'px',
+                   'eyeleft' : (fringeW * 2.5) + 'px',
+                   'pupiltop' : ((cellW / 6) + fringeW * 2.5) + 'px',
+                   'pupilleft' : (fringeW * 3) + 'px'}}
 
 function startGame() {
 
@@ -357,7 +387,7 @@ function checkGhostCollision() {
 
       if (ghostCollision === true) {
         collidedGhosts.push(ghost.item.id); 
-        console.log(collidedGhosts);
+
       }
     }
 
@@ -389,7 +419,6 @@ function checkGhostCollision() {
 
     collidedGhosts.forEach(id=>{
       let ghost = document.getElementById(id);
-      console.log(ghost);
       let ghostEaten = false;
       let ghostLeft = ghost.style.left;
       let ghostTop = ghost.style.top;
@@ -513,6 +542,7 @@ function checkGhostMoves(item) {
     })
 
     if (dirs.length === 1) {
+      if (item.direction != dirs[0]) {ghostEyes(item.item,dirs[0])};
       item.direction = dirs[0]; 
       item.speed = d[dirs[0]].speed;
     }
@@ -567,6 +597,7 @@ function checkGhostMoves(item) {
         tempDir = dirs[index];
       }
 
+      if (item.direction != tempDir) {ghostEyes(item.item,tempDir)};
       item.direction = tempDir;
       item.speed = d[tempDir].speed;
 
@@ -585,9 +616,6 @@ function checkReturnMoves(item) {
   let targetPosY = 11 * cellW;
   let targetRow = 11;
   let targetCol = 14;
-
-  console.log(item.position.x,targetPosX,'-',item.position.y,targetPosY);
-  console.log(item.free);
 
   if (item.position.x === targetPosX && item.position.y === targetPosY && item.free === 'returning') {
     // if it has hit the way to get into the ghost box, but there is no space, respawn and start moving again
@@ -618,12 +646,14 @@ function checkReturnMoves(item) {
       let blueeyes = Array.from(item.item.getElementsByClassName('blue-pupil'));
       blueeyes.forEach(eye => eye.style.display = 'none')
       item.speed = 0;
+      if (item.direction != 'left') {ghostEyes(item.item,'left')};
       item.direction = 'left';
 
       spawn(item);
 
     } else {
 
+      if (item.direction != 'down') {ghostEyes(item.item,'down')};
       item.direction = 'down';
       item.position.x = 14 * cellW - cellW / 2;
       item.item.style.left = item.position.x + "px";
@@ -638,16 +668,18 @@ function checkReturnMoves(item) {
     ghosts.forEach(x=> {if (x.free !== 'free') {countNotFree++}});
 
     if (countNotFree < 4) {
+      if (item.direction != 'down') {ghostEyes(item.item,'down')};
       item.direction = 'down';
       item.speed = d['down'].speed;
-      console.log('y: ' + item.position.y);
     } else {
+      if (item.direction != 'up') {ghostEyes(item.item,'up')};
       item.direction = 'up';
       item.speed = d['up'].speed;
     }
 
   }
   else if (item.position.x === 14 * cellW - cellW / 2 && item.position.y >= 14 * cellW && item.position.y < 15 * cellW) {
+    if (item.direction != 'up') {ghostEyes(item.item,'up')};
     item.direciton = 'up';
     item.speed = 0;
     item.free = 'notfree';
@@ -717,8 +749,8 @@ function checkReturnMoves(item) {
       else {return false;}
     })
 
-    console.log(dirs);
     if (dirs.length === 1) {
+      if (dirs[0] !== item.direction) {ghostEyes(item.item,dirs[0])};
       item.direction = dirs[0]; 
       item.speed = d[dirs[0]].speed;
     }
@@ -726,11 +758,8 @@ function checkReturnMoves(item) {
 
       tempDir = '';
       // find targetPos relative to item
-      console.log(targetPosY,item.position.y);
-      console.log(targetPosX,item.position.x);
       let rowDir = targetPosY > item.position.y ? 'down' : targetPosY < item.position.y ? 'up' : 'same'
       let colDir = targetPosX > item.position.x ? 'right' : targetPosY < item.position.x ? 'left' : 'same'
-      console.log(rowDir,colDir);
 
       // if the item is in a portal row, see if it would be better to go through the portal
       if (portals.includes(item.rcPos.row)) {
@@ -776,7 +805,7 @@ function checkReturnMoves(item) {
         tempDir = dirs[index];
       }
 
-      console.log(tempDir);
+      if (tempDir !== item.direction) {ghostEyes(item.item,tempDir)};
       item.direction = tempDir;
       item.speed = d[tempDir].speed;
 
@@ -848,8 +877,6 @@ function scoreDivAdd(pos) {
   newDiv.style.top = pos.y;
   newDiv.innerHTML = '200';
 
-  console.log(newDiv);
-
   let game = document.getElementById('game');
   game.appendChild(newDiv);
 
@@ -900,7 +927,7 @@ function munchMode() {
     }
 
     else if (powerCount < 80) {
-      console.log('woo');
+        // animated mouth will go here
     }
 
     // flashing while winding down - count 80 (4 seconds)
@@ -931,7 +958,7 @@ function munchMode() {
         })
 
       }
-      console.log('pcount = ' + powerCount);
+
     }
 
     // done - count 120 (6 seconds)
@@ -982,6 +1009,20 @@ function munchMode() {
   }
 
   setTimeout(munchMode,50);
+
+}
+
+function ghostEyes(item, dir) {
+  let eyes = Array.from(item.getElementsByClassName('eyeball'));
+  let pupils = Array.from(item.getElementsByClassName('pupil'));
+
+  eyes.forEach(eye=> eye.style.top = d[dir].eyetop);
+  eyes[0].style.left = d[dir].eyeleft;
+  eyes[1].style.left = (parseInt(d[dir].eyeleft) + fringeW * 5) + 'px';
+
+  pupils.forEach(pupil => pupil.style.top = d[dir].pupiltop);
+  pupils[0].style.left = d[dir].pupilleft;
+  pupils[1].style.left = (parseInt(d[dir].pupilleft) + fringeW * 5) + 'px'
 
 }
 
