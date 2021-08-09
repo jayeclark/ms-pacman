@@ -10,49 +10,43 @@ let restarted = false;
 let restartGhosts = false;
 let score = 0;
 
-const height = +window.innerHeight - 40;
-const width = +window.innerWidth - 40;
-const rowHeight = Math.floor(height / ((board.length + 2) * speed)) * speed;
-const colHeight = Math.floor((+window.innerWidth - 40) / (board[0].length * speed)) * speed;
-const cellW = Math.min(rowHeight,colHeight);
-const fringeW = Math.floor(cellW * 1.5 / 12);
-
-let d = {'left' : {'transform' : 'rotateY(180deg)',
-                   'speed' : -speed,
-                   'row' : 0,
-                   'col' : -1, 
-                   'reverse' : 'right',
-                   'eyetop' : ((cellW / 6) + fringeW) + 'px',
-                   'eyeleft' : (fringeW * 2) + 'px',
-                   'pupiltop' : ((cellW / 6) + fringeW * 2.5) + 'px',
-                   'pupilleft' : (fringeW * 2) + 'px'},
-         'right' : {'transform' : 'rotate(0deg)',
-                    'speed' : speed,
-                    'row':0,
-                    'col':1, 
-                    'reverse' : 'left',
-                    'eyetop' : ((cellW / 6) + fringeW) + 'px',
-                    'eyeleft' : (fringeW * 3) + 'px',
-                    'pupiltop' : ((cellW / 6) + fringeW * 2.5) + 'px',
-                    'pupilleft' : (fringeW * 4) + 'px'},
-         'up' : {'transform' : 'rotate(90deg) rotateY(180deg)',
-                 'speed' : -speed,
-                 'row':-1,
-                 'col':0, 
-                 'reverse' : 'down',
-                 'eyetop' : ((cellW / 6) + fringeW) + 'px',
-                 'eyeleft' : (fringeW * 2.5) + 'px',
-                 'pupiltop' : ((cellW / 6) + fringeW * 0.5) + 'px',
-                 'pupilleft' : (fringeW * 3) + 'px'},
-         'down' : {'transform' : 'rotate(90deg)',
-                   'speed' : speed,
-                   'row':1,
-                   'col':0, 
-                   'reverse' : 'up',
-                   'eyetop' : ((cellW / 6) + fringeW) + 'px',
-                   'eyeleft' : (fringeW * 2.5) + 'px',
-                   'pupiltop' : ((cellW / 6) + fringeW * 2.5) + 'px',
-                   'pupilleft' : (fringeW * 3) + 'px'}}
+const d = {'left':'','right':'','up':'','down':''};
+d.left =  {'transform' : 'rotateY(180deg)',
+           'speed' : -speed,
+           'row' : 0,
+           'col' : -1, 
+           'reverse' : 'right',
+           'eyetop' : ((cellW / 6) + fringeW) + 'px',
+           'eyeleft' : (fringeW * 2) + 'px',
+           'pupiltop' : ((cellW / 6) + fringeW * 2.5) + 'px',
+           'pupilleft' : (fringeW * 2) + 'px'};
+d.right = {'transform' : 'rotate(0deg)',
+           'speed' : speed,
+           'row':0,
+           'col':1, 
+           'reverse' : 'left',
+           'eyetop' : ((cellW / 6) + fringeW) + 'px',
+           'eyeleft' : (fringeW * 3) + 'px',
+           'pupiltop' : ((cellW / 6) + fringeW * 2.5) + 'px',
+           'pupilleft' : (fringeW * 4) + 'px'};
+d.up =    {'transform' : 'rotate(90deg) rotateY(180deg)',
+           'speed' : -speed,
+           'row':-1,
+           'col':0, 
+           'reverse' : 'down',
+           'eyetop' : ((cellW / 6) + fringeW) + 'px',
+           'eyeleft' : (fringeW * 2.5) + 'px',
+           'pupiltop' : ((cellW / 6) + fringeW * 0.5) + 'px',
+           'pupilleft' : (fringeW * 3) + 'px'}
+d.down =  {'transform' : 'rotate(90deg)',
+           'speed' : speed,
+           'row':1,
+           'col':0, 
+           'reverse' : 'up',
+           'eyetop' : ((cellW / 6) + fringeW) + 'px',
+           'eyeleft' : (fringeW * 2.5) + 'px',
+           'pupiltop' : ((cellW / 6) + fringeW * 2.5) + 'px',
+           'pupilleft' : (fringeW * 3) + 'px'};
 
 // Deprioritize a button after it has been clicked
 const buttonSwap = () => {
@@ -137,6 +131,10 @@ function restartGame() {
   let start = document.getElementById('start');
   start.style.display = ''; 
 
+}
+
+function cache(dir) {
+  msPacMan.cache = dir;
 }
 
 // Update the position of Ms PacMan
@@ -852,10 +850,40 @@ function spawn(item) {
 
   function blink(item) {
 
-    if (blinkCount === 44) {item.speed = d[item.direction].speed; item.free = 'free'; return true;}
-    let display = 'none';
-    if (blinkCount % 8 === 0 || blinkCount === 0) {display = '';}
-    if (blinkCount % 4 === 0) {
+    if (blinkCount === 44) {
+               item.speed = d[item.direction].speed; item.free = 'free'; 
+               if (munchModeActive === true) {
+                      item.item.style.backgroundColor = 'blue';
+                      let fringes = Array.from(ghost.item.getElementsByClassName('fringe'));
+                      fringes.forEach(fringe=> {
+                                 
+                       if (fringe.style.backgroundColor === ghost.color) {fringe.style.backgroundColor = 'blue';}
+                       else {
+                         let gradient = fringe.style.backgroundImage;
+                         let newGradient = gradient.replace(ghost.color,'blue');
+                         fringe.style.backgroundImage = newGradient;
+                       }
+
+                     })
+
+                     let eyeballs = Array.from(ghost.item.getElementsByClassName('eyeball'));
+                     eyeballs.forEach(eye => eye.style.display = 'none');
+
+                     let pupils = Array.from(ghost.item.getElementsByClassName('pupil'));
+                     pupils.forEach(pupil=> pupil.style.display = 'none');
+
+                     let frowns = Array.from(ghost.item.getElementsByClassName('blue-frown'));
+                     frowns.forEach(frown=> frown.style.display = '');
+
+                     let frownEyes = Array.from(ghost.item.getElementsByClassName('blue-pupil'));
+                     frownEyes.forEach(eye=> eye.style.display = '');
+                          
+               }      
+               return true;}
+             
+      let display = 'none';
+      if (blinkCount % 8 === 0 || blinkCount === 0) {display = '';}
+      if (blinkCount % 4 === 0) {
 
       item.item.style.display = display;
 
@@ -938,7 +966,7 @@ function munchMode() {
     }
 
     // flashing while winding down - count 80 (4 seconds)
-    else if (powerCount < 120) {
+    else if (powerCount < 120 && powerCount >= 80) {
       let tempColor = 'white';
       if (powerCount % 8 === 0) {tempColor = 'blue';}
       if (powerCount % 4 === 0) {
@@ -947,15 +975,25 @@ function munchMode() {
 
           if (ghost.free === 'free') {
   
-            ghost.item.style.backgroundColor = tempColor;
+            if (ghost.item.style.backgroundColor === 'white' || ghost.item.style.backgroundColor === 'blue') {
+              ghost.item.style.backgroundColor = tempColor;
+            }
   
             let fringes = Array.from(ghost.item.getElementsByClassName('fringe'));
             fringes.forEach(fringe=> {
-              if (fringe.style.backgroundColor === 'blue' || fringe.style.backgroundColor === 'white') {fringe.style.backgroundColor = tempColor;}
+              if (fringe.style.backgroundColor === 'blue' || fringe.style.backgroundColor === 'white') {
+                         fringe.style.backgroundColor = tempColor;
+              }
               else {
                 let gradient = fringe.style.backgroundImage;
-                let newGradient = gradient.replace(ghost.color,tempColor);
-                fringe.style.backgroundImage = newGradient;
+                if (gradient.includes('blue') && tempColor !== 'blue') {
+                      let newGradient = gradient.replace('blue',tempColor);
+                      fringe.style.backgroundImage = newGradient;
+                } else if (gradient.includes('white') && tempColor !== 'white') {
+                      let newGradient = gradient.replace('white',tempColor);
+                      fringe.style.backgroundImage = newGradient;                         
+                }
+                           
               }
               
             })

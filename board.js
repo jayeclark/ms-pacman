@@ -336,6 +336,8 @@ function drawBoard(board) {
 
     let ghost = {};
 
+    const fringeW = Math.floor(cellW * 1.5 / 12);
+
     const ghostDiv = document.createElement('div');
     ghostDiv.id = id;
     ghostDiv.style.backgroundColor = gColor;
@@ -550,6 +552,67 @@ function drawBoard(board) {
   game.appendChild(clyde.item);
 
   ghosts.push(inky, blinky, pinky, clyde);
+
+  // make arrow divs and put them below the main game
+
+  let arrowMargin = (board[0].length - 4) / 2;
+  let arrowsDiv = document.createElement('div');
+  arrowsDiv.style.margin = '20px '+arrowMargin+' 20px '+arrowMargin;
+
+  let leftArrow = document.createElement('div');
+  let leftImg = document.createElement('img');
+  leftImg.src = './arrow.png';
+  leftImg.transform = 'rotate(90deg)';
+  leftImg.width = cellW * 2;
+  leftImg.height = cellW;
+  leftArrow.appendChild(leftImg);
+  leftArrow.style.left = 0;
+  leftArrow.style.top = cellW / 2 ;
+  leftArrow.style.position = 'absolute';
+  leftArrow.onclick = 'cache(\'left\')';
+
+  let upArrow = document.createElement('div');
+  let upImg = document.createElement('img');
+  upImg.src = './arrow.png';
+  upImg.transform = 'rotate(180deg)';
+  upImg.width = cellW * 2;
+  upImg.height = cellW;
+  upArrow.appendChild(upImg);
+  upArrow.style.left = cellW;
+  upArrow.style.top = 0;
+  upArrow.style.position = 'absolute';
+  upArrow.onclick = 'cache(\'up\')';
+
+  let rightArrow = document.createElement('div');
+  let rightImg = document.createElement('img');
+  rightImg.src = './arrow.png';
+  rightImg.transform = 'rotate(-90deg)';
+  rightImg.width = cellW * 2;
+  rightImg.height = cellW;
+  rightArrow.appendChild(rightImg);
+  rightArrow.style.left = cellW * 3;
+  rightArrow.style.top = cellW / 2;
+  rightArrow.style.position = 'absolute';
+  rightArrow.onclick = 'cache(\'right\')';
+
+  let downArrow = document.createElement('div');
+  let downImg = document.createElement('img');
+  downImg.src = './arrow.png';
+  downImg.transform = 'rotate(-180deg)';
+  downImg.width = cellW * 2;
+  downImg.height = cellW;
+  downArrow.appendChild(downImg);
+  downArrow.style.left = cellW;
+  downArrow.style.top = cellW * 2;
+  downArrow.style.position = 'absolute';
+  downArrow.onclick = 'cache(\'down\')';
+
+  arrowsDiv.appendChild(leftArrow);
+  arrowsDiv.appendChild(upArrow);
+  arrowsDiv.appendChild(rightArrow);
+  arrowsDiv.appendChild(downArrow);
+
+  game.appendChild(arrowsDiv);
 
 }
 
