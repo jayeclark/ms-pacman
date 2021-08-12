@@ -8,6 +8,7 @@ let stop = false;
 let started = false;
 let restarted = false;
 let restartGhosts = false;
+let restartRelease = false;
 let score = 0;
 
 const d = {'left':'','right':'','up':'','down':''};
@@ -67,10 +68,12 @@ function startGame() {
     restarted = false;
     update();
     setTimeout(updateGhosts,1000);
+    setTimeout(function() {restartedRelease = false; release(board2);},7000)
 
     started = true;
     let readyDiv = document.getElementById('ready');
     readyDiv.style.display = 'none';
+
   }
   else {
     stop = !stop;
@@ -85,6 +88,7 @@ function restartGame() {
   started = false;
   stop = false;
   restarted = true;
+  restartRelease = true;
   restartGhosts = false;
   
   // erase board, ghosts, and msPacMan
@@ -106,20 +110,8 @@ function restartGame() {
   ghosts.splice(0,ghosts.length);
 
   function redraw() {
-    drawBoard(board);
-
-    for (let i = 0; i < board.length; i++) {
-    let thisRow = board[i];
-      if (thisRow.includes('P')) {
-        pacPos.col = thisRow.indexOf('P');
-        pacPos.colM = thisRow.indexOf('P') + 1;
-        pacPos.row = i;
-        pacPos.rowM = i + 1;
-        break;
-     }
-    }
-    msPacMan = makePac();
-
+    drawBoardNew(board2);
+    msPacMan = new MsPacMan(board2);
   }
   
   setTimeout(redraw,500);
@@ -135,6 +127,15 @@ function restartGame() {
 
 function cache(dir) {
   msPacMan.cache = dir;
+  let el = dir + '-arrow';
+  let arrow = document.getElementById(el);
+  arrow.style.opacity = '60%';
+  arrow.style.transform = 'translate(0px, 2px)';
+  let unclick = () => {
+    arrow.style.opacity = '';
+    arrow.style.transform = '';
+  }
+  setTimeout(unclick,100);
 }
 
 // Update the position of Ms PacMan
@@ -168,10 +169,10 @@ function update() {
   
       if (msPacMan.direction === 'left' || msPacMan.direction === 'right' ) {
           msPacMan.position.x += msPacMan.speed;
-          msPacMan.newimg.style.left = msPacMan.position.x;
+          msPacMan.el.style.left = msPacMan.position.x;
       } else if (msPacMan.direction === 'up' || msPacMan.direction === 'down' ){
           msPacMan.position.y += msPacMan.speed;
-          msPacMan.newimg.style.top = msPacMan.position.y;
+          msPacMan.el.style.top = msPacMan.position.y;
       }
   
       msPacMan.rcPos.row = Math.floor(msPacMan.position.y / cellW);
@@ -183,7 +184,7 @@ function update() {
   }
 
   if (count === 3) {
-      msPacMan.newimg.src = msPacMan.newimg.src.includes('mspacman1.png') ? 
+      msPacMan.el.src = msPacMan.el.src.includes('mspacman1.png') ? 
                         './images/mspacman2.png' : './images/mspacman1.png'  
       count = 0;
     }
@@ -213,63 +214,48 @@ function updateGhosts() {
 
       if (ghost.position.x % ghost.speed > 0) {
         ghost.position.x = ghost.position.x + ghost.position.x % ghost.speed;
-        ghost.item.style.left = ghost.position.x;
+        ghost.el.style.left = ghost.position.x;
       }
       if (ghost.position.y % ghost.speed > 0) {
         ghost.position.y = ghost.position.y + ghost.position.y % ghost.speed;
-        ghost.item.style.top = ghost.position.y;
+        ghost.el.style.top = ghost.position.y;
       }
 
     }
 
   })
 
+
   if (stop === false) {
 
-    ghosts.forEach(ghost=> {
+    for (let ghost of ghosts) {
 
-      if(ghost.free === 'free') {
+      if(ghost.free === 'free' || ghost.free === 'returning') {
   
         // check if the ghost can change direction 
-        checkGhostMoves(ghost);
+        
+        ghost.pickDir();
+        ghost.move(ghost.direction);
+        //checkGhostMoves(ghost);
 
-        // change direction to chase pacman
+        // change direction to chase pacman, go home, or run from pacman
 
-        if (ghost.direction === 'left' || ghost.direction === 'right' ) {
-          ghost.position.x += ghost.speed;
-          ghost.item.style.left = ghost.position.x;
-        } else if (ghost.direction === 'up' || ghost.direction === 'down' ){
-            ghost.position.y += ghost.speed;
-            ghost.item.style.top = ghost.position.y;
-        }
+        //if (ghost.direction === 'left' || ghost.direction === 'right' ) {
+        //  ghost.position.x += ghost.speed;
+        //  ghost.el.style.left = ghost.position.x;
+        //} else if (ghost.direction === 'up' || ghost.direction === 'down' ){
+        //    ghost.position.y += ghost.speed;
+        //    ghost.el.style.top = ghost.position.y;
+       // }
 
-        ghost.rcPos.row = Math.floor(ghost.position.y / cellW);
-        ghost.rcPos.rowM = Math.floor(ghost.position.y / cellW) + 1;
-        ghost.rcPos.col = Math.floor(ghost.position.x / cellW);
-        ghost.rcPos.colM = Math.floor(ghost.position.x / cellW) + 1;
+        //ghost.rcPos.row = Math.floor(ghost.position.y / cellW);
+        //ghost.rcPos.rowM = Math.floor(ghost.position.y / cellW) + 1;
+        //ghost.rcPos.col = Math.floor(ghost.position.x / cellW);
+        //ghost.rcPos.colM = Math.floor(ghost.position.x / cellW) + 1;
       
       }
 
-      else if (ghost.free === 'returning') {
-
-        checkReturnMoves(ghost);
-
-        if (ghost.direction === 'left' || ghost.direction === 'right' ) {
-          ghost.position.x += ghost.speed;
-          ghost.item.style.left = ghost.position.x;
-        } else if (ghost.direction === 'up' || ghost.direction === 'down' ){
-            ghost.position.y += ghost.speed;
-            ghost.item.style.top = ghost.position.y;
-        }
-
-        ghost.rcPos.row = Math.floor(ghost.position.y / cellW);
-        ghost.rcPos.rowM = Math.floor(ghost.position.y / cellW) + 1;
-        ghost.rcPos.col = Math.floor(ghost.position.x / cellW);
-        ghost.rcPos.colM = Math.floor(ghost.position.x / cellW) + 1;
-
-      }
-
-    })
+    }
 
   }
 
@@ -303,8 +289,8 @@ function checkDots(item) {
     let dotRight = dotLeft + parseInt(dot.style.width);
     let dotTop = parseInt(dot.style.top);
     let dotBottom = dotTop + parseInt(dot.style.width);
-    let itemLeft = parseInt(item.newimg.style.left);
-    let itemTop = parseInt(item.newimg.style.top);
+    let itemLeft = parseInt(item.el.style.left);
+    let itemTop = parseInt(item.el.style.top);
 
 
     let leftBoundary = itemLeft + cellW - pacWidth / 2;
@@ -319,7 +305,7 @@ function checkDots(item) {
       if (removedDot !== '') {
         if (removedDot.classList.contains('big')) {
           score += 50;
-          if (munchModeActive === true) {powerCount = 1;} else {munchMode();}
+          if (munchModeActive === true) {powerCount = 0;} else {munchMode();}
         }
         else {score += 10;}
         let scoreDiv = document.getElementById('score');
@@ -337,7 +323,7 @@ function checkDots(item) {
             // disappear ghosts
             ghosts.forEach(ghost => {
               if (ghost.free === 'free') {
-                ghost.item.style.display = 'none';
+                ghost.el.style.display = 'none';
               }
             })
 
@@ -362,43 +348,47 @@ function checkDots(item) {
 function checkGhostCollision() {
 
   // if collided with a ghost, end game
-
-  let ghostCollision = false;
+ 
   let collidedGhosts = [];
-  let leftBound = parseInt(msPacMan.newimg.style.left) + parseInt(msPacMan.newimg.style.margin);
-  let rightBound = parseInt(msPacMan.newimg.style.left) + parseInt(msPacMan.newimg.style.margin) + parseInt(msPacMan.newimg.width);
-  let topBound = parseInt(msPacMan.newimg.style.top) + parseInt(msPacMan.newimg.style.margin);
-  let bottomBound = parseInt(msPacMan.newimg.style.top) + parseInt(msPacMan.newimg.style.margin) + parseInt(msPacMan.newimg.height);
+  let pacMar = parseInt(msPacMan.el.style.margin);
+  let pacL = parseInt(msPacMan.el.style.left) + parseInt(msPacMan.el.style.margin);
+  let pacR = parseInt(msPacMan.el.style.left) + parseInt(msPacMan.el.style.margin) + parseInt(msPacMan.el.width);
+  let pacT = parseInt(msPacMan.el.style.top) + parseInt(msPacMan.el.style.margin);
+  let pacB = parseInt(msPacMan.el.style.top) + parseInt(msPacMan.el.style.margin) + parseInt(msPacMan.el.width);
+  let pacDir = msPacMan.direction;
 
   ghosts.forEach(ghost => {
 
+    let ghostCollision = false;
     if (ghost.free === 'free') {
 
-      let ghostLeft = parseInt(ghost.item.style.left) + parseInt(ghost.item.style.margin);
-      let ghostRight = parseInt(ghost.item.style.left) + parseInt(ghost.item.style.margin) + parseInt(ghost.item.style.width);
-      let ghostTop = parseInt(ghost.item.style.top) + parseInt(ghost.item.style.margin);
-      let ghostBottom = parseInt(ghost.item.style.top) + parseInt(ghost.item.style.margin) + parseInt(ghost.item.style.height);
-    
-      if (ghostRight >= leftBound && ghostRight <= rightBound) {
-        if (ghostTop <= bottomBound && ghostTop >= topBound) { ghostCollision = true; }
-        else if (ghostBottom >= topBound && ghostBottom <= bottomBound) { 
-          ghostCollision = true; }
-      }
+      let ghostMar = parseFloat(ghost.el.style.margin);
+      const ghostL = parseFloat(ghost.el.style.left) + ghostMar;
+      const ghostR = parseFloat(ghost.el.style.left) + ghostMar + parseFloat(ghost.el.style.width);
+      const ghostT = parseFloat(ghost.el.style.top) + ghostMar;
+      const ghostB = parseFloat(ghost.el.style.top) + ghostMar + parseFloat(ghost.el.style.height);
+      const ghostCx = (ghostL + ghostR) / 2;
+      const ghostCy = (ghostT + ghostB) / 2;
 
-      if (ghostLeft <= rightBound && ghostLeft >= leftBound) {
-        if (ghostTop <= bottomBound && ghostTop >= topBound) { ghostCollision = true; }
-        else if (ghostBottom >= topBound && ghostBottom <= bottomBound) { ghostCollision = true; }
+      if ((ghostR >= pacL && ghostR <= pacR) || (ghostL <= pacR && ghostL >= pacL)) {
+        if (ghostCy <= pacB && ghostCy >= pacT) {ghostCollision = true;}
+        else if (ghostT <= pacB && ghostT >= pacT) { ghostCollision = true; } 
+        else if (ghostB >= pacT && ghostB <= pacB) { ghostCollision = true; }
+      }
+      else if ((ghostB >= pacT && ghostB <= pacB) || (ghostT <= pacB && ghostT >= pacT)) {
+        if (ghostCx <= pacR && ghostCx >= pacL) {ghostCollision = true;}
+        else if (ghostL <= pacR && ghostL >= pacL) { ghostCollision = true; } 
+        else if (ghostR >= pacL && ghostR <= pacR) { ghostCollision = true; }
       }
 
       if (ghostCollision === true) {
-        collidedGhosts.push(ghost.item.id); 
-
+        collidedGhosts.push(ghost.el.id); 
       }
     }
 
   })
 
-  if (ghostCollision === true && powerCount === 0) {
+  if (collidedGhosts.length > 0 && powerCount === 0) {
     
     // stop movement
     stop = true;
@@ -406,7 +396,7 @@ function checkGhostCollision() {
     dotCount = 0;
 
     // disappear msPacMan
-    msPacMan.newimg.style.display = 'none';
+    msPacMan.el.style.display = 'none';
 
     // appear 'game over'
     let over = document.getElementById('game-over');
@@ -420,47 +410,41 @@ function checkGhostCollision() {
     restart.style.display = '';
 
   }
-  else if (ghostCollision === true && powerCount > 0) {
+  else if (collidedGhosts.length > 0 && powerCount > 0) {
 
     collidedGhosts.forEach(id=>{
-      let ghost = document.getElementById(id);
+      let ghostEl = document.getElementById(id);
+      let ghostL = parseFloat(ghostEl.style.left) + parseFloat(ghostEl.style.margin);
+      let ghostT = parseFloat(ghostEl.style.top) + parseFloat(ghostEl.style.margin);
       let ghostEaten = false;
-      let ghostLeft = ghost.style.left;
-      let ghostTop = ghost.style.top;
-      if (ghostLeft < msPacMan.newimg.style.left && msPacMan.direction === 'left') {ghostEaten = true;}
-      if (ghostLeft > msPacMan.newimg.style.left + msPacMan.newimg.style.margin + msPacMan.newimg.style.width && msPacMan.direction === 'right') {ghostEaten = true;}
-      if (ghostTop < msPacMan.newimg.style.top && msPacMan.direction === 'up') {ghostEaten = true;}
-      if (ghostLeft > msPacMan.newimg.style.top + msPacMan.newimg.style.margin + msPacMan.newimg.style.height && msPacMan.direction === 'down') {ghostEaten = true;}
 
-      if (ghostEaten === true) {
+      if ((ghostL <= pacL && pacDir === 'left') || (ghostL >= pacL && pacDir === 'right') ||
+          (ghostT <= pacT && pacDir === 'up') || (ghostT >= pacT && pacDir === 'down')) {
+            ghosts.forEach(x => {
+              if (x.el.id === id && x.free === 'free') ghostEaten = true
+            })
+      }
 
-        ghosts.forEach(x=> {
-          if (x.item.id === id) {x.free = 'returning';}
+      if (ghostEaten === true) { 
+
+        ghosts.forEach(x => {
+
+          if (x.el.id === id && x.free === 'free') {
+
+            x.free = 'returning';
+            x.el.style.backgroundColor = 'transparent';
+
+            const divs = [];
+            const classTypes = ['fringe','eyeball','pupil','blue-frown','blue-pupil'];
+            classTypes.forEach(classtype => divs.push(...Array.from(x.el.getElementsByClassName(classtype))));
+            divs.forEach(div => toggleDisplay(div));
+
+            scoreDivAdd({'x': x.el.style.left, 'y':x.el.style.top});
+            score += 200;
+            document.getElementById('score').innerHTML = score;
+
+          }
         })
-
-        ghost.style.backgroundColor = 'transparent';
-        let fringes = Array.from(ghost.getElementsByClassName('fringe'));
-        fringes.forEach(fringe=> fringe.style.display = 'none')
-
-        let eyeballs = Array.from(ghost.getElementsByClassName('eyeball'));
-        eyeballs.forEach(eye => eye.style.display = '');
-
-        let pupils = Array.from(ghost.getElementsByClassName('pupil'));
-        pupils.forEach(pupil=> pupil.style.display = '');
-
-        let frowns = Array.from(ghost.getElementsByClassName('blue-frown'));
-        frowns.forEach(frown=> frown.style.display = 'none');
-
-        let frownEyes = Array.from(ghost.getElementsByClassName('blue-pupil'));
-        frownEyes.forEach(eye=> eye.style.display = 'none');
-
-        let scorePos = {};
-        scorePos.x = ghost.style.left;
-        scorePos.y = ghost.style.top;
-        scoreDivAdd(scorePos);
-        score += 200;
-        let scoreDiv = document.getElementById('score');
-        scoreDiv.innerHTML = score;
 
       }
 
@@ -468,6 +452,10 @@ function checkGhostCollision() {
 
   }
 
+}
+
+function toggleDisplay(item) {
+  if (item.style.display === 'none') {item.style.display = ''} else {item.style.display = 'none'}
 }
 
 // Check prosimity to edges and reverse direction and image if needed
@@ -493,7 +481,7 @@ function checkCollisions(item) {
 
           let currDir = item.direction;
 
-          let currTransform = item.newimg.style.transform;
+          let currTransform = item.el.style.transform;
           if (item.cache === 'down' && currDir === 'left') {transformStr = 'rotate(270deg) rotateY(180deg)';}
           else if (item.cache === 'down' && currDir === 'right') {transformStr = 'rotate(90deg)';}
           else if (item.cache === 'up' && currDir === 'left') {transformStr = 'rotate(90deg) rotateY(180deg)';}
@@ -504,7 +492,7 @@ function checkCollisions(item) {
           else if (item.cache === 'down' && currDir === 'up') {
             if (currTransform.includes('rotate(90deg) rotateY(180deg)')) {transformStr = 'rotate(90deg)';}
           }
-          item.newimg.style.transform = transformStr;
+          item.el.style.transform = transformStr;
           item.speed = stats.speed;
           item.direction = item.cache;
           item.cache = '';
@@ -517,330 +505,13 @@ function checkCollisions(item) {
 
   // if there is no cache, or it wasn't cleared, check whether Ms PacMan is up against a wall
   let next = nextPos(item.rcPos, item.direction);
-
-  if (isWall(next,item.direction) === true && findXY(item.rcPos).x === item.position.x && findXY(item.rcPos).y === item.position.y) {
+  let xy = findXY(item.rcPos);
+  if (isWall(next,item.direction) === true && xy.x === item.position.x && findXY(item.rcPos).y === item.position.y) {
     item.speed = 0;
     item.cache = '';
   }
 
   teleport(item);
-
-}
-
-// Check if the free ghost can move, and move him closer to pacman if so
-function checkGhostMoves(item) {
-
-  // only do the calculations if the ghost has hit a tile square-on
-  if (item.position.x % cellW === 0 && item.position.y % cellW === 0) {
-
-    let dirs = ['left','right','up','down'];
-
-    // remove reversing direction as an option
-    let rev = d[item.direction].reverse;
-
-    dirs.splice(dirs.indexOf(rev),1);
-
-    // filter out any directions that have walls
-    dirs = dirs.filter(dir => {
-      if (isWall(nextPos(item.rcPos,dir),dir) === false) {return true;}
-      else {return false;}
-    })
-
-    if (dirs.length === 1) {
-      if (item.direction != dirs[0]) {ghostEyes(item.item,dirs[0])};
-      item.direction = dirs[0]; 
-      item.speed = d[dirs[0]].speed;
-    }
-    else {
-
-      tempDir = ''
-      // find pacPos relative to item
-      let pacRow = msPacMan.rcPos.row > item.rcPos.row ? 'down' : msPacMan.rcPos.row < item.rcPos.row ? 'up' : 'same'
-      let pacCol = msPacMan.rcPos.col > item.rcPos.col ? 'right' : msPacMan.rcPos.col < item.rcPos.col ? 'left' : 'same'
-
-
-      // if the item is in a portal row, see if it would be better to go through the portal
-      if (portals.includes(item.rcPos.row)) {
-        let optA = Math.abs(msPacMan.rcPos.col - item.rcPos.col);
-        let optB = Math.min(msPacMan.rcPos.col, (board[0].length - msPacMan.rcPos.col));
-        optB += Math.min(item.rcPos.col,(board[0].length - item.rcPos.col));
-
-        if (optB < optA && pacCol !== 'same') { pacCol = d[pacCol].reverse; }
-      }
-
-      // if both directions are available, pick the one with the longest run 
-
-      if (dirs.includes(pacRow) && dirs.includes(pacCol)) {
-
-        let checkRun = (pos,dir) => {
-          let hitWall = false;
-          let tempPos = pos;
-          let runCount = 0;
-          while (hitWall == false) {
-            if (board[tempPos.row].charAt(tempPos.col) === 'X' || board[tempPos.row].charAt(tempPos.col) === 'X' ) {
-              hitWall = true;
-            }
-            else {runCount++; tempPos.row += d[dir].row; tempPos.col += d[dir].col;}
-          }
-          return runCount;
-        }
-
-        if (checkRun(item.rcPos,pacRow) > checkRun(item.rcPos,pacCol)) {
-          tempDir = pacRow;
-        }
-        else if (checkRun(item.rcPos,pacRow) < checkRun(item.rcPos,pacCol)) {
-          tempDir = pacCol;
-        }
-        // if both runs are equal, pick at random
-        else if (Math.random() < 0.5) {tempDir = pacRow} else {tempDir = pacCol}
-
-      }
-      else if (dirs.includes(pacRow)) {tempDir = pacRow}
-      else if (dirs.includes(pacCol)) {tempDir = pacCol}
-      else {
-        let index = Math.floor(Math.random() * dirs.length);
-        tempDir = dirs[index];
-      }
-
-      if (item.direction != tempDir) {ghostEyes(item.item,tempDir)};
-      item.direction = tempDir;
-      item.speed = d[tempDir].speed;
-
-    }
-    teleport(item);
-
-  }
-
-}
-
-// Check if the returning ghost can move, and move him closer to pacman if so
-function checkReturnMoves(item) {
-
-  let targetPosX = 14 * cellW - cellW / 2;
-  if (targetPosX % Math.abs(speed) > 0) {targetPosX -= targetPosX % Math.abs(speed);}
-  let targetPosY = 11 * cellW;
-  let targetRow = 11;
-  let targetCol = 14;
-
-  if (item.position.x === targetPosX && item.position.y === targetPosY && item.free === 'returning') {
-    // if it has hit the way to get into the ghost box, but there is no space, respawn and start moving again
-    let countNotFree = 0;
-    ghosts.forEach(x=> {if (x.free !== 'free') {countNotFree++}});
-
-    if (countNotFree === 4) {
-
-      item.free = 'spawning';
-
-      item.item.style.backgroundColor = item.color;
-
-      let fringes = Array.from(item.item.getElementsByClassName('fringe'))
-      fringes.forEach(fringe => {
-        if (fringe.style.backgroundColor !== '' && fringe.style.backgroundColor !== 'transparent') {
-          fringe.style.backgroundColor = item.color;
-          fringe.style.display = '';
-        } else {
-          let bgimage = fringe.style.backgroundImage;
-          let newBgimage = bgimage.replace('blue',item.color);
-          newBgImage = bgimage.replace('white',item.color);
-          fringe.style.backgroundImage = newBgimage;
-          fringe.style.display = '';
-        }
-      })
-      let frowns = Array.from(item.item.getElementsByClassName('blue-frown'));
-      frowns.forEach(frown => frown.style.display = 'none')
-      let blueeyes = Array.from(item.item.getElementsByClassName('blue-pupil'));
-      blueeyes.forEach(eye => eye.style.display = 'none')
-      item.speed = 0;
-      if (item.direction != 'left') {ghostEyes(item.item,'left')};
-      item.direction = 'left';
-
-      spawn(item);
-
-    } else {
-
-      if (item.direction != 'down') {ghostEyes(item.item,'down')};
-      item.direction = 'down';
-      item.position.x = 14 * cellW - cellW / 2;
-      item.item.style.left = item.position.x + "px";
-      item.speed = d['down'].speed;
-
-    }
-
-  }
-  else if (item.position.x === 14 * cellW - cellW / 2 && item.position.y < 14 * cellW && item.free === 'returning') {
-    
-    let countNotFree = 0;
-    ghosts.forEach(x=> {if (x.free !== 'free') {countNotFree++}});
-
-    if (countNotFree < 4) {
-      if (item.direction != 'down') {ghostEyes(item.item,'down')};
-      item.direction = 'down';
-      item.speed = d['down'].speed;
-    } else {
-      if (item.direction != 'up') {ghostEyes(item.item,'up')};
-      item.direction = 'up';
-      item.speed = d['up'].speed;
-    }
-
-  }
-  else if (item.position.x === 14 * cellW - cellW / 2 && item.position.y >= 14 * cellW && item.position.y < 15 * cellW) {
-    if (item.direction != 'up') {ghostEyes(item.item,'up')};
-    item.direciton = 'up';
-    item.speed = 0;
-    item.free = 'notfree';
-    let countNotFree = 0;
-    ghosts.forEach(x=> {if (x.free !== 'free') {countNotFree++}});
-    if (countNotFree === 4) {
-
-      item.item.style.backgroundColor = item.color;
-      let fringes = Array.from(item.item.getElementsByClassName('fringe'))
-      fringes.forEach(fringe => {
-        if (fringe.style.backgroundColor !== '' && fringe.style.backgroundColor !== 'transparent') {
-          fringe.style.backgroundColor = item.color;
-          fringe.style.display = '';
-        } else {
-          let bgimage = fringe.style.backgroundImage;
-          let newBgimage = bgimage.replace('blue',item.color);
-          bewBgImage = bgimage.replace('white',item.color);
-          fringe.style.backgroundImage = newBgimage;
-          fringe.style.display = '';
-        }
-      })
-      let frowns = Array.from(item.item.getElementsByClassName('blue-frown'));
-      frowns.forEach(frown => frown.style.display = 'none')
-      let blueeyes = Array.from(item.item.getElementsByClassName('blue-pupil'));
-      blueeyes.forEach(eye => eye.style.display = 'none');
-
-      item.direction = 'up';
-      item.speed = d['up'].speed;
-
-    }
-    else if (countNotFree < 4) {
-      // else make everything else display
-      item.item.backgroundColor = item.color;
-      let fringes = Array.from(item.item.getElementsByClassName('fringe'))
-      fringes.forEach(fringe => {
-        if (fringe.style.backgroundColor !== '' && fringe.style.backgroundColor !== 'transparent') {
-          fringe.style.backgroundColor = item.color;
-          fringe.style.display = '';
-        } else {
-          let bgimage = fringe.style.backgroundImage;
-          let newBgimage = bgimage.replace('blue',item.color);
-          fringe.style.backgroundImage = newBgimage;
-          fringe.style.display = '';
-        }
-      })
-      let frowns = Array.from(item.item.getElementsByClassName('blue-frown'));
-      frowns.forEach(frown => frown.style.display = 'none')
-      let blueeyes = Array.from(item.item.getElementsByClassName('blue-pupil'));
-      blueeyes.forEach(eye => eye.style.display = 'none')
-
-    }
-
-  }
-  // do these calculations if the ghost has hit a tile square-on
-  else if (item.position.x % cellW === 0 && item.position.y % cellW === 0 && item.free === 'returning') {
-
-    let dirs = ['left','right','up','down'];
-
-    // remove reversing direction as an option
-    let rev = d[item.direction].reverse;
-
-    dirs.splice(dirs.indexOf(rev),1);
-
-    // filter out any directions that have walls
-    dirs = dirs.filter(dir => {
-      if (isWall(nextPos(item.rcPos,dir),dir) === false) {return true;}
-      else {return false;}
-    })
-
-    if (dirs.length === 1) {
-      if (dirs[0] !== item.direction) {ghostEyes(item.item,dirs[0])};
-      item.direction = dirs[0]; 
-      item.speed = d[dirs[0]].speed;
-    }
-    else {
-
-      tempDir = '';
-      // find targetPos relative to item
-      let rowDir = targetPosY > item.position.y ? 'down' : targetPosY < item.position.y ? 'up' : 'same'
-      let colDir = targetPosX > item.position.x ? 'right' : targetPosY < item.position.x ? 'left' : 'same'
-
-      // if the item is in a portal row, see if it would be better to go through the portal
-      if (portals.includes(item.rcPos.row)) {
-        let optA = Math.abs(targetCol - item.rcPos.col);
-        let optB = Math.min(targetCol, (board[0].length - targetCol));
-        optB += Math.min(item.rcPos.col,(board[0].length - item.rcPos.col));
-
-        if (optB < optA && colDir !== 'same') { colDir = d[colDir].reverse; }
-      }
-
-      // if both directions are available, pick the one with the longest run 
-
-      if (dirs.includes(rowDir) && dirs.includes(colDir)) {
-
-        let checkRun = (pos,dir) => {
-          let hitWall = false;
-          let tempPos = pos;
-          let runCount = 0;
-          while (hitWall == false) {
-            if (board[tempPos.row].charAt(tempPos.col) === 'X' || board[tempPos.row].charAt(tempPos.col) === 'G' ) {
-              hitWall = true;
-            }
-            else {runCount++; tempPos.row += d[dir].row; tempPos.col += d[dir].col;}
-          }
-          return runCount;
-        }
-
-        if (checkRun(item.rcPos,rowDir) > checkRun(item.rcPos,colDir)) {
-          tempDir = rowDir;
-        }
-        else if (checkRun(item.rcPos,rowDir) < checkRun(item.rcPos,colDir)) {
-          tempDir = colDir;
-        }
-        // if both runs are equal, pick at random
-        else if (Math.random() < 0.5) {tempDir = rowDir} else {tempDir = colDir}
-
-      }
-      else if (dirs.includes(rowDir)) {tempDir = rowDir}
-      else if (dirs.includes(colDir)) {tempDir = colDir}
-      else if (dirs.includes(item.direction)) {tempDir = item.direction}
-      else {
-        let index = Math.floor(Math.random() * dirs.length);
-        tempDir = dirs[index];
-      }
-
-      if (tempDir !== item.direction) {ghostEyes(item.item,tempDir)};
-      item.direction = tempDir;
-      item.speed = d[tempDir].speed;
-
-    }
-    teleport(item);
-
-    let extramove = () => {   
-
-      if (item.direction === 'left' || item.direction === 'right') {
-      item.position.x += item.speed;
-      item.item.style.left = item.position.x;
-      } else if (item.direction === 'up' || item.direction === 'down' ){
-        item.position.y += item.speed;
-        item.item.style.top = item.position.y;
-      }
-
-      item.rcPos.row = Math.floor(item.position.y / cellW);
-      item.rcPos.rowM = Math.floor(item.position.y / cellW) + 1;
-      item.rcPos.col = Math.floor(item.position.x / cellW);
-      item.rcPos.colM = Math.floor(item.position.x / cellW) + 1;
-
-    }
-
-    let fast = true;
-    if (targetRow === item.rcPos.row && item.rcPos.col > targetCol - 3 && item.rcPos.col < targetCol + 3) {
-      fast = false;
-    }
-    if (item.free === 'returning' && fast === true) {setTimeout(extramove,25);}
-
-  }
 
 }
 
@@ -853,30 +524,28 @@ function spawn(item) {
     if (blinkCount === 44) {
                item.speed = d[item.direction].speed; item.free = 'free'; 
                if (munchModeActive === true) {
-                      item.item.style.backgroundColor = 'blue';
-                      let fringes = Array.from(ghost.item.getElementsByClassName('fringe'));
+                      item.el.style.backgroundColor = 'blue';
+                      let fringes = Array.from(item.el.getElementsByClassName('fringe'));
                       fringes.forEach(fringe=> {
                                  
-                       if (fringe.style.backgroundColor === ghost.color) {fringe.style.backgroundColor = 'blue';}
+                       if (fringe.style.backgroundColor === item.color) {fringe.style.backgroundColor = 'blue';}
+                       else if (fringe.style.backgroundColor === 'white') {fringe.style.backgroundColor = 'blue';}
                        else {
                          let gradient = fringe.style.backgroundImage;
-                         let newGradient = gradient.replace(ghost.color,'blue');
+                         let newGradient = gradient.replace(item.color,'blue');
+                         newGradient = newGradient.replace('white','blue');
                          fringe.style.backgroundImage = newGradient;
                        }
 
                      })
 
-                     let eyeballs = Array.from(ghost.item.getElementsByClassName('eyeball'));
-                     eyeballs.forEach(eye => eye.style.display = 'none');
+                     let eyes = [...Array.from(item.el.getElementsByClassName('eyeball')),
+                                 ...Array.from(item.el.getElementsByClassName('pupil'))];
+                     eyes.forEach(eye => eye.style.display = 'none');
 
-                     let pupils = Array.from(ghost.item.getElementsByClassName('pupil'));
-                     pupils.forEach(pupil=> pupil.style.display = 'none');
-
-                     let frowns = Array.from(ghost.item.getElementsByClassName('blue-frown'));
+                     let frowns = [...Array.from(item.el.getElementsByClassName('blue-frown')),
+                                   ...Array.from(item.el.getElementsByClassName('blue-pupil'))];
                      frowns.forEach(frown=> frown.style.display = '');
-
-                     let frownEyes = Array.from(ghost.item.getElementsByClassName('blue-pupil'));
-                     frownEyes.forEach(eye=> eye.style.display = '');
                           
                }      
                return true;}
@@ -885,7 +554,7 @@ function spawn(item) {
       if (blinkCount % 8 === 0 || blinkCount === 0) {display = '';}
       if (blinkCount % 4 === 0) {
 
-      item.item.style.display = display;
+      item.el.style.display = display;
 
     }
     blinkCount++;
@@ -919,41 +588,97 @@ function scoreDivAdd(pos) {
 
 }
 
+function release(board) {
+
+  // releases new ghosts as applicable
+
+  // stop the function if the game is restarted
+  if (restarted === true || restartRelease === true) {return false;}
+
+  // only proceed if there are notfree ghosts
+  if (ghosts.every(ghost => ghost.free !== 'notfree') === false && stop === false) {
+
+    // see which box positions are occupied
+    let positions = boxPositions();
+    let targetBoxPos = '';
+
+    // center leaves first, followed by left and then right
+    if (positions.center === true) {targetBoxPos = 'center'}
+    else if (positions.left === true) {targetBoxPos = 'left'}
+    else if (positions.right == true) {targetBoxPos = 'right'}
+
+    ghosts.forEach(ghost=>{
+
+      if (ghost.boxPosition === targetBoxPos) {
+
+        const ghostGate = document.getElementById('ghost-gate');
+        ghostGate.style.backgroundColor = 'black';
+  
+        leave(ghost,board);
+  
+        function leave(ghost) {
+          if (restarted === true) {return false;}
+          if (ghost.free !== 'notfree') {
+            for (let otherGhost of ghosts) {
+              if (otherGhost.boxPosition === 'center' && ghostsInBox <= 2) {
+                reArrange(otherGhost);
+              }
+            }
+            return true;}
+          ghost.leaveBox();
+          setTimeout(function() {leave(ghost)},50);
+        }
+  
+        function reArrange(ghost) {
+          if (ghost.reshuffle() === true) {return false;}
+          ghost.reshuffle();
+          setTimeout(function() {reArrange(ghost)},50)
+        }
+      }
+    })
+
+  }
+
+  setTimeout(function() {release(board);},4000)
+
+}
+
 function munchMode() {
 
   if (stop === false) {
 
-
-    if (munchModeActive === false && powerCount === 0) {munchModeActive === true;}
+    if (munchModeActive === false) {munchModeActive = true;}
     // make free ghosts blue, turn off their eyes and turn on their frowns
     if (powerCount === 0) {
+
       ghosts.forEach(ghost=>{
 
-        if (ghost.free === 'free') {
+        if (ghost.el.style.backgroundColor !== 'transparent') {
 
-          ghost.item.style.backgroundColor = 'blue';
+          ghost.el.style.backgroundColor = 'blue';
 
-          let fringes = Array.from(ghost.item.getElementsByClassName('fringe'));
+          let fringes = Array.from(ghost.el.getElementsByClassName('fringe'));
           fringes.forEach(fringe=> {
-            if (fringe.style.backgroundColor === ghost.color) {fringe.style.backgroundColor = 'blue';}
+            if (fringe.style.backgroundColor === ghost.color || fringe.style.backgroundColor === 'white') {fringe.style.backgroundColor = 'blue';}
             else {
               let gradient = fringe.style.backgroundImage;
               let newGradient = gradient.replace(ghost.color,'blue');
+              newGradient = newGradient.replace('white','blue');
               fringe.style.backgroundImage = newGradient;
             }
             
           })
 
-          let eyeballs = Array.from(ghost.item.getElementsByClassName('eyeball'));
+          let eyeballs = Array.from(ghost.el.getElementsByClassName('eyeball'));
           eyeballs.forEach(eye => eye.style.display = 'none');
 
-          let pupils = Array.from(ghost.item.getElementsByClassName('pupil'));
+          let pupils = Array.from(ghost.el.getElementsByClassName('pupil'));
           pupils.forEach(pupil=> pupil.style.display = 'none');
 
-          let frowns = Array.from(ghost.item.getElementsByClassName('blue-frown'));
+          let frowns = Array.from(ghost.el.getElementsByClassName('blue-frown'));
           frowns.forEach(frown=> frown.style.display = '');
 
-          let frownEyes = Array.from(ghost.item.getElementsByClassName('blue-pupil'));
+          let frownEyes = Array.from(ghost.el.getElementsByClassName('blue-pupil'));
           frownEyes.forEach(eye=> eye.style.display = '');
 
         }
@@ -973,13 +698,13 @@ function munchMode() {
 
         ghosts.forEach(ghost=>{
 
-          if (ghost.free === 'free') {
+          if (ghost.el.style.backgroundColor !== 'transparent') {
   
-            if (ghost.item.style.backgroundColor === 'white' || ghost.item.style.backgroundColor === 'blue') {
-              ghost.item.style.backgroundColor = tempColor;
+            if (ghost.el.style.backgroundColor === 'white' || ghost.el.style.backgroundColor === 'blue') {
+              ghost.el.style.backgroundColor = tempColor;
             }
   
-            let fringes = Array.from(ghost.item.getElementsByClassName('fringe'));
+            let fringes = Array.from(ghost.el.getElementsByClassName('fringe'));
             fringes.forEach(fringe=> {
               if (fringe.style.backgroundColor === 'blue' || fringe.style.backgroundColor === 'white') {
                          fringe.style.backgroundColor = tempColor;
@@ -1012,10 +737,10 @@ function munchMode() {
       // make everything normal again
       ghosts.forEach(ghost=>{
 
-        if (ghost.free === 'free') {
-          ghost.item.style.backgroundColor = ghost.color;
+        if (ghost.el.style.backgroundColor !== 'transparent') {
+          ghost.el.style.backgroundColor = ghost.color;
 
-          let fringes = Array.from(ghost.item.getElementsByClassName('fringe'));
+          let fringes = Array.from(ghost.el.getElementsByClassName('fringe'));
           fringes.forEach(fringe=> {
             if (fringe.style.backgroundColor === 'blue' || fringe.style.backgroundColor === 'white' ) {fringe.style.backgroundColor = ghost.color;}
             else {
@@ -1026,16 +751,16 @@ function munchMode() {
             }
             
           })
-          let eyeballs = Array.from(ghost.item.getElementsByClassName('eyeball'));
+          let eyeballs = Array.from(ghost.el.getElementsByClassName('eyeball'));
           eyeballs.forEach(eye => eye.style.display = '');
 
-          let pupils = Array.from(ghost.item.getElementsByClassName('pupil'));
+          let pupils = Array.from(ghost.el.getElementsByClassName('pupil'));
           pupils.forEach(pupil=> pupil.style.display = '');
 
-          let frowns = Array.from(ghost.item.getElementsByClassName('blue-frown'));
+          let frowns = Array.from(ghost.el.getElementsByClassName('blue-frown'));
           frowns.forEach(frown=> frown.style.display = 'none');
 
-          let frownEyes = Array.from(ghost.item.getElementsByClassName('blue-pupil'));
+          let frownEyes = Array.from(ghost.el.getElementsByClassName('blue-pupil'));
           frownEyes.forEach(eye=> eye.style.display = 'none');
 
         }
@@ -1061,7 +786,7 @@ function ghostEyes(item, dir) {
   let eyes = Array.from(item.getElementsByClassName('eyeball'));
   let pupils = Array.from(item.getElementsByClassName('pupil'));
 
-  eyes.forEach(eye=> eye.style.top = d[dir].eyetop);
+  eyes.forEach(eye => eye.style.top = d[dir].eyetop);
   eyes[0].style.left = d[dir].eyeleft;
   eyes[1].style.left = (parseInt(d[dir].eyeleft) + fringeW * 5) + 'px';
 
@@ -1071,18 +796,28 @@ function ghostEyes(item, dir) {
 
 }
 
-function teleport(item) {
+function teleport(item,board=board2) {
 
   if (item.position.x <= 0 && item.direction === 'left') {
-    item.position.x = (board[0].length - 2) * cellW;
-    item.rcPos.col = board[0].length - 2;
-    item.rcPos.colM = board[0].length - 1;
+    item.position.x = (board.cols - 2) * board.tileW - board.speed;
+    item.rcPos.col = board.cols - 3;
+    item.rcPos.colM = board.cols - 2;
   }
 
-  else if (item.position.x > (board[0].length - 2) * cellW && item.direction === 'right') {
+  else if (item.position.x > (board.cols - 2) * cellW && item.direction === 'right') {
     item.position.x = 0;
     item.rcPos.col = 0;
     item.rcPos.colM = 1;
   }
+
+}
+
+function boxPositions() {
+  
+  const positions = {left: false, center: false, right: false}
+  for (let ghost of ghosts) {if (ghost.boxPosition !== 'none' && ghost.boxPosition !== '') {
+    positions[ghost.boxPosition] = true;}
+  }
+  return positions;
 
 }
