@@ -459,6 +459,9 @@ class Ghost {
 
   leaveBox() {
 
+
+    if (restarted === true) {return false;}
+
     if (stop === false) {
 
       const board = this.board;
@@ -478,6 +481,7 @@ class Ghost {
         this.free = 'free';
         this.board.ghostsInBox.splice(this.board.ghostsInBox.indexOf(this.el.id),1);
         console.log('leave',this.board.ghostsInBox);
+
         if (this.position.x % board.tileW > 0) {
           this.position.x -= this.position.x % board.tileW;
           this.el.style.left = this.position.x;
@@ -492,18 +496,9 @@ class Ghost {
         
       }
       else if (xG < xS && this.free === 'notfree') {this.move('right')}
-      else if (xG > xS && this.free === 'notfree') {this.move('left')}
-      else if (xG < xS && xS - xG < this.speed && this.free === 'notfree') {
-        this.position.x = xS
-        this.el.style.left = this.position.x;
-        this.rcPos.col = Math.floor(this.position.x / board.tileW);
-        this.rcPos.colM = this.rcPos.col + 1;
-      }
-  
+      else if (xG > xS && this.free === 'notfree') {this.move('left')}  
 
     }
-
-    if (restarted === true) {return false;}
 
   }
 
@@ -607,10 +602,10 @@ class Ghost {
               fringe.style.backgroundColor = color;
               fringe.style.display = '';
             } else {
-              let bgimage = fringe.style.backgroundImage;
-              let newBgimage = bgimage.replace('blue',color);
-              newBgimage = bgimage.replace('white',color);
-              fringe.style.backgroundImage = newBgimage;
+              let bgImage = fringe.style.backgroundImage;
+              let newBgImage = bgImage.replace('blue',color);
+              newBgImage = newBgImage.replace('white',color);
+              fringe.style.backgroundImage = newBgImage;
               fringe.style.display = '';
             }
           })
@@ -653,10 +648,10 @@ class Ghost {
                      fringe.style.backgroundColor = color;
                      fringe.style.display = '';
                    } else {
-                     let bgimage = fringe.style.backgroundImage;
-                     let newBgimage = bgimage.replace('blue',color);
-                     newBgimage = bgimage.replace('white',color);
-                     fringe.style.backgroundImage = newBgimage;
+                     let bgImage = fringe.style.backgroundImage;
+                     let newBgImage = bgImage.replace('blue',color);
+                     newBgImage = bgImage.replace('white',color);
+                     fringe.style.backgroundImage = newBgImage;
                      fringe.style.display = '';
                    }
                  })
@@ -728,10 +723,10 @@ class Ghost {
               fringe.style.backgroundColor = this.color;
               fringe.style.display = '';
             } else {
-              let bgimage = fringe.style.backgroundImage;
-              let newBgimage = bgimage.replace('blue',this.color);
-              newBgImage = bgimage.replace('white',this.color);
-              fringe.style.backgroundImage = newBgimage;
+              let bgImage = fringe.style.backgroundImage;
+              let newBgImage = bgImage.replace('blue',this.color);
+              newBgImage = newBgImage.replace('white',this.color);
+              fringe.style.backgroundImage = newBgImage;
               fringe.style.display = '';
             }
           })
@@ -882,7 +877,7 @@ class Ghost {
   get isInBox() {
     const board = this.board;
     if (this.rcPos.row >= board.ghostStart.row && this.rcPos.row < board.ghostEnd.row - 1) {
-      if (this.rcPos.col >= board.ghostStart.col && this.rcPos.col < board.ghostEnd.col) {
+      if (this.rcPos.col >= board.ghostStart.col && this.rcPos.col <= board.ghostEnd.col) {
         return true;
       }
     }
