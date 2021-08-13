@@ -5,3 +5,61 @@ body {
 @media only screen and (max-width: 760px) {
     #test-div { display: none; }
   }
+
+.wall {
+  position: absolute;
+  z-index: 50;
+  background-color: #f4bb9c;
+  margin: -1px;
+  border: solid 3px #e33022;
+}
+
+.inner-corner {
+  position: absolute;
+  background-color: black;
+  z-index: 1000;
+  margin: -2px;  
+}
+
+.pac-dot {
+  position: absolute;
+  background-color: #e1e1fb;
+  z-index: 102;
+}
+
+.arrow-div {
+  position: absolute;
+  left: 0px;
+  margin: 20px 0px 20px 0px;
+}
+
+.arrow {
+  z-index: 2000;
+  margin: 0px;
+  position: absolute;
+}
+
+.outer-ghostbox {
+  position: absolute;
+  z-index: 50;
+  background-color: #f1bdae;
+  border: solid 3px #e33022;
+}
+
+.inner-ghostbox {
+  position: absolute;
+  z-index: 51;
+  background-color: black;
+  border: solid 3px #e33022;
+}
+
+.door {
+  position: absolute;
+  z-index: 52;
+  background-color: #e1e1fb;
+  top: -3px;
+  border-left: solid 3px #e33022;
+  border-right: solid 3px #e33022;
+  border-top: solid 3px black;
+  border-bottom: solid 3px black;
+}

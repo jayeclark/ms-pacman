@@ -176,9 +176,7 @@ function update() {
       }
   
       msPacMan.rcPos.row = Math.floor(msPacMan.position.y / cellW);
-      msPacMan.rcPos.rowM = Math.floor(msPacMan.position.y / cellW) + 1;
       msPacMan.rcPos.col = Math.floor(msPacMan.position.x / cellW);
-      msPacMan.rcPos.colM = Math.floor(msPacMan.position.x / cellW) + 1;
     }
 
   }
@@ -249,9 +247,7 @@ function updateGhosts() {
        // }
 
         //ghost.rcPos.row = Math.floor(ghost.position.y / cellW);
-        //ghost.rcPos.rowM = Math.floor(ghost.position.y / cellW) + 1;
         //ghost.rcPos.col = Math.floor(ghost.position.x / cellW);
-        //ghost.rcPos.colM = Math.floor(ghost.position.x / cellW) + 1;
       
       }
 
@@ -267,28 +263,26 @@ function updateGhosts() {
 function checkDots(item) {
 
   // find all dots in the current cell
-  let classCode = 'pac-dot-'+item.rcPos.col + '-' + item.rcPos.row;
+  let classCode = 'dot-'+item.rcPos.col + '-' + item.rcPos.row;
   let next = nextPos(item.rcPos,item.direction);
-  let classCode2 = 'pac-dot-'+next.col + '-' + next.row;
+  let classCode2 = 'dot-'+ next.col + '-' + next.row;
  
-  if (item.direction === 'right') {classCode2 = 'pac-dot-'+next.colM + '-' + next.row;}
-  if (item.direction === 'down') {classCode2 = 'pac-dot-'+next.col + '-' + next.rowM;}
+  if (item.direction === 'right') {classCode2 = 'pac-dot-' + (next.col + 1) + '-' + next.row;}
+  if (item.direction === 'down') {classCode2 = 'pac-dot-' + next.col + '-' + (next.row + 1);}
 
-  let dots = Array.prototype.slice.call(document.getElementsByClassName(classCode), 0);
-  let dots2 = Array.prototype.slice.call(document.getElementsByClassName(classCode2), 0);
- 
-  dots.push(...dots2);
-  //dots.push(...dots3);
+  let dots = [document.getElementById(classCode),document.getElementById(classCode2)].filter(x => x !== null);
 
   // check if any are in the mouth
   for (let i = 0; i < dots.length; i++) {
 
-    let dot = dots[i];
+    const dot = dots[i];
+    let dotW = dotWidth; 
+    if (dot.classList.contains('big')) {dotW = parseInt(dot.style.width);} 
 
     let dotLeft = parseInt(dot.style.left);
-    let dotRight = dotLeft + parseInt(dot.style.width);
+    let dotRight = dotLeft + dotW;
     let dotTop = parseInt(dot.style.top);
-    let dotBottom = dotTop + parseInt(dot.style.width);
+    let dotBottom = dotTop + dotW;
     let itemLeft = parseInt(item.el.style.left);
     let itemTop = parseInt(item.el.style.top);
 
@@ -801,13 +795,11 @@ function teleport(item,board=board2) {
   if (item.position.x <= 0 && item.direction === 'left') {
     item.position.x = (board.cols - 2) * board.tileW - board.speed;
     item.rcPos.col = board.cols - 3;
-    item.rcPos.colM = board.cols - 2;
   }
 
   else if (item.position.x > (board.cols - 2) * cellW && item.direction === 'right') {
     item.position.x = 0;
     item.rcPos.col = 0;
-    item.rcPos.colM = 1;
   }
 
 }
