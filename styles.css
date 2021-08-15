@@ -63,3 +63,80 @@ body {
   border-top: solid 3px black;
   border-bottom: solid 3px black;
 }
+
+.ghost {
+  background-size: 100%;
+  background-image: none;
+  position: absolute;
+  z-index: 900;
+  border-top-left-radius: 50%;
+  border-top-right-radius: 50%;
+}
+
+.fringe {
+  position: absolute;
+  margin: 0px;
+  border-top-right-radius: 0%;
+  border-top-left-radius: 0%;
+}
+
+.fringe-inner {
+  border-bottom-right-radius: 50%;
+  border-bottom-left-radius: 50%;
+}
+
+.fringe-right {
+  border-bottom-right-radius: 0%;
+  border-bottom-left-radius: 50%;
+}
+
+.fringe-left {
+  border-bottom-right-radius: 50%;
+  border-bottom-left-radius: 0%;
+}
+
+.eyeball {
+  position: absolute;
+  margin: 0px;
+  background-color: white;
+  border-radius: 50%;
+}
+
+.pupil {
+  position: absolute;
+  margin: 0px;
+  background-color: blue;
+  border-radius: 50%;
+}
+
+.blue-pupil {
+  position: absolute;
+  margin: 0px;
+  background-color: lightgray;
+  border-radius: 50%;
+}
+
+.blue-frown {
+  position: absolute;
+  margin: 0px;
+  background-color: transparent;
+  border-left: solid 1px lightgray;
+  border-bottom: solid 1px lightgray;
+  transform: rotate(-45deg);
+}
+
+.ms-pac-man {
+  position: absolute;
+  z-index: 3000;
+  transform: rotate(0deg)
+}
+
+.message {
+  position: absolute;
+  z-index: 50;
+  background-color: transparent;
+  font-family: 'Press Start 2P', cursive;
+  color: yellow;
+  text-align: center;
+  align-content: center;
+}

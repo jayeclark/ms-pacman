@@ -11,44 +11,6 @@ let restartGhosts = false;
 let restartRelease = false;
 let score = 0;
 
-const d = {'left':'','right':'','up':'','down':''};
-d.left =  {'transform' : 'rotateY(180deg)',
-           'speed' : -speed,
-           'row' : 0,
-           'col' : -1, 
-           'reverse' : 'right',
-           'eyetop' : ((cellW / 6) + fringeW) + 'px',
-           'eyeleft' : (fringeW * 2) + 'px',
-           'pupiltop' : ((cellW / 6) + fringeW * 2.5) + 'px',
-           'pupilleft' : (fringeW * 2) + 'px'};
-d.right = {'transform' : 'rotate(0deg)',
-           'speed' : speed,
-           'row':0,
-           'col':1, 
-           'reverse' : 'left',
-           'eyetop' : ((cellW / 6) + fringeW) + 'px',
-           'eyeleft' : (fringeW * 3) + 'px',
-           'pupiltop' : ((cellW / 6) + fringeW * 2.5) + 'px',
-           'pupilleft' : (fringeW * 4) + 'px'};
-d.up =    {'transform' : 'rotate(90deg) rotateY(180deg)',
-           'speed' : -speed,
-           'row':-1,
-           'col':0, 
-           'reverse' : 'down',
-           'eyetop' : ((cellW / 6) + fringeW) + 'px',
-           'eyeleft' : (fringeW * 2.5) + 'px',
-           'pupiltop' : ((cellW / 6) + fringeW * 0.5) + 'px',
-           'pupilleft' : (fringeW * 3) + 'px'}
-d.down =  {'transform' : 'rotate(90deg)',
-           'speed' : speed,
-           'row':1,
-           'col':0, 
-           'reverse' : 'up',
-           'eyetop' : ((cellW / 6) + fringeW) + 'px',
-           'eyeleft' : (fringeW * 2.5) + 'px',
-           'pupiltop' : ((cellW / 6) + fringeW * 2.5) + 'px',
-           'pupilleft' : (fringeW * 3) + 'px'};
-
 // Deprioritize a button after it has been clicked
 const buttonSwap = () => {
 
@@ -139,7 +101,7 @@ function cache(dir) {
 }
 
 // Update the position of Ms PacMan
-function update() {
+function update(board=board2) {
 
   if (restarted === true) {return false;}
   count++;
@@ -175,8 +137,8 @@ function update() {
           msPacMan.el.style.top = msPacMan.position.y;
       }
   
-      msPacMan.rcPos.row = Math.floor(msPacMan.position.y / cellW);
-      msPacMan.rcPos.col = Math.floor(msPacMan.position.x / cellW);
+      msPacMan.rcPos.row = Math.floor(msPacMan.position.y / board.tileW);
+      msPacMan.rcPos.col = Math.floor(msPacMan.position.x / board.tileW);
     }
 
   }
@@ -207,9 +169,7 @@ function updateGhosts() {
   // correct starting position if applicable
 
   ghosts.forEach(ghost=> {
-
     if (ghost.free === 'free') {
-
       if (ghost.position.x % ghost.speed > 0) {
         ghost.position.x = ghost.position.x + ghost.position.x % ghost.speed;
         ghost.el.style.left = ghost.position.x;
@@ -218,50 +178,24 @@ function updateGhosts() {
         ghost.position.y = ghost.position.y + ghost.position.y % ghost.speed;
         ghost.el.style.top = ghost.position.y;
       }
-
     }
-
   })
-
 
   if (stop === false) {
 
     for (let ghost of ghosts) {
 
       if(ghost.free === 'free' || ghost.free === 'returning') {
-  
-        // check if the ghost can change direction 
-        
+        // check if the ghost can change directions
         ghost.pickDir();
         ghost.move(ghost.direction);
-        //checkGhostMoves(ghost);
-
-        // change direction to chase pacman, go home, or run from pacman
-
-        //if (ghost.direction === 'left' || ghost.direction === 'right' ) {
-        //  ghost.position.x += ghost.speed;
-        //  ghost.el.style.left = ghost.position.x;
-        //} else if (ghost.direction === 'up' || ghost.direction === 'down' ){
-        //    ghost.position.y += ghost.speed;
-        //    ghost.el.style.top = ghost.position.y;
-       // }
-
-        //ghost.rcPos.row = Math.floor(ghost.position.y / cellW);
-        //ghost.rcPos.col = Math.floor(ghost.position.x / cellW);
-      
       }
-
     }
-
   }
-
   setTimeout(updateGhosts, 50);
-
 }
 
-
 function checkDots(item) {
-
   // find all dots in the current cell
   let classCode = 'dot-'+item.rcPos.col + '-' + item.rcPos.row;
   let next = nextPos(item.rcPos,item.direction);
@@ -276,20 +210,20 @@ function checkDots(item) {
   for (let i = 0; i < dots.length; i++) {
 
     const dot = dots[i];
-    let dotW = dotWidth; 
-    if (dot.classList.contains('big')) {dotW = parseInt(dot.style.width);} 
+    let {tileW, pacDotW, pacWidth} = board2; 
+    if (dot.classList.contains('big')) {pacDotW = parseInt(dot.style.width);} 
 
     let dotLeft = parseInt(dot.style.left);
-    let dotRight = dotLeft + dotW;
+    let dotRight = dotLeft + pacDotW;
     let dotTop = parseInt(dot.style.top);
-    let dotBottom = dotTop + dotW;
+    let dotBottom = dotTop + pacDotW;
     let itemLeft = parseInt(item.el.style.left);
     let itemTop = parseInt(item.el.style.top);
 
 
-    let leftBoundary = itemLeft + cellW - pacWidth / 2;
+    let leftBoundary = itemLeft + tileW - pacWidth / 2;
     let rightBoundary = leftBoundary + pacWidth;
-    let topBoundary = itemTop + cellW - pacWidth / 2;
+    let topBoundary = itemTop + tileW - pacWidth / 2;
     let bottomBoundary = topBoundary + pacWidth;
 
     function removeDot(id) {
@@ -344,11 +278,14 @@ function checkGhostCollision() {
   // if collided with a ghost, end game
  
   let collidedGhosts = [];
-  let pacMar = parseInt(msPacMan.el.style.margin);
-  let pacL = parseInt(msPacMan.el.style.left) + parseInt(msPacMan.el.style.margin);
-  let pacR = parseInt(msPacMan.el.style.left) + parseInt(msPacMan.el.style.margin) + parseInt(msPacMan.el.width);
-  let pacT = parseInt(msPacMan.el.style.top) + parseInt(msPacMan.el.style.margin);
-  let pacB = parseInt(msPacMan.el.style.top) + parseInt(msPacMan.el.style.margin) + parseInt(msPacMan.el.width);
+
+  //const style = window.getComputedStyle(msPacMan.el)
+  const {left, margin, top, width} = window.getComputedStyle(msPacMan.el);
+
+  let pacL = parseInt(left) + parseInt(margin);
+  let pacR = parseInt(left) + parseInt(margin) + parseInt(width);
+  let pacT = parseInt(top) + parseInt(margin);
+  let pacB = parseInt(top) + parseInt(margin) + parseInt(width);
   let pacDir = msPacMan.direction;
 
   ghosts.forEach(ghost => {
@@ -356,11 +293,12 @@ function checkGhostCollision() {
     let ghostCollision = false;
     if (ghost.free === 'free') {
 
-      let ghostMar = parseFloat(ghost.el.style.margin);
-      const ghostL = parseFloat(ghost.el.style.left) + ghostMar;
-      const ghostR = parseFloat(ghost.el.style.left) + ghostMar + parseFloat(ghost.el.style.width);
-      const ghostT = parseFloat(ghost.el.style.top) + ghostMar;
-      const ghostB = parseFloat(ghost.el.style.top) + ghostMar + parseFloat(ghost.el.style.height);
+      const {margin: gMargin, left: gLeft, top: gTop, width: gWidth, height: gHeight} = window.getComputedStyle(ghost.el);
+
+      const ghostL = parseFloat(gLeft) + parseFloat(gMargin);
+      const ghostR = parseFloat(gLeft) + parseFloat(gMargin) + parseFloat(gWidth);
+      const ghostT = parseFloat(gTop) + parseFloat(gMargin);
+      const ghostB = parseFloat(gTop) + parseFloat(gMargin) + parseFloat(gHeight);
       const ghostCx = (ghostL + ghostR) / 2;
       const ghostCy = (ghostT + ghostB) / 2;
 
@@ -408,8 +346,10 @@ function checkGhostCollision() {
 
     collidedGhosts.forEach(id=>{
       let ghostEl = document.getElementById(id);
-      let ghostL = parseFloat(ghostEl.style.left) + parseFloat(ghostEl.style.margin);
-      let ghostT = parseFloat(ghostEl.style.top) + parseFloat(ghostEl.style.margin);
+      const {margin: gMargin, left: gLeft, top: gTop, width: gWidth, height: gHeight} = window.getComputedStyle(ghostEl);
+
+      let ghostL = parseFloat(gLeft) + parseFloat(gMargin);
+      let ghostT = parseFloat(gTop) + parseFloat(gMargin);
       let ghostEaten = false;
 
       if ((ghostL <= pacL && pacDir === 'left') || (ghostL >= pacL && pacDir === 'right') ||
@@ -559,11 +499,11 @@ function spawn(item) {
 
 }
 
-function scoreDivAdd(pos) {
-
+function scoreDivAdd(pos,board=board2) {
+  const tileW = board.tileW;
   let newDiv = document.createElement('div');
-  newDiv.style.width = cellW * 2;
-  newDiv.style.height = cellW * 2;
+  newDiv.style.width = tileW * 2;
+  newDiv.style.height = tileW * 2;
   newDiv.style.position = 'absolute';
   newDiv.style.display = '';
   newDiv.style.backgroundColor = 'transparent';
@@ -582,55 +522,55 @@ function scoreDivAdd(pos) {
 
 }
 
+
+// releases new ghosts from the box as applicable
 function release(board) {
 
-  // releases new ghosts as applicable
-
-  // stop the function if the game is restarted
+  // stop function if the game is restarted
   if (restarted === true || restartRelease === true) {return false;}
 
-  // only proceed if there are notfree ghosts
-  if (ghosts.every(ghost => ghost.free !== 'notfree') === false && stop === false) {
+  // only proceed if there are ghosts in position in the box
+  const positions = Ghost.boxPositions();
+  if (Object.keys(positions).every(pos => !positions[pos]) === false) {
 
-    // see which box positions are occupied
-    let positions = boxPositions();
     let targetBoxPos = '';
 
     // center leaves first, followed by left and then right
-    if (positions.center === true) {targetBoxPos = 'center'}
-    else if (positions.left === true) {targetBoxPos = 'left'}
-    else if (positions.right == true) {targetBoxPos = 'right'}
+    if (positions.center) {targetBoxPos = 'center'}
+    else if (positions.left) {targetBoxPos = 'left'}
+    else if (positions.right) {targetBoxPos = 'right'}
 
-    ghosts.forEach(ghost=>{
+    // get the ghost in the target position
+    ghost = ghosts.filter(g => g.boxPosition === targetBoxPos)[0];
 
-      if (ghost.boxPosition === targetBoxPos) {
+    // open the gate
+    const ghostGate = document.getElementById('ghost-gate');
+    ghostGate.style.backgroundColor = 'black';
 
-        const ghostGate = document.getElementById('ghost-gate');
-        ghostGate.style.backgroundColor = 'black';
-  
-        leave(ghost,board);
-  
-        function leave(ghost) {
-          if (restarted === true) {return false;}
-          if (ghost.free !== 'notfree') {
-            for (let otherGhost of ghosts) {
-              if (otherGhost.boxPosition === 'center' && ghostsInBox <= 2) {
-                reArrange(otherGhost);
-              }
-            }
-            return true;}
-          ghost.leaveBox();
-          setTimeout(function() {leave(ghost)},50);
+    leave(ghost,board);
+
+    function leave(ghost) {
+      if (restarted === true) {return false;}
+      if (ghost.free === 'free') {
+        // recalculate box positions
+        let newPos = Ghost.boxPositions();
+        if (newPos.center !== '' && (newPos.left === false || newPos.right === false)) {
+          // find and move center ghost
+          otherGhost = ghosts.filter(g => g.boxPosition === 'center')[0];
+          reArrange(otherGhost);
         }
-  
-        function reArrange(ghost) {
-          if (ghost.reshuffle() === true) {return false;}
-          ghost.reshuffle();
-          setTimeout(function() {reArrange(ghost)},50)
-        }
+        return true;
       }
-    })
+      ghost.leaveBox();
+      setTimeout(function() {leave(ghost)},50);
+    }
 
+    function reArrange(ghost) {
+      let result = ghost.reshuffle();
+      if (result || restarted) {return false;}
+      setTimeout(function() {reArrange(ghost)},50)
+    }
+    
   }
 
   setTimeout(function() {release(board);},4000)
@@ -797,19 +737,8 @@ function teleport(item,board=board2) {
     item.rcPos.col = board.cols - 3;
   }
 
-  else if (item.position.x > (board.cols - 2) * cellW && item.direction === 'right') {
+  else if (item.position.x > (board.cols - 2) * board.tileW && item.direction === 'right') {
     item.position.x = 0;
     item.rcPos.col = 0;
   }
-
-}
-
-function boxPositions() {
-  
-  const positions = {left: false, center: false, right: false}
-  for (let ghost of ghosts) {if (ghost.boxPosition !== 'none' && ghost.boxPosition !== '') {
-    positions[ghost.boxPosition] = true;}
-  }
-  return positions;
-
 }

@@ -46,8 +46,28 @@ class RcPos {
   get top() { return (new RcPos(this.row - 1, this.col)) }
 }
 
-class Board {
+class Directions {
+  constructor(board) {
+    const {tileW, fringeW} = board;
+    this.left = {transform: 'rotateY(180deg)', reverse: 'right'};
+    this.right = {transform: 'rotate(0deg)', reverse: 'left'};
+    this.up = {transform: 'rotate(90deg) rotateY(180deg)', reverse: 'down'};
+    this.down = {transform: 'rotate(90deg)', reverse: 'up'};
 
+    for (let dir of ['left', 'right','up','down']) {
+      const obj = this[dir];
+      obj.row = (dir === 'left' || dir === 'right') ? 0 : dir === 'up' ? -1 : 1
+      obj.col = (dir === 'up' || dir === 'down') ? 0 : dir === 'left' ? -1 : 1
+      obj.speed = (dir == 'up' || dir === 'left') ? -board.speed : board.speed
+      obj.eyetop = (tileW / 6 + fringeW) + 'px';
+      obj.eyeleft = fringeW * 2.5 + obj.col * fringeW * 0.5;
+      obj.pupiltop = dir === 'down' ? (tileW / 6 + fringeW * 3 ) + 'px' : (tileW / 6 + fringeW * 2.5 + obj.row * fringeW * 2) + 'px'
+      obj.pupilleft = (fringeW * 3 + fringeW * obj.col) +'px';
+    }
+  }
+}
+
+class Board {
   constructor(arr,speed) {
     this.layout = arr;
     const rowHeight = Math.floor((+window.innerHeight - 40) / ((board.length + 2) * speed)) * speed;
@@ -68,16 +88,29 @@ class Board {
     styleSheet.innerHTML += `.wall {height: ${this.tileW + 1}; width: ${this.tileW + 1}}`;
     styleSheet.innerHTML += `.inner-corner {height: ${this.tileW / 2}; width: ${this.tileW / 2}}`;
 
-    let radial = `radial-gradient(circle ${this.tileW / 2}px at POSITION,`
-    radial += `rgba(0,0,0,0) 0%, rgba(0,0,0,0) ${(this.tileW / 2) - 3}px,`
-    radial += ` #e33022 ${(this.tileW / 2) - 3}px, #e33022 100%, #f4bb9c 100%)`;
+    let radial = `radial-gradient(circle ${this.cornerW}px at POSITION,`
+    radial += `rgba(0,0,0,0) 0%, rgba(0,0,0,0) ${(this.cornerW) - 3}px,`
+    radial += ` #e33022 ${(this.cornerW) - 3}px, #e33022 100%, #f4bb9c 100%)`;
 
     let positions = {'top-left': 'right 100% bottom 100%','top-right': 'left 100% bottom 100%', 'bottom-left': 'right 100% top 100%', 'bottom-right': 'left 100% top 100%'};
     for (let dir in positions) {styleSheet.innerHTML += `.inner-${dir} {background-image: ${radial.replace('POSITION',positions[dir])}}`;}
 
-    styleSheet.innerHTML += `.pac-dot {width: ${Math.floor(this.tileW / 9) * 2};height: ${Math.floor(this.tileW / 9) * 2}}`
-
+    styleSheet.innerHTML += `.pac-dot {width: ${this.pacDotW}px;height: ${this.pacDotW}px}`;
+    styleSheet.innerHTML += `.ms-pac-man {width: ${this.tileW * 1.5};margin: ${Math.floor((this.tileW * 0.5) / 2)}px}`;
+    styleSheet.innerHTML += `.ghost {width: ${this.tileW * 1.5}px; height: ${this.tileW * 1.5 - this.fringeW * 2}px; margin: ${this.tileW / 4}px}`;
+    styleSheet.innerHTML += `.fringe {width: ${this.fringeW * 2}px; height: ${this.fringeW * 2}px; top: ${(this.tileW * 1.75) - this.fringeW * 4}px}`;
+    styleSheet.innerHTML += `.eyeball {width: ${this.fringeW * 3}px;height:${this.fringeW * 4}px}`;
+    styleSheet.innerHTML += `.pupil {width: ${this.fringeW * 2}px;height:${this.fringeW * 2}px}`;
+    styleSheet.innerHTML += `.blue-pupil {width: ${this.fringeW * 2}px;height: ${this.fringeW * 2}px; top: ${this.tileW / 6 + this.fringeW * 2}px}`;
+    const sideSq = ((this.fringeW * 3) ** 2) / 2;
+    const side = Math.floor(sideSq ** 0.5);
+    styleSheet.innerHTML += `.blue-frown {width: ${side}px; height: ${side}px; top: ${this.tileW / 6 + this.fringeW * 6}px}`;
   }
+
+  get fringeW() {return Math.floor(this.tileW * 1.5 / 12)}
+  get cornerW() {return this.tileW / 2}
+  get pacDotW() {return Math.floor(this.tileW / 9) * 2}
+  get pacWidth() {return this.tileW * 1.5}
 
   tile(rcPos) {
     let [row, col] = [rcPos.row, rcPos.col];
@@ -155,14 +188,11 @@ class Wall {
         game.appendChild(inner);
       }
     }
-
     // remove borders as needed
     for (let dir of ['top','bottom','left','right']) {
       if (board.type(board.tile(rcPos[dir])) !== 'hall') {block.style['border'+(dir.charAt(0)).toUpperCase()+dir.slice(1)] = 'none';}
     }
-
     return block;
-
   }
 
   makeInnerCorner(upDown,leftRight,block,board) {
@@ -187,14 +217,14 @@ class PacDot {
     dot.classList.add('pac-dot');
     dot.classList.add('pac-dot-'+rcPos.col+'-'+rcPos.row);
 
-    dot.style.top = board.tileW * (rcPos.row + 1) - dotWidth / 2;
-    dot.style.left = board.tileW * (rcPos.col + 1) - dotWidth / 2;
+    dot.style.top = board.tileW * (rcPos.row + 1) - board.pacDotW / 2;
+    dot.style.left = board.tileW * (rcPos.col + 1) - board.pacDotW / 2;
 
     if (big === true) {
-      dot.style.width = dotWidth * 4;
-      dot.style.height = dotWidth * 4;
-      dot.style.top = cellW * (rcPos.row + 1) - dotWidth * 4 / 2;
-      dot.style.left = cellW * (rcPos.col + 1) - dotWidth * 4 / 2;
+      dot.style.width = board.pacDotW * 4;
+      dot.style.height = board.pacDotW * 4;
+      dot.style.top = board.tileW * (rcPos.row + 1) - board.pacDotW * 4 / 2;
+      dot.style.left = board.tileW * (rcPos.col + 1) - board.pacDotW * 4 / 2;
       dot.style.borderRadius = '50%';
       dot.classList.add('big');
     }   
@@ -208,34 +238,34 @@ class GhostBox {
 
   constructor(startPos,endPos,board) {
       // Make the ghost div
-  let cellW = board.tileW;
+  let tileW = board.tileW;
 
-  let targetX = startPos.col * cellW - cellW / 2;
+  let targetX = startPos.col * tileW - tileW / 2;
   if (targetX % Math.abs(speed) > 0) {targetX -= targetX % Math.abs(speed);}
-  board.ghostGateX = (startPos.col + (endPos.col - startPos.col) / 2 - 0.5) * cellW;
-  board.ghostGateY.start = cellW * (startPos.row - 2);
-  board.ghostGateY.end = board.ghostGateY.start + cellW * (endPos.row - startPos.row);
+  board.ghostGateX = (startPos.col + (endPos.col - startPos.col) / 2 - 0.5) * tileW;
+  board.ghostGateY.start = tileW * (startPos.row - 2);
+  board.ghostGateY.end = board.ghostGateY.start + tileW * (endPos.row - startPos.row);
 
   let block = document.createElement('div');
   block.classList.add('outer-ghostbox');
-  block.style.top = cellW * startPos.row;
-  block.style.left = cellW * startPos.col;
-  block.style.height = cellW * (endPos.row - startPos.row + 1);
-  block.style.width = cellW * (endPos.col - startPos.col + 1);
+  block.style.top = tileW * startPos.row;
+  block.style.left = tileW * startPos.col;
+  block.style.height = tileW * (endPos.row - startPos.row + 1);
+  block.style.width = tileW * (endPos.col - startPos.col + 1);
 
   let innerDiv = document.createElement('div');
   innerDiv.classList.add('inner-ghostbox');
-  innerDiv.style.top = cellW / 3 - 3;
-  innerDiv.style.left = cellW / 3 - 3;
-  innerDiv.style.height = cellW * 4 - (cellW * 2/ 3);
-  innerDiv.style.width = cellW * 7 - (cellW * 2 / 3);
+  innerDiv.style.top = tileW / 3 - 3;
+  innerDiv.style.left = tileW / 3 - 3;
+  innerDiv.style.height = tileW * 4 - (tileW * 2/ 3);
+  innerDiv.style.width = tileW * 7 - (tileW * 2 / 3);
 
   let door = document.createElement('div');
   door.id = 'ghost-gate';
   door.classList.add('door');
-  door.style.left = cellW * 2 + cellW / 4;
-  door.style.height = cellW / 3 + 3;
-  door.style.width = cellW * 2 + 3;
+  door.style.left = tileW * 2 + tileW / 4;
+  door.style.height = tileW / 3 + 3;
+  door.style.width = tileW * 2 + 3;
 
   block.appendChild(innerDiv);
   block.appendChild(door);
@@ -251,162 +281,85 @@ class MessageDiv {
     // args passed are id, top, left, height, width, str, board
     let messageDiv = document.createElement('div');
     messageDiv.id = args.id;
-    messageDiv.innerHTML = args.innerHTML;
-    messageDiv.style.position = 'absolute';
-    messageDiv.style.zIndex = 50;
-    messageDiv.style.backgroundColor = 'none';
+    messageDiv.classList.add('message');
+    messageDiv.innerHTML = `<p style='align: center;'>${args.innerHTML}</p>`;
     messageDiv.style.padding = board.tileW / 4;
-    messageDiv.style.fontFamily = '\'Press Start 2P\',cursive';
-    messageDiv.style.color = 'yellow';
-    messageDiv.style.textAlign = 'center';
-    messageDiv.style.alignContent = 'center';
 
-    for (let param in args.style) {
-      messageDiv.style[param] = args.style[param];
-    }
-
+    for (let param in args.style) {messageDiv.style[param] = args.style[param];}
     return messageDiv;
   }
 }
 
 class Ghost {
+  constructor(pos,gColor,dir,id,free,board=board2) {
 
-  constructor(pos,gColor,dir,id,free,board) {
-
-      const rcPos = new RcPos(pos.row,pos.col);
-      const cellW = board.tileW;
-      const fringeW = Math.floor(board.tileW * 1.5 / 12);
-      const fringeWex = board.tileW * 1.5 - fringeW * 10;
+      const {row, col} = pos;
+      const {tileW, fringeW} = board;
+      const fringeWex = tileW * 1.5 - fringeW * 10;
   
       const ghostDiv = document.createElement('div');
       ghostDiv.id = id;
+      ghostDiv.classList.add('ghost');
       ghostDiv.style.backgroundColor = gColor;
-      ghostDiv.style.backgroundSize = '100%';
-      ghostDiv.style.backgroundImage = 'none';
-      ghostDiv.style.position = 'absolute';
-      ghostDiv.style.zIndex = 900;
-      ghostDiv.style.height = cellW * 1.5 - fringeW * 2;
-      ghostDiv.style.width = cellW * 1.5;
-      ghostDiv.style.borderTopLeftRadius = '50%';
-      ghostDiv.style.borderTopRightRadius = '50%';
-      ghostDiv.style.margin = (cellW / 4) + 'px'
-      ghostDiv.style.top = cellW * (rcPos.row);
-      ghostDiv.style.left = cellW * (rcPos.col) - cellW / 2;
-  
-      function createChild(args) {
-        const item = document.createElement('div');
-        item.style.position = 'absolute';
-
-        for (let property in args) {
-
-          if (property === 'class') {item.classList.add(args[property])}
-          else if (typeof args[property] === 'object') {
-            for (let el in args[property]) {
-              item.style[el] = args[property][el];
-            }
-          }
-          else {
-            item.style[property] = args[property];
-          }
-        }
-        return item;
-      }
+      ghostDiv.style.top = tileW * (row);
+      ghostDiv.style.left = tileW * (col) - tileW / 2;
   
       let childDivArr = [];
       let leftCache = 0;
 
       for (let i = 1; i < 8; i++) {
-
-        let params = {height: fringeW * 2 + 'px',
-                      width: (fringeW * 2) + 'px',
-                      class: 'fringe',
-                      margin: '0px',
-                      top: parseInt((cellW / 4) + cellW * 1.5 - fringeW * 4) + 'px',
-                      left: leftCache,
-                      borderCorners: {borderTopRightRadius: '0%',
-                                      borderBottomRightRadius: '50%',
-                                      borderBottomLeftRadius: '50%',
-                                      borderTopLeftRadius: '0%'}};
-        if (i % 2 > 0) {params.backgroundColor = gColor;} else {
-          params.backgroundColor = 'none';
-          params.backgroundImage = 'radial-gradient(ellipse at top 51% left 50%, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 70%, '+gColor+' 70%)';
+        let props = {classes: ['fringe'], left: leftCache, width: (fringeW * 2) + 'px'};
+        if (i % 2 > 0) {props.backgroundColor = gColor;} else {
+          props.backgroundColor = 'transparent';
+          props.backgroundImage = 'radial-gradient(ellipse at top 51% left 50%, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 70%, '+gColor+' 70%)';
         }
 
-        if (i === 1 || i === 7) {params.width = fringeW + 'px';}
-        else if (i === 4) {params.width = fringeWex + 'px';}  
-        if (i === 1) {params.borderCorners.borderBottomLeftRadius = '0%'}
-        else if (i === 7) {params.borderCorners.borderBottomRightRadius = '0%'}
+        if (i === 1 || i === 7) {props.width = fringeW + 'px';} else if (i === 4) {props.width = fringeWex + 'px';}  
+        if (i === 1) {props.classes.push('fringe-left')} else if (i === 7) {props.classes.push('fringe-right')}
+        else {props.classes.push('fringe-inner')}
 
-        leftCache += parseFloat(params.width);
-        childDivArr.push(params);
+        leftCache += parseFloat(props.width);
+        childDivArr.push(props);
       }
 
-      childDivArr.push({height: fringeW * 4 + 'px', width: fringeW * 3 + 'px', 
-                        class: 'eyeball', margin: '0px', top: d[dir].eyetop, 
-                        left: d[dir].eyeleft, backgroundColor: 'white',
-                        borderRadius: '50%'});
-      childDivArr.push({height: fringeW * 4, width: fringeW * 3, 
-                        class: 'eyeball', margin: '0px', 'top' : d[dir].eyetop, 
-                        left: (fringeW * 5 + parseInt(d[dir].eyeleft)) + 'px', 
-                        backgroundColor: 'white', borderRadius: '50%'});
-
-      childDivArr.push({height: fringeW * 2, width: fringeW * 2, 
-                        class: 'pupil', margin: '0px', top: d[dir].pupiltop, 
-                        left: d[dir].pupilleft, backgroundColor: 'blue',
-                        borderRadius: '50%'});
-      childDivArr.push({height: fringeW * 2, width: fringeW * 2, 
-                        class : 'pupil', margin : '0px', top : d[dir].pupiltop, 
-                        left: (fringeW * 5 + parseInt(d[dir].pupilleft)) + 'px', 
-                        backgroundColor: 'blue', borderRadius: '50%'});
+      childDivArr.push({classes: ['eyeball'], top: d[dir].eyetop, left: d[dir].eyeleft});
+      childDivArr.push({classes: ['eyeball'], top: d[dir].eyetop, left: (fringeW * 5 + parseInt(d[dir].eyeleft)) + 'px'});
+      childDivArr.push({classes: ['pupil'], top: d[dir].pupiltop, left: d[dir].pupilleft});
+      childDivArr.push({classes : ['pupil'], top : d[dir].pupiltop, left: (fringeW * 5 + parseInt(d[dir].pupilleft)) + 'px'});
 
       // eyes and mouth for blue mode, display = none
-      let adj = Math.round(cellW * 0.75 - fringeW * 5)/4;
-      let hyp = (fringeW * 3) ** 2;
-      let sideSq = hyp / 2;
-      let side = Math.floor(sideSq ** 0.5);
-      childDivArr.push({height: fringeW * 2, width: fringeW * 2, 
-                        display: 'none', class: 'blue-pupil',
-                        margin: '0px', top: ((cellW / 6) + fringeW * 2) + 'px', 
-                        left: (fringeW * 3) + 'px', 
-                        backgroundColor: 'lightgray', 
-                        borderRadius: '50%'});
-      childDivArr.push({height: fringeW * 2, width: fringeW * 2, 
-                        display: 'none', class: 'blue-pupil',
-                        margin: '0px', top: ((cellW / 6) + fringeW * 2) + 'px', 
-                        left: (fringeW * 8) + 'px', 
-                        backgroundColor: 'lightgray', 
-                        borderRadius : '50%'});
-      
+      childDivArr.push({classes: ['blue-pupil'],display:'none',left: (fringeW * 3) + 'px'});
+      childDivArr.push({classes: ['blue-pupil'],display:'none',left: (fringeW * 8) + 'px'});
+
+      // frown for blue mode
+      const adj = Math.round(tileW * 0.75 - fringeW * 5)/4;
       for (let i = 1; i < 5; i++) {
-        let frown = {height: Math.floor(side) + 'px', width: Math.floor(side) + 'px', 
-                   display: 'none', class: 'blue-frown',
-                   margin: '0px', top: ((cellW / 4) + cellW * 1.5 - fringeW * 8) + 'px', 
-                   backgroundColor: 'none', 
-                   borderLeft: 'solid 1px lightgray',
-                   borderBottom: 'solid 1px lightgray',
-                   transform:  'rotate(-45deg)'};
-        frown.left = (adj * (2 - i)) + fringeW + (fringeW * 3 * (i-1)) + adj;
+        let frown = {classes: ['blue-frown'],display:'none',left: adj * (3 - i) + fringeW * (3 * i - 2)};
         childDivArr.push(frown);
       }
     
-      childDivArr.forEach(div => {
-  
-        let tempDiv = createChild(div);
-        ghostDiv.appendChild(tempDiv);
-  
-      })
-  
-      this.el = ghostDiv;
-      this.color = ghostDiv.style.backgroundColor;
-      this.lastCorner = '';
-      this.cache = '';
-      this.speed = (dir === 'left' || dir === 'up') ? -board.speed : board.speed ;
-      this.direction = dir;
-      this.free = free;
-      this.rcPos = rcPos;
-      this.board = board;
-      this.position = {'x': (cellW * (rcPos.col) - cellW / 2),'y': cellW * (rcPos.row)};
+      childDivArr.forEach(div => ghostDiv.appendChild( createChild(div)))
 
+      this.rcPos = new RcPos(row,col);
+      this.position = findXY(this.rcPos);
+      const [el, color, direction] = [ghostDiv, gColor, dir, (dir === 'left' || dir === 'up') ? -board.speed : board.speed ];
+      Object.assign(this, {el, color, direction, speed, free, board});
+
+      function createChild(args) {
+        const item = document.createElement('div');
+        for (let property in args) {property === 'classes' ? item.classList.add(...args[property]) : item.style[property] = args[property]}
+        return item;
+      }
+
+  }
+
+  static boxPositions() {
+  
+    const positions = {left: '', center: '', right: ''}
+    for (let ghost of ghosts) {if (ghost.boxPosition !== 'none' && ghost.boxPosition !== '') {
+      positions[ghost.boxPosition] = ghost.el.id;}
+    }
+    return positions;
   }
 
   leaveBox() {
@@ -554,7 +507,7 @@ class Ghost {
     
       let startDir = this.direction;
       let targPos;
-      const cellW = this.board.tileW;
+      const tileW = this.board.tileW;
     
       // set the target for the ghost - either toward or away from pacman, or toward the box
       if (this.free === 'free' && munchModeActive == false) {
@@ -572,12 +525,12 @@ class Ghost {
         }
       } else if (this.free === 'free' && munchModeActive == true) {
         targPos = {row: this.board.rows - msPacMan.rcPos.row, col: this.board.cols - msPacMan.rcPos.col};
-        targPos.x = targPos.row * cellW;
-        targPos.y = targPos.col * cellW;
+        targPos.x = targPos.row * tileW;
+        targPos.y = targPos.col * tileW;
       } else if (this.free === 'returning') {
         let targetX = this.board.ghostGateX;
         if (targetX % Math.abs(speed) > 0) {targetX -= targetX % Math.abs(speed);}
-        targPos = { row: Math.floor(this.board.ghostGateY.start) / cellW, col: Math.round(targetX/cellW), x: targetX, y: this.board.ghostGateY.start};
+        targPos = { row: Math.floor(this.board.ghostGateY.start) / tileW, col: Math.round(targetX/tileW), x: targetX, y: this.board.ghostGateY.start};
       }
     
       if (this.position.x === targPos.x && this.position.y === targPos.y && this.free === 'returning') {
@@ -623,7 +576,7 @@ class Ghost {
           if (this.direction != 'down') {this.moveEyes('down',this.board)};
           this.direction = 'down';
           this.speed = d['down'].speed;
-          this.position.x = 14 * cellW - cellW / 2;
+          this.position.x = 14 * tileW - tileW / 2;
           this.el.style.left = this.position.x + "px";
     
           let ghostGate = document.getElementById('ghost-gate');
@@ -650,7 +603,7 @@ class Ghost {
       }
     
       // do these calculations if the ghost has hit a tile square-on
-      else if (this.position.x % cellW === 0 && this.position.y % cellW === 0 && this.isInBox === false) {
+      else if (this.position.x % tileW === 0 && this.position.y % tileW === 0 && this.isInBox === false) {
     
         let dirs = ['left','right','up','down'];
     
@@ -840,7 +793,7 @@ class Ghost {
 
   moveEyes(dir,board=board2,ds = -1) {
     if (ds = -1) {
-      const fringeW = Math.floor(board.tileW * 1.5 / 12);
+      const {fringeW} = board;
       ds = {left: {row: 0, col: -1,
                     eyeleft: fringeW * 2,
                     pupiltop: (board.tileW / 6) + fringeW * 2.5,
@@ -878,38 +831,28 @@ class MsPacMan {
   
     let row = board.layout.findIndex(x => x.includes('P'));
     let col = board.layout[row].indexOf('P');
-    let cellW = board.tileW;
     let pacPos = {row, col};
 
-    let x = pacPos.col * cellW;
-    let y = pacPos.row * cellW;
-
-    this.position = {x,y};
+    this.position = findXY(pacPos);
     this.speed = board.speed;
     this.rcPos = pacPos;
     this.cache = '';
     this.direction = 'right';
 
-      // Add image to div id = game
-      let game = document.getElementById('game');
-      let el = document.createElement('img');
-      el.style.position = 'absolute';
-      el.style.zIndex = '200';
-      el.id = 'mspacman';
-      el.src = './images/mspacman1.png';
-      el.style.transform = 'rotate(0deg)';
-      let topPad = Math.floor((board.tileW * 0.5) / 2);
-      let rightPad = Math.floor((board.tileW * 0.5) / 2);
-      el.style.margin = topPad + "px " + rightPad + "px " + topPad + "px " + rightPad + "px";
-      el.width = board.tileW * 1.5;
-    
-      // Set position
-      el.style.left = this.position.x - board.tileW / 2;
-      el.style.top = this.position.y;
-    
-      game.appendChild(el);
+    // Add image
+    let game = document.getElementById('game');
+    let el = document.createElement('img');
+    el.id = 'mspacman';
+    el.classList.add('ms-pac-man');
+    el.src = './images/mspacman1.png';
+  
+    // Set position
+    el.style.left = this.position.x - board.tileW / 2;
+    el.style.top = this.position.y;
+  
+    game.appendChild(el);
 
-      this.el = el;
+    this.el = el;
 
   }
 
@@ -917,7 +860,7 @@ class MsPacMan {
 
 // make a board out of the map, with speed set to 6
 const board2 = new Board(board,6);
-const [cellW, pacWidth, dotWidth, fringeW] = [board2.tileW, board2.tileW * 1.5, Math.floor(board2.tileW / 9) * 2, Math.floor(board2.tileW * 1.5 / 12)]
+const d = new Directions(board2);
 
 const [ghosts,portals] = [[],[]];
 let isMobile = false;
@@ -985,22 +928,13 @@ function drawBoardNew(board) {
 
   // Make the message divs
   //id, top, left, height, width, str, board, visibility
-
-  let [ready, over, winner] = [{id: 'ready', 
-                                style: {top: board.tileW * (board.ghostStart.row + 4), 
-                                        left: board.tileW * board.ghostStart.col,
-                                        fontSize: '2rem',
-                                        display: ''},
-                                innerHTML: 'READY!',},
-                               {id: 'game-over', 
-                                style: {top: board.tileW * (board.ghostStart.row - 1), 
-                                        left: board.tileW * (board.ghostStart.col - 1),
-                                        fontSize: '4rem',
-                                        display: 'none'},
+  const {tileW, ghostStart : {row, col}} = board;
+  let [ready, over, winner] = [{id: 'ready', innerHTML: 'READY!', style: {top: tileW * (row + 4), left: tileW * col, fontSize: '2rem'}},
+                               {id: 'game-over', style: {top: tileW * (row - 1), left: tileW * (col - 1), fontSize: '4rem', display: 'none'},
                                 innerHTML: 'GAME OVER!',},
                                {id: 'winner', 
-                                style: {top: board.tileW * (board.ghostStart.row + 1), 
-                                        left: board.tileW * (board.ghostStart.col - 4),
+                                style: {top: tileW * (row + 1), 
+                                        left: board.tileW * (col - 4),
                                         fontSize: '3.5rem',
                                         display: 'none'},
                                 innerHTML: 'WINNER!!',}];
@@ -1030,7 +964,7 @@ function drawBoardNew(board) {
       // make arrow divs and put them below the main game
   let arrowsDiv = document.createElement('div');
   let height = window.innerHeight - (board2.rows) * board2.tileW - 20;
-  let arrowW = (Math.floor(height/3 - 40)) * 2;
+  let [arrowW,arrowH] = [(Math.floor(height/3 - 40)) * 2, (Math.floor(height/3 - 40))];
   let upArrowL = (board2.cols * board2.tileW - arrowW) / 2 ;
 
   arrowsDiv.style.top = (board2.rows * board2.tileW) + 'px';
@@ -1039,10 +973,7 @@ function drawBoardNew(board) {
 
   //if (isMobile === false) {arrowsDiv.style.display = 'none';}
 
-  const positions = {up: {top: 0,left: upArrowL},
-                     down: {top: arrowW,left: upArrowL},
-                     left: {top: arrowW / 2,left: upArrowL - 20 - arrowW / 2},
-                     right: {top: arrowW / 2,left: upArrowL + arrowW}};              
+  const positions = {up: upArrowL, down: upArrowL, left: upArrowL - 20 - arrowW / 2, right: upArrowL + arrowW};              
 
   for (let dir in positions) {const tempArrow = makeArrow(dir,arrowW); arrowsDiv.appendChild(tempArrow);}
 
@@ -1051,7 +982,7 @@ function drawBoardNew(board) {
     const arrowImg = makeArrowImg(arrowW,dir);
     arrow.appendChild(arrowImg);
     arrow.classList.add('arrow');
-    [arrow.id, arrow.style.left, arrow.style.top] = [dir + '-arrow', positions[dir].left + 'px', positions[dir].top + 'px'];
+    [arrow.id, arrow.style.left, arrow.style.top] = [dir + '-arrow', positions[dir] + 'px', (arrowH + d[dir].row * arrowH) + 'px'];
     arrow.setAttribute('onclick','cache(\''+dir+'\')');
     return arrow;
   }
@@ -1062,17 +993,7 @@ function drawBoardNew(board) {
     [img.src, img.width, img.height, img.style.transform] = ['./images/arrow.png', arrowW, arrowW / 2, rotate[dir]];
     return img;
   }
-
   game.appendChild(arrowsDiv);
-}
-
-function findXY(rcPos) {
-
-  let x = rcPos.col * cellW;
-  let y = rcPos.row * cellW;
-
-  return {x, y};
-
 }
 
 window.onload = (event) => {
@@ -1082,18 +1003,13 @@ window.onload = (event) => {
   msPacMan = new MsPacMan(board2);
 }
 
-function nextPos(pos,dir) {
-  if (dir === '') {return pos;}
-  return {col: pos.col + d[dir].col, row: pos.row + d[dir].row};
-}
+function findXY(rcPos,board=board2) {return {x: rcPos.col * board.tileW, y: rcPos.row * board.tileW} }
+
+function nextPos(pos,dir) {return dir === '' ? pos : {col: pos.col + d[dir].col, row: pos.row + d[dir].row} }
 
 function isWall(pos,dir,board=board2) {
-  const wallD = {right: {row1: pos.row, row2: pos.row + 1, col1: pos.col + 1, col2: pos.col + 1},
-               down: {row1: pos.row + 1, row2: pos.row + 1, col1: pos.col, col2: pos.col + 1},
-               left: {row1: pos.row, row2: pos.row + 1, col1: pos.col, col2: pos.col},
-               up: {row1: pos.row, row2: pos.row, col1: pos.col, col2: pos.col + 1}};
-
-  const [row1, row2, col1, col2] = Object.values(wallD[dir]);
+  const [row1, row2] = [dir === 'down' ? pos.row + 1 : pos.row, dir === 'up' ? pos.row : pos.row + 1];
+  const [col1, col2] = [dir === 'right'? pos.col + 1 : pos.col, dir === 'left' ? pos.col : pos.col + 1];
   const [res1, res2]  = [board.layout[row1].charAt(col1), board.layout[row2].charAt(col2)];
-  if (res1.search(/[XG]/) >= 0 || res2.search(/[XG]/) >= 0) {return true;} else {return false;}
+  return (res1.search(/[XG]/) >= 0 || res2.search(/[XG]/) >= 0)
 }
