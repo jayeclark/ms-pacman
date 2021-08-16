@@ -932,20 +932,12 @@ function drawBoardNew(board) {
   let [ready, over, winner] = [{id: 'ready', innerHTML: 'READY!', style: {top: tileW * (row + 4), left: tileW * col, fontSize: '2rem'}},
                                {id: 'game-over', style: {top: tileW * (row - 1), left: tileW * (col - 1), fontSize: '4rem', display: 'none'},
                                 innerHTML: 'GAME OVER!',},
-                               {id: 'winner', 
-                                style: {top: tileW * (row + 1), 
-                                        left: board.tileW * (col - 4),
-                                        fontSize: '3.5rem',
-                                        display: 'none'},
+                               {id: 'winner', style: {top: tileW * (row + 1), left: board.tileW * (col - 4),fontSize: '3.5rem', display: 'none'},
                                 innerHTML: 'WINNER!!',}];
-    let readyDiv = new MessageDiv(ready,board);
-    let overDiv = new MessageDiv(over,board);
-    let winnerDiv = new MessageDiv(winner,board);
+    let [readyDiv, overDiv, winnerDiv] = [new MessageDiv(ready,board),new MessageDiv(over,board),new MessageDiv(winner,board)];
 
-    game.appendChild(readyDiv);
-    game.appendChild(overDiv);
-    game.appendChild(winnerDiv);
-  
+    game.append(readyDiv, overDiv, winnerDiv);
+
     const inky = new Ghost({'row':11,'col':14},'red','left','inky','free',board);
     const blinky = new Ghost({'row':14,'col':12},'aqua','up','blinky','notfree',board);
     const pinky = new Ghost({'row':14,'col':14},'plum','down','pinky','notfree',board);
