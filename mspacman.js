@@ -1,26 +1,15 @@
-let count = 0;
-let gCount = 0;
-let dCount = 0;
-let powerCount = 0;
-let eatenCount = 0;
-let munchModeActive = false;
-let stop = false;
-let started = false;
-let restarted = false;
-let restartGhosts = false;
-let restartRelease = false;
-let score = 0;
+let [count, gCount, dCount, powerCount, eatenCount, score] = [0,0,0,0,0,0];
+let [munchModeActive, stop, started, restarted, restartGhosts, restartRelease] = [false, false, false, false, false, false];
 
-// Deprioritize a button after it has been clicked
+// Swap the visibility of the 'Start' and 'Stop' buttons when they are clicked
 const buttonSwap = () => {
 
-  let start = document.getElementById('start');
-  if (start.style.display.includes('none')) { start.style.display = ''; } 
-  else { start.style.display = 'none'; }
+  const ids = ['start','stop'];
+  ids.forEach(id=>{
+    const button = document.getElementById(id);
+    button.style.display = button.style.display.includes('none') ? '' : button.style.display = 'none';
+  })
 
-  let stop = document.getElementById('stop');
-  if (stop.style.display.includes('none')) { stop.style.display = ''; } 
-  else { stop.style.display = 'none'; }
 }
 
 function startGame() {
@@ -47,27 +36,18 @@ function startGame() {
 
 function restartGame() {
 
-  started = false;
-  stop = false;
-  restarted = true;
-  restartRelease = true;
-  restartGhosts = false;
+  started = stop = restartGhosts = false;
+  restarted = restartRelease = true;
   
   // erase board, ghosts, and msPacMan
   const oldGame = document.getElementById('game');
+  oldGame.innerHTML = '';
 
-  while (oldGame.firstChild) {
-    oldGame.removeChild(oldGame.lastChild);
-  }
-
-  const oldScore = document.getElementById('score');
-  oldScore.innerHTML = 0;
+  document.getElementById('score').innerHTML = 0;
   score = 0;
 
   const msPacKeys = Object.keys(msPacMan);
-  msPacKeys.forEach(key=> {
-    delete msPacMan[key];
-  })
+  msPacKeys.forEach(key=> {delete msPacMan[key];})
 
   ghosts.splice(0,ghosts.length);
 
@@ -77,7 +57,6 @@ function restartGame() {
   }
   
   setTimeout(redraw,500);
-
 
   let restart = document.getElementById('restart');
   restart.style.display = 'none';
@@ -112,13 +91,11 @@ function update(board=board2) {
     document.onkeydown = checkKey;
 
     function checkKey(e) {
-    
         e = e || window.event;
         if (e.keyCode == '38' || e.keyCode == '87') { msPacMan.cache = 'up'; } 
         else if (e.keyCode == '40' || e.keyCode == '83') { msPacMan.cache = 'down'; } 
         else if (e.keyCode == '37' || e.keyCode == '65') { msPacMan.cache = 'left'; } 
         else if (e.keyCode == '39' || e.keyCode == '68') { msPacMan.cache = 'right'; }
-    
     }
   
     checkGhostCollision();
@@ -126,19 +103,9 @@ function update(board=board2) {
     if (msPacMan.speed !== 0 || msPacMan.cache !== '') {
   
       checkCollisions(msPacMan);
-
       checkDots(msPacMan);
-  
-      if (msPacMan.direction === 'left' || msPacMan.direction === 'right' ) {
-          msPacMan.position.x += msPacMan.speed;
-          msPacMan.el.style.left = msPacMan.position.x;
-      } else if (msPacMan.direction === 'up' || msPacMan.direction === 'down' ){
-          msPacMan.position.y += msPacMan.speed;
-          msPacMan.el.style.top = msPacMan.position.y;
-      }
-  
-      msPacMan.rcPos.row = Math.floor(msPacMan.position.y / board.tileW);
-      msPacMan.rcPos.col = Math.floor(msPacMan.position.x / board.tileW);
+      msPacMan.move();
+
     }
 
   }
@@ -361,24 +328,16 @@ function checkGhostCollision() {
 
       if (ghostEaten === true) { 
 
-        ghosts.forEach(x => {
+        const ghost = ghosts.filter(g => g.el.id === id)[0];
 
-          if (x.el.id === id && x.free === 'free') {
+        if (ghost.free === 'free') {
 
-            x.free = 'returning';
-            x.el.style.backgroundColor = 'transparent';
+          ghost.disAppear();
 
-            const divs = [];
-            const classTypes = ['fringe','eyeball','pupil','blue-frown','blue-pupil'];
-            classTypes.forEach(classtype => divs.push(...Array.from(x.el.getElementsByClassName(classtype))));
-            divs.forEach(div => toggleDisplay(div));
-
-            scoreDivAdd({'x': x.el.style.left, 'y':x.el.style.top});
-            score += 200;
-            document.getElementById('score').innerHTML = score;
-
-          }
-        })
+          board2.scoreDivAdd({'x': parseFloat(ghost.el.style.left), 'y': parseFloat(ghost.el.style.top)});
+          score += 200;
+          document.getElementById('score').innerHTML = score;
+        }
 
       }
 
@@ -388,9 +347,7 @@ function checkGhostCollision() {
 
 }
 
-function toggleDisplay(item) {
-  if (item.style.display === 'none') {item.style.display = ''} else {item.style.display = 'none'}
-}
+function toggleDisplay(item) {item.style.display = item.style.display === 'none' ? '' : 'none'}
 
 // Check prosimity to edges and reverse direction and image if needed
 function checkCollisions(item) {
@@ -500,17 +457,11 @@ function spawn(item) {
 }
 
 function scoreDivAdd(pos,board=board2) {
-  const tileW = board.tileW;
+  const tile = board.tileW;
   let newDiv = document.createElement('div');
-  newDiv.style.width = tileW * 2;
-  newDiv.style.height = tileW * 2;
-  newDiv.style.position = 'absolute';
-  newDiv.style.display = '';
-  newDiv.style.backgroundColor = 'transparent';
-  newDiv.style.fontFamily = '\'Press Start 2P\',cursive';
-  newDiv.style.color = 'lightgray';
-  newDiv.style.zIndex = '1000';
-  newDiv.style.textAlign = 'center';
+  newDiv.classList.add('ghost-score');
+  newDiv.style.width = tile * 2;
+  newDiv.style.height = tile * 2;
   newDiv.style.left = pos.x;
   newDiv.style.top = pos.y;
   newDiv.innerHTML = '200';
@@ -582,6 +533,7 @@ function munchMode() {
   if (stop === false) {
 
     if (munchModeActive === false) {munchModeActive = true;}
+
     // make free ghosts blue, turn off their eyes and turn on their frowns
     if (powerCount === 0) {
 
@@ -593,27 +545,18 @@ function munchMode() {
 
           let fringes = Array.from(ghost.el.getElementsByClassName('fringe'));
           fringes.forEach(fringe=> {
-            if (fringe.style.backgroundColor === ghost.color || fringe.style.backgroundColor === 'white') {fringe.style.backgroundColor = 'blue';}
+            let {backgroundColor: color, backgroundImage: image} = fringe.style;
+            if (color !== 'transparent') {fringe.style.backgroundColor = 'blue';}
             else {
-              let gradient = fringe.style.backgroundImage;
-              let newGradient = gradient.replace(ghost.color,'blue');
-              newGradient = newGradient.replace('white','blue');
-              fringe.style.backgroundImage = newGradient;
+              fringe.style.backgroundImage = image.replace(new RegExp(`white|${ghost.color}`),'blue');
             }
-            
           })
 
-          let eyeballs = Array.from(ghost.el.getElementsByClassName('eyeball'));
-          eyeballs.forEach(eye => eye.style.display = 'none');
-
-          let pupils = Array.from(ghost.el.getElementsByClassName('pupil'));
-          pupils.forEach(pupil=> pupil.style.display = 'none');
-
-          let frowns = Array.from(ghost.el.getElementsByClassName('blue-frown'));
-          frowns.forEach(frown=> frown.style.display = '');
-
-          let frownEyes = Array.from(ghost.el.getElementsByClassName('blue-pupil'));
-          frownEyes.forEach(eye=> eye.style.display = '');
+          let divs = [...Array.from(ghost.el.getElementsByClassName('eyeball')),
+                      ...Array.from(ghost.el.getElementsByClassName('pupil')),
+                      ...Array.from(ghost.el.getElementsByClassName('blue-frown')),
+                      ...Array.from(ghost.el.getElementsByClassName('blue-pupil'))];
+          divs.forEach(div => div.style.display = div.style.display === 'none' ? '' : 'none');
 
         }
 
@@ -632,33 +575,23 @@ function munchMode() {
 
         ghosts.forEach(ghost=>{
 
-          if (ghost.el.style.backgroundColor !== 'transparent') {
-  
-            if (ghost.el.style.backgroundColor === 'white' || ghost.el.style.backgroundColor === 'blue') {
-              ghost.el.style.backgroundColor = tempColor;
-            }
-  
+          let backgroundColor = ghost.el.style.backgroundColor;
+          if (backgroundColor !== 'transparent') {
+            if (backgroundColor.match(/blue|white/)) {ghost.el.style.backgroundColor = tempColor;}
             let fringes = Array.from(ghost.el.getElementsByClassName('fringe'));
-            fringes.forEach(fringe=> {
-              if (fringe.style.backgroundColor === 'blue' || fringe.style.backgroundColor === 'white') {
-                         fringe.style.backgroundColor = tempColor;
-              }
+
+            fringes.forEach(fringe => {
+              backgroundColor = fringe.style.backgroundColor;
+              if (backgroundColor.match(/blue|white/)) {fringe.style.backgroundColor = tempColor;}
               else {
                 let gradient = fringe.style.backgroundImage;
-                if (gradient.includes('blue') && tempColor !== 'blue') {
-                      let newGradient = gradient.replace('blue',tempColor);
-                      fringe.style.backgroundImage = newGradient;
-                } else if (gradient.includes('white') && tempColor !== 'white') {
-                      let newGradient = gradient.replace('white',tempColor);
-                      fringe.style.backgroundImage = newGradient;                         
-                }
-                           
+                if (gradient.includes(tempColor) === false) {
+                      fringe.style.backgroundImage = gradient.replace(/blue|white/,tempColor);
+                }          
               }
-              
             })
   
           }
-  
         })
 
       }
@@ -675,27 +608,16 @@ function munchMode() {
           ghost.el.style.backgroundColor = ghost.color;
 
           let fringes = Array.from(ghost.el.getElementsByClassName('fringe'));
-          fringes.forEach(fringe=> {
-            if (fringe.style.backgroundColor === 'blue' || fringe.style.backgroundColor === 'white' ) {fringe.style.backgroundColor = ghost.color;}
-            else {
-              let gradient = fringe.style.backgroundImage;
-              let newGradient = gradient.replace('blue',ghost.color);
-              newGradient = gradient.replace('white',ghost.color);
-              fringe.style.backgroundImage = newGradient;
-            }
-            
+          fringes.forEach(fringe => {
+            let { backgroundColor, backgroundImage } = fringe.style;
+            if (backgroundColor.match(/blue|white/)) {fringe.style.backgroundColor = ghost.color;}
+            else {fringe.style.backgroundImage = backgroundImage.replace(/blue|white/, ghost.color);}
           })
-          let eyeballs = Array.from(ghost.el.getElementsByClassName('eyeball'));
-          eyeballs.forEach(eye => eye.style.display = '');
-
-          let pupils = Array.from(ghost.el.getElementsByClassName('pupil'));
-          pupils.forEach(pupil=> pupil.style.display = '');
-
-          let frowns = Array.from(ghost.el.getElementsByClassName('blue-frown'));
-          frowns.forEach(frown=> frown.style.display = 'none');
-
-          let frownEyes = Array.from(ghost.el.getElementsByClassName('blue-pupil'));
-          frownEyes.forEach(eye=> eye.style.display = 'none');
+          let divs = [...Array.from(ghost.el.getElementsByClassName('eyeball')), 
+                      ...Array.from(ghost.el.getElementsByClassName('pupil')),
+                      ...Array.from(ghost.el.getElementsByClassName('blue-frown')),
+                      ...Array.from(ghost.el.getElementsByClassName('blue-pupil'))];
+          divs.forEach(div => div.style.display = div.style.display === 'none' ? '' : 'none');
 
         }
 
@@ -716,27 +638,11 @@ function munchMode() {
 
 }
 
-function ghostEyes(item, dir) {
-  let eyes = Array.from(item.getElementsByClassName('eyeball'));
-  let pupils = Array.from(item.getElementsByClassName('pupil'));
-
-  eyes.forEach(eye => eye.style.top = d[dir].eyetop);
-  eyes[0].style.left = d[dir].eyeleft;
-  eyes[1].style.left = (parseInt(d[dir].eyeleft) + fringeW * 5) + 'px';
-
-  pupils.forEach(pupil => pupil.style.top = d[dir].pupiltop);
-  pupils[0].style.left = d[dir].pupilleft;
-  pupils[1].style.left = (parseInt(d[dir].pupilleft) + fringeW * 5) + 'px'
-
-}
-
 function teleport(item,board=board2) {
-
   if (item.position.x <= 0 && item.direction === 'left') {
     item.position.x = (board.cols - 2) * board.tileW - board.speed;
     item.rcPos.col = board.cols - 3;
   }
-
   else if (item.position.x > (board.cols - 2) * board.tileW && item.direction === 'right') {
     item.position.x = 0;
     item.rcPos.col = 0;

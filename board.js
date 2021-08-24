@@ -15,13 +15,13 @@ let board = ['XXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
              'SSX--X---SSGGGGGGGSS---X--XSS',
              'SSX--X---SSGGGGGGGSS---X--XSS',
              'XXX--X--XSSGGGGGGGSSX--X--XXX',
-             '--------XSSSSSSSSSSSX--------',
+             '-P------XSSSSSSSSSSSX--------',
              '--------XSSSSSSSSSSSX--------',
              'XXX--XXXXXXX--X--XXXXXXX--XXX',
              'SSX-----------X-----------XSS',
              'SSX-----------X-----------XSS',
              'XXX--XXXX--XXXXXXX--XXXX--XXX',
-             'X-------------P-------------X',    
+             'X---------------------------X',    
              'X---------------------------X',  
              'X--XXX--XXXX--X--XXXX--XXX--X',    
              'X--XXX--X-----X-----X--XXX--X',    
@@ -48,7 +48,7 @@ class RcPos {
 
 class Directions {
   constructor(board) {
-    const {tileW, fringeW} = board;
+    const {tileW: tile, fringeW: fringe} = board;
     this.left = {transform: 'rotateY(180deg)', reverse: 'right'};
     this.right = {transform: 'rotate(0deg)', reverse: 'left'};
     this.up = {transform: 'rotate(90deg) rotateY(180deg)', reverse: 'down'};
@@ -59,52 +59,48 @@ class Directions {
       obj.row = (dir === 'left' || dir === 'right') ? 0 : dir === 'up' ? -1 : 1
       obj.col = (dir === 'up' || dir === 'down') ? 0 : dir === 'left' ? -1 : 1
       obj.speed = (dir == 'up' || dir === 'left') ? -board.speed : board.speed
-      obj.eyetop = (tileW / 6 + fringeW) + 'px';
-      obj.eyeleft = fringeW * 2.5 + obj.col * fringeW * 0.5;
-      obj.pupiltop = dir === 'down' ? (tileW / 6 + fringeW * 3 ) + 'px' : (tileW / 6 + fringeW * 2.5 + obj.row * fringeW * 2) + 'px'
-      obj.pupilleft = (fringeW * 3 + fringeW * obj.col) +'px';
+      obj.eyetop = (tile / 6 + fringe) + 'px';
+      obj.eyeleft = fringe * 2.5 + obj.col * fringe * 0.5;
+      obj.pupiltop = dir === 'down' ? (tile / 6 + fringe * 3 ) + 'px' : (tile / 6 + fringe * 2.5 + obj.row * fringe * 2) + 'px'
+      obj.pupilleft = (fringe * 3 + fringe * obj.col) +'px';
     }
   }
 }
 
 class Board {
   constructor(arr,speed) {
-    this.layout = arr;
-    const rowHeight = Math.floor((+window.innerHeight - 40) / ((board.length + 2) * speed)) * speed;
-    const colHeight = Math.floor((+window.innerWidth - 40) / (board[0].length * speed)) * speed;
-    this.tileW = Math.min(rowHeight,colHeight);
-    this.rows = arr.length;
-    this.cols = arr[0].length;
-    this.portals = [];
-    this.ghostStart = {row:-1,col:-1};
-    this.ghostEnd = {row:-1,col:-1};
-    this.ghostGateX = '';
-    this.ghostGateY = {};
-    this.ghostPositions = [];
-    this.speed = speed;
-    this.ghostsInBox = [];
+    const rowHeight = Math.floor((+window.innerHeight - 40) / ((arr.length + 2) * speed)) * speed;
+    const colHeight = Math.floor((+window.innerWidth - 40) / (arr[0].length * speed)) * speed;
+    [this.layout,this.rows,this.cols] = [arr, arr.length, arr[0].length];
+    [this.tileW, this.speed, this.portals] = [Math.min(rowHeight,colHeight), speed, []];
+
+    [this.ghostStart, this.ghostEnd, this.ghostGateX, this.ghostGateY] = [{row:-1,col:-1}, {row:-1,col:-1}, '', {}]
+    this.ghostPositions = [], this.ghostsInBox = [];
 
     // set dynamic style sheet properties, based on board size, for walls, corners, pacDots, and more
-    styleSheet.innerHTML += `.wall {height: ${this.tileW + 1}; width: ${this.tileW + 1}}`;
-    styleSheet.innerHTML += `.inner-corner {height: ${this.tileW / 2}; width: ${this.tileW / 2}}`;
+    const {tileW: tile, cornerW: corner, pacDotW: pacDot, fringeW: fringe} = this;
 
-    let radial = `radial-gradient(circle ${this.cornerW}px at POSITION,`
-    radial += `rgba(0,0,0,0) 0%, rgba(0,0,0,0) ${(this.cornerW) - 3}px,`
-    radial += ` #e33022 ${(this.cornerW) - 3}px, #e33022 100%, #f4bb9c 100%)`;
+    styleSheet.innerHTML += `.wall {height: ${tile + 1}; width: ${tile + 1}}`;
+    styleSheet.innerHTML += `.inner-corner {height: ${tile / 2}; width: ${tile / 2}}`;
+
+    let radial = `radial-gradient(circle ${corner}px at POSITION,`
+    radial += `rgba(0,0,0,0) 0%, rgba(0,0,0,0) ${corner - 3}px,`
+    radial += ` #e33022 ${corner - 3}px, #e33022 100%, #f4bb9c 100%)`;
 
     let positions = {'top-left': 'right 100% bottom 100%','top-right': 'left 100% bottom 100%', 'bottom-left': 'right 100% top 100%', 'bottom-right': 'left 100% top 100%'};
     for (let dir in positions) {styleSheet.innerHTML += `.inner-${dir} {background-image: ${radial.replace('POSITION',positions[dir])}}`;}
 
-    styleSheet.innerHTML += `.pac-dot {width: ${this.pacDotW}px;height: ${this.pacDotW}px}`;
-    styleSheet.innerHTML += `.ms-pac-man {width: ${this.tileW * 1.5};margin: ${Math.floor((this.tileW * 0.5) / 2)}px}`;
-    styleSheet.innerHTML += `.ghost {width: ${this.tileW * 1.5}px; height: ${this.tileW * 1.5 - this.fringeW * 2}px; margin: ${this.tileW / 4}px}`;
-    styleSheet.innerHTML += `.fringe {width: ${this.fringeW * 2}px; height: ${this.fringeW * 2}px; top: ${(this.tileW * 1.75) - this.fringeW * 4}px}`;
-    styleSheet.innerHTML += `.eyeball {width: ${this.fringeW * 3}px;height:${this.fringeW * 4}px}`;
-    styleSheet.innerHTML += `.pupil {width: ${this.fringeW * 2}px;height:${this.fringeW * 2}px}`;
-    styleSheet.innerHTML += `.blue-pupil {width: ${this.fringeW * 2}px;height: ${this.fringeW * 2}px; top: ${this.tileW / 6 + this.fringeW * 2}px}`;
-    const sideSq = ((this.fringeW * 3) ** 2) / 2;
+    styleSheet.innerHTML += `.pac-dot {width: ${pacDot}px;height: ${pacDot}px}`;
+    styleSheet.innerHTML += `.ms-pac-man {width: ${tile * 1.5};margin: ${Math.floor((tile * 0.5) / 2)}px}`;
+    styleSheet.innerHTML += `.ghost {width: ${tile * 1.5}px; height: ${tile * 1.5 - fringe * 2}px; margin: ${tile / 4}px}`;
+    styleSheet.innerHTML += `.fringe {width: ${fringe * 2}px; height: ${fringe * 2}px; top: ${(tile * 1.75) - fringe * 4}px}`;
+    styleSheet.innerHTML += `.eyeball {width: ${fringe * 3}px;height:${fringe * 4}px}`;
+    styleSheet.innerHTML += `.pupil {width: ${fringe * 2}px;height:${fringe * 2}px}`;
+    styleSheet.innerHTML += `.blue-pupil {width: ${fringe * 2}px;height: ${fringe * 2}px; top: ${tile / 6 + fringe * 2}px}`;
+    const sideSq = ((fringe * 3) ** 2) / 2;
     const side = Math.floor(sideSq ** 0.5);
-    styleSheet.innerHTML += `.blue-frown {width: ${side}px; height: ${side}px; top: ${this.tileW / 6 + this.fringeW * 6}px}`;
+    styleSheet.innerHTML += `.blue-frown {width: ${side}px; height: ${side}px; top: ${tile / 6 + fringe * 6}px}`;
+  
   }
 
   get fringeW() {return Math.floor(this.tileW * 1.5 / 12)}
@@ -124,6 +120,24 @@ class Board {
   isFree(rcPos) {
     str = this.layout[rcPos.row].charAt(rcPos.col);
     return str.search(/[\-SPB]/) > -1 
+  }
+
+  scoreDivAdd(pos) {
+
+    const tile = this.tileW;
+    let ghostScore = document.createElement('div');
+    ghostScore.classList.add('ghost-score');
+    ghostScore.style.width = tile * 2;
+    ghostScore.style.height = tile * 2;
+    ghostScore.style.left = pos.x;
+    ghostScore.style.top = pos.y;
+    ghostScore.innerHTML = '200';
+  
+    let game = document.getElementById('game');
+    game.appendChild(ghostScore);
+  
+    setTimeout(function() {game.removeChild(ghostScore)},1500);
+
   }
 
   type(str) {
@@ -208,14 +222,12 @@ class Wall {
 }
 
 class PacDot {
-  constructor(rcPos, board, big = false) {
 
-    // Make the dot!
+  constructor(rcPos, board, big = false) {
 
     let dot = document.createElement('div');
     dot.id = 'dot-'+rcPos.col+'-'+rcPos.row; 
-    dot.classList.add('pac-dot');
-    dot.classList.add('pac-dot-'+rcPos.col+'-'+rcPos.row);
+    dot.classList.add('pac-dot'), dot.classList.add('pac-dot-'+rcPos.col+'-'+rcPos.row);
 
     dot.style.top = board.tileW * (rcPos.row + 1) - board.pacDotW / 2;
     dot.style.left = board.tileW * (rcPos.col + 1) - board.pacDotW / 2;
@@ -605,12 +617,10 @@ class Ghost {
       // do these calculations if the ghost has hit a tile square-on
       else if (this.position.x % tileW === 0 && this.position.y % tileW === 0 && this.isInBox === false) {
     
-        let dirs = ['left','right','up','down'];
-    
-        // remove reversing direction as an option
         let rev = d[this.direction].reverse;
+        let dirs = ['left','right','up','down'];
         dirs.splice(dirs.indexOf(rev),1);
-
+    
         // filter out any directions that have walls
         dirs = dirs.filter(dir => isWall(nextPos(this.rcPos,dir),dir,this.board) === false)
     
@@ -624,6 +634,7 @@ class Ghost {
         }
         else if (this.free !== 'returning' && dirs.includes(msPacMan.direction) && (this.el.id === 'blinky' ||  this.el.id === 'pinky') && this.rcPos.col > 3 && this.rcPos.col < this.board.cols - 3) {
           // if it is possible to go in the direction msPacMan is facing, do it
+          this.moveEyes(msPacMan.direction,this.board)
           this.direction = msPacMan.direction; 
           this.speed = d[msPacMan.direction].speed;
         }
@@ -675,7 +686,6 @@ class Ghost {
             let index = Math.floor(Math.random() * dirs.length);
             newDir = dirs[index];
           }
-          if (newDir === '') {console.log("Houston we have a porblem")}
           this.direction = newDir;
           this.speed = d[newDir].speed;
     
@@ -683,9 +693,7 @@ class Ghost {
 
         teleport(this);
     
-        if (this.direction !== startDir) {
-          this.moveEyes(this.direction,this.board)
-        }
+        if (this.direction !== startDir) {this.moveEyes(this.direction,this.board)}
 
         let fast = true;
         if (targPos.row === this.rcPos.row && this.rcPos.col > targPos.col - 2 && this.rcPos.col < targPos.col + 2) {
@@ -700,27 +708,29 @@ class Ghost {
     
   }
 
-  reAppear() {
+  disAppear() {
+    this.free = 'returning', this.el.style.backgroundColor = 'transparent';
+    const [classTypes, divs] = [['fringe','eyeball','pupil','blue-frown','blue-pupil'],[]];
+    classTypes.forEach(classType => divs.push(...Array.from(this.el.getElementsByClassName(classType))));
+    divs.forEach(div => div.style.display = div.style.display === 'none' ? '' : 'none');
+  }
 
-    let [color, frownD, eyeD] = [this.color, 'none', ''];
-    if (munchModeActive === true) {[color, frownD, eyeD] = ['blue', '', 'none']}
+  reAppear() {
+    let [color, showDivs] = [this.color, {eyeball: '', pupil: '', fringe: '', 'blue-frown': 'none', 'blue-pupil': 'none'}];
+    if (munchModeActive === true) {
+      [color, showDivs] = ['blue', {'blue-frown': '', 'blue-pupil': '', fringe: '', eyeball: 'none', pupil: 'none'}]
+    }
 
     this.el.style.backgroundColor = color;
     const fringes = Array.from(this.el.getElementsByClassName('fringe'))
     fringes.forEach(fringe => {
-      if (fringe.style.backgroundColor !== '' && fringe.style.backgroundColor !== 'transparent') {
-        [fringe.style.backgroundColor, fringe.style.display] = [color, ''];
-      } else {
-        let bgImage = fringe.style.backgroundImage;
-        let newBgImage = bgImage.replace('blue',color).replace('white',color);
-        [fringe.style.backgroundImage, fringe.style.display] = [newBgImage, ''];
-      }
+      if (fringe.style.backgroundColor !== 'transparent') {fringe.style.backgroundColor = color;} 
+      else {fringe.style.backgroundImage = fringe.style.backgroundImage.replace(/blue|white/, color);}
     })
 
-    Array.from(this.el.getElementsByClassName('eyeball')).forEach(eye => eye.style.display = eyeD);
-    Array.from(this.el.getElementsByClassName('pupil')).forEach(pupil => pupil.style.display = eyeD);
-    Array.from(this.el.getElementsByClassName('blue-frown')).forEach(frown => frown.style.display = frownD);
-    Array.from(this.el.getElementsByClassName('blue-pupil')).forEach(eye => eye.style.display = frownD);
+    for (let dClass in showDivs) {
+      Array.from(this.el.getElementsByClassName(dClass)).forEach(d => d.style.display = showDivs[dClass]);
+    }
 
   }
 
@@ -777,49 +787,30 @@ class Ghost {
                      pupilleft: fringeW * 3}};
 
     if (this.direction !== dir) {
-      this.moveEyes(dir,board,ds);
+      this.moveEyes(dir,board,d);
     }
     this.direction = dir;
     this.speed = board.speed * ds[dir].row + board.speed * ds[dir].col;
 
-    this.position.x = this.position.x + board.speed * ds[dir].col;
-    this.position.y = this.position.y + board.speed * ds[dir].row;
-    this.el.style.left = this.position.x;
-    this.el.style.top = this.position.y;
-    this.rcPos.col = Math.floor(this.position.x / board.tileW);
-    this.rcPos.row = Math.floor(this.position.y / board.tileW);
+    this.position.x = this.position.x + board.speed * ds[dir].col, this.position.y = this.position.y + board.speed * ds[dir].row;
+    this.el.style.left = this.position.x, this.el.style.top = this.position.y;
+    this.rcPos.col = Math.floor(this.position.x / board.tileW), this.rcPos.row = Math.floor(this.position.y / board.tileW);
 
   }
 
-  moveEyes(dir,board=board2,ds = -1) {
-    if (ds = -1) {
-      const {fringeW} = board;
-      ds = {left: {row: 0, col: -1,
-                    eyeleft: fringeW * 2,
-                    pupiltop: (board.tileW / 6) + fringeW * 2.5,
-                    pupilleft: fringeW * 2},
-            right: {row: 0, col: 1,
-                    eyeleft: fringeW * 3,
-                    pupiltop: (board.tileW / 6) + fringeW * 2.5,
-                    pupilleft: fringeW * 4},
-            up: {row: -1, col: 0,
-                  eyeleft: fringeW * 2.5,
-                  pupiltop: (board.tileW / 6) + fringeW * 0.5,
-                  pupilleft: fringeW * 3},
-            down: {row: 1, col: 0,
-                    eyeleft: fringeW * 2.5,
-                    pupiltop: (board.tileW / 6) + fringeW * 2.5,
-                    pupilleft: fringeW * 3}};
-    }
-    let fringeW = Math.floor(board.tileW * 1.5 / 12);
+  moveEyes(dir,board=board2,dirArray=d) {
+    console.log(dirArray);
+    const {fringeW} = board;
     let eyes = Array.from(this.el.getElementsByClassName('eyeball'));
     let pupils = Array.from(this.el.getElementsByClassName('pupil'));
   
-    eyes[0].style.left = ds[dir].eyeleft + 'px';
-    eyes[1].style.left = (ds[dir].eyeleft + fringeW * 5) + 'px';
+    eyes[0].style.left = dirArray[dir].eyeleft + 'px';
+    eyes[1].style.left = (dirArray[dir].eyeleft + fringeW * 5) + 'px';
   
-    pupils[0].style.left = ds[dir].pupilleft + 'px';
-    pupils[1].style.left = (ds[dir].pupilleft + fringeW * 5) + 'px';
+    pupils[0].style.left = parseFloat(dirArray[dir].pupilleft) + 'px';
+    pupils[1].style.left = (parseFloat(dirArray[dir].pupilleft) + fringeW * 5) + 'px';
+
+    pupils[0].style.top = pupils[1].style.top = dirArray[dir].pupiltop;
 
   }
 
@@ -853,6 +844,21 @@ class MsPacMan {
     game.appendChild(el);
 
     this.el = el;
+
+  }
+
+  move(board=board2) {
+
+    if (this.direction === 'left' || this.direction === 'right' ) {
+      this.position.x += this.speed;
+      this.el.style.left = this.position.x;
+    } else if (this.direction === 'up' || this.direction === 'down' ){
+        this.position.y += this.speed;
+        this.el.style.top = this.position.y;
+    }
+
+    this.rcPos.row = Math.floor(this.position.y / board.tileW);
+    this.rcPos.col = Math.floor(this.position.x / board.tileW);
 
   }
 

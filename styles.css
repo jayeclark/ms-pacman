@@ -140,3 +140,12 @@ body {
   text-align: center;
   align-content: center;
 }
+
+.ghost-score {
+  position: absolute;
+  background-color: transparent;
+  font-family: 'Press Start 2P', cursive;
+  color: lightgray;
+  z-index: 1000;
+  text-align: center;
+}
