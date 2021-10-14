@@ -971,7 +971,7 @@ function drawBoardNew(board) {
 
   //if (isMobile === false) {arrowsDiv.style.display = 'none';}
 
-  const positions = {up: upArrowL, down: upArrowL, left: upArrowL - 20 - arrowW / 2, right: upArrowL + arrowW};              
+  const positions = {up: upArrowL, down: upArrowL, left: upArrowL - 40 - arrowW / 2, right: upArrowL + arrowW};              
 
   for (let dir in positions) {const tempArrow = makeArrow(dir,arrowW); arrowsDiv.appendChild(tempArrow);}
 
