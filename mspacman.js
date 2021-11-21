@@ -1,3 +1,8 @@
+import { board2, d, dots, drawBoardNew, findXY, nextPos, isWall, RcPos } from './components/board.js';
+import { Ghost, ghosts } from './components/Ghost.js';
+import { MsPacMan } from './components/MsPacman.js';
+import { Tile } from './components/Tile.js';
+
 let [count, gCount, dCount, powerCount, eatenCount, score] = [0,0,0,0,0,0];
 let [munchModeActive, stop, started, restarted, restartGhosts, restartRelease] = [false, false, false, false, false, false];
 
@@ -12,7 +17,7 @@ const buttonSwap = () => {
 
 }
 
-function startGame() {
+export function startGame() {
 
   if (stop === false && started === false) {
     
@@ -34,7 +39,7 @@ function startGame() {
 
 }
 
-function restartGame() {
+export function restartGame() {
 
   started = stop = restartGhosts = false;
   restarted = restartRelease = true;
@@ -53,7 +58,9 @@ function restartGame() {
 
   function redraw() {
     drawBoardNew(board2);
-    msPacMan = new MsPacMan(board2);
+    const row = board2.findIndex(x=> x.includes('P'));
+    const col = board2[row].indexOf('P');
+    msPacMan = new MsPacMan(new RcPos(row, col, board2));
   }
   
   setTimeout(redraw,500);
@@ -111,7 +118,7 @@ function update(board=board2) {
   }
 
   if (count === 3) {
-      msPacMan.el.src = msPacMan.el.src.includes('mspacman1.png') ? 
+      msPacMan.element.src = msPacMan.element.src.includes('mspacman1.png') ? 
                         './images/mspacman2.png' : './images/mspacman1.png'  
       count = 0;
     }
@@ -139,11 +146,11 @@ function updateGhosts() {
     if (ghost.free === 'free') {
       if (ghost.position.x % ghost.speed > 0) {
         ghost.position.x = ghost.position.x + ghost.position.x % ghost.speed;
-        ghost.el.style.left = ghost.position.x;
+        ghost.element.style.left = ghost.position.x;
       }
       if (ghost.position.y % ghost.speed > 0) {
         ghost.position.y = ghost.position.y + ghost.position.y % ghost.speed;
-        ghost.el.style.top = ghost.position.y;
+        ghost.element.style.top = ghost.position.y;
       }
     }
   })
@@ -184,8 +191,8 @@ function checkDots(item) {
     let dotRight = dotLeft + pacDotW;
     let dotTop = parseInt(dot.style.top);
     let dotBottom = dotTop + pacDotW;
-    let itemLeft = parseInt(item.el.style.left);
-    let itemTop = parseInt(item.el.style.top);
+    let itemLeft = parseInt(item.element.style.left);
+    let itemTop = parseInt(item.element.style.top);
 
 
     let leftBoundary = itemLeft + tileW - pacWidth / 2;
@@ -210,7 +217,7 @@ function checkDots(item) {
 
     if (dotLeft > leftBoundary && dotRight < rightBoundary && dotTop > topBoundary && dotBottom < bottomBoundary) {
       removeDot(dot.id); eatenCount++;
-      if (eatenCount === dotCount) {
+      if (eatenCount === dots.dotCount) {
 
             // stop movement
             stop = true;
@@ -218,7 +225,7 @@ function checkDots(item) {
             // disappear ghosts
             ghosts.forEach(ghost => {
               if (ghost.free === 'free') {
-                ghost.el.style.display = 'none';
+                ghost.element.style.display = 'none';
               }
             })
 
@@ -246,8 +253,7 @@ function checkGhostCollision() {
  
   let collidedGhosts = [];
 
-  //const style = window.getComputedStyle(msPacMan.el)
-  const {left, margin, top, width} = window.getComputedStyle(msPacMan.el);
+  const { left, margin, top, width } = window.getComputedStyle(msPacMan.element);
 
   let pacL = parseInt(left) + parseInt(margin);
   let pacR = parseInt(left) + parseInt(margin) + parseInt(width);
@@ -260,7 +266,7 @@ function checkGhostCollision() {
     let ghostCollision = false;
     if (ghost.free === 'free') {
 
-      const {margin: gMargin, left: gLeft, top: gTop, width: gWidth, height: gHeight} = window.getComputedStyle(ghost.el);
+      const {margin: gMargin, left: gLeft, top: gTop, width: gWidth, height: gHeight} = window.getComputedStyle(ghost.element);
 
       const ghostL = parseFloat(gLeft) + parseFloat(gMargin);
       const ghostR = parseFloat(gLeft) + parseFloat(gMargin) + parseFloat(gWidth);
@@ -281,7 +287,7 @@ function checkGhostCollision() {
       }
 
       if (ghostCollision === true) {
-        collidedGhosts.push(ghost.el.id); 
+        collidedGhosts.push(ghost.element.id); 
       }
     }
 
@@ -292,10 +298,10 @@ function checkGhostCollision() {
     // stop movement
     stop = true;
     eatenCount = 0;
-    dotCount = 0;
+    dots.dotCount = 0;
 
     // disappear msPacMan
-    msPacMan.el.style.display = 'none';
+    msPacMan.element.style.display = 'none';
 
     // appear 'game over'
     let over = document.getElementById('game-over');
@@ -322,19 +328,19 @@ function checkGhostCollision() {
       if ((ghostL <= pacL && pacDir === 'left') || (ghostL >= pacL && pacDir === 'right') ||
           (ghostT <= pacT && pacDir === 'up') || (ghostT >= pacT && pacDir === 'down')) {
             ghosts.forEach(x => {
-              if (x.el.id === id && x.free === 'free') ghostEaten = true
+              if (x.element.id === id && x.free === 'free') ghostEaten = true
             })
       }
 
       if (ghostEaten === true) { 
 
-        const ghost = ghosts.filter(g => g.el.id === id)[0];
+        const ghost = ghosts.filter(g => g.element.id === id)[0];
 
         if (ghost.free === 'free') {
 
           ghost.disAppear();
 
-          board2.scoreDivAdd({'x': parseFloat(ghost.el.style.left), 'y': parseFloat(ghost.el.style.top)});
+          board2.scoreDivAdd({'x': parseFloat(ghost.element.style.left), 'y': parseFloat(ghost.element.style.top)});
           score += 200;
           document.getElementById('score').innerHTML = score;
         }
@@ -372,7 +378,7 @@ function checkCollisions(item) {
 
           let currDir = item.direction;
 
-          let currTransform = item.el.style.transform;
+          let currTransform = item.element.style.transform;
           if (item.cache === 'down' && currDir === 'left') {transformStr = 'rotate(270deg) rotateY(180deg)';}
           else if (item.cache === 'down' && currDir === 'right') {transformStr = 'rotate(90deg)';}
           else if (item.cache === 'up' && currDir === 'left') {transformStr = 'rotate(90deg) rotateY(180deg)';}
@@ -383,7 +389,7 @@ function checkCollisions(item) {
           else if (item.cache === 'down' && currDir === 'up') {
             if (currTransform.includes('rotate(90deg) rotateY(180deg)')) {transformStr = 'rotate(90deg)';}
           }
-          item.el.style.transform = transformStr;
+          item.element.style.transform = transformStr;
           item.speed = stats.speed;
           item.direction = item.cache;
           item.cache = '';
@@ -395,9 +401,11 @@ function checkCollisions(item) {
   }
 
   // if there is no cache, or it wasn't cleared, check whether Ms PacMan is up against a wall
-  let next = nextPos(item.rcPos, item.direction);
-  let xy = findXY(item.rcPos);
-  if (isWall(next,item.direction) === true && xy.x === item.position.x && findXY(item.rcPos).y === item.position.y) {
+  const { direction, rcPos } = item;
+  let next = rcPos[direction];
+  if (direction.includes('right').or(direction.includes('down'))) { next = next[direction];}
+  let [{ x, y }, { typeOf }] = [rcPos.xyCoordinates, Tile];
+  if (typeOf(Tile.at(next)).isBarrier() && x === item.position.x && y === item.position.y) {
     item.speed = 0;
     item.cache = '';
   }
@@ -415,8 +423,8 @@ function spawn(item) {
     if (blinkCount === 44) {
                item.speed = d[item.direction].speed; item.free = 'free'; 
                if (munchModeActive === true) {
-                      item.el.style.backgroundColor = 'blue';
-                      let fringes = Array.from(item.el.getElementsByClassName('fringe'));
+                      item.element.style.backgroundColor = 'blue';
+                      let fringes = Array.from(item.element.getElementsByClassName('fringe'));
                       fringes.forEach(fringe=> {
                                  
                        if (fringe.style.backgroundColor === item.color) {fringe.style.backgroundColor = 'blue';}
@@ -430,12 +438,12 @@ function spawn(item) {
 
                      })
 
-                     let eyes = [...Array.from(item.el.getElementsByClassName('eyeball')),
-                                 ...Array.from(item.el.getElementsByClassName('pupil'))];
+                     let eyes = [...Array.from(item.element.getElementsByClassName('eyeball')),
+                                 ...Array.from(item.element.getElementsByClassName('pupil'))];
                      eyes.forEach(eye => eye.style.display = 'none');
 
-                     let frowns = [...Array.from(item.el.getElementsByClassName('blue-frown')),
-                                   ...Array.from(item.el.getElementsByClassName('blue-pupil'))];
+                     let frowns = [...Array.from(item.element.getElementsByClassName('blue-frown')),
+                                   ...Array.from(item.element.getElementsByClassName('blue-pupil'))];
                      frowns.forEach(frown=> frown.style.display = '');
                           
                }      
@@ -445,7 +453,7 @@ function spawn(item) {
       if (blinkCount % 8 === 0 || blinkCount === 0) {display = '';}
       if (blinkCount % 4 === 0) {
 
-      item.el.style.display = display;
+      item.element.style.display = display;
 
     }
     blinkCount++;
@@ -492,7 +500,7 @@ function release(board) {
     else if (positions.right) {targetBoxPos = 'right'}
 
     // get the ghost in the target position
-    ghost = ghosts.filter(g => g.boxPosition === targetBoxPos)[0];
+    let ghost = ghosts.filter(g => g.boxPosition === targetBoxPos)[0];
 
     // open the gate
     const ghostGate = document.getElementById('ghost-gate');
@@ -539,11 +547,11 @@ function munchMode() {
 
       ghosts.forEach(ghost=>{
 
-        if (ghost.el.style.backgroundColor !== 'transparent') {
+        if (ghost.element.style.backgroundColor !== 'transparent') {
 
-          ghost.el.style.backgroundColor = 'blue';
+          ghost.element.style.backgroundColor = 'blue';
 
-          let fringes = Array.from(ghost.el.getElementsByClassName('fringe'));
+          let fringes = Array.from(ghost.element.getElementsByClassName('fringe'));
           fringes.forEach(fringe=> {
             let {backgroundColor: color, backgroundImage: image} = fringe.style;
             if (color !== 'transparent') {fringe.style.backgroundColor = 'blue';}
@@ -552,10 +560,10 @@ function munchMode() {
             }
           })
 
-          let divs = [...Array.from(ghost.el.getElementsByClassName('eyeball')),
-                      ...Array.from(ghost.el.getElementsByClassName('pupil')),
-                      ...Array.from(ghost.el.getElementsByClassName('blue-frown')),
-                      ...Array.from(ghost.el.getElementsByClassName('blue-pupil'))];
+          let divs = [...Array.from(ghost.element.getElementsByClassName('eyeball')),
+                      ...Array.from(ghost.element.getElementsByClassName('pupil')),
+                      ...Array.from(ghost.element.getElementsByClassName('blue-frown')),
+                      ...Array.from(ghost.element.getElementsByClassName('blue-pupil'))];
           divs.forEach(div => div.style.display = div.style.display === 'none' ? '' : 'none');
 
         }
@@ -575,10 +583,10 @@ function munchMode() {
 
         ghosts.forEach(ghost=>{
 
-          let backgroundColor = ghost.el.style.backgroundColor;
+          let backgroundColor = ghost.element.style.backgroundColor;
           if (backgroundColor !== 'transparent') {
-            if (backgroundColor.match(/blue|white/)) {ghost.el.style.backgroundColor = tempColor;}
-            let fringes = Array.from(ghost.el.getElementsByClassName('fringe'));
+            if (backgroundColor.match(/blue|white/)) {ghost.element.style.backgroundColor = tempColor;}
+            let fringes = Array.from(ghost.element.getElementsByClassName('fringe'));
 
             fringes.forEach(fringe => {
               backgroundColor = fringe.style.backgroundColor;
@@ -604,19 +612,19 @@ function munchMode() {
       // make everything normal again
       ghosts.forEach(ghost=>{
 
-        if (ghost.el.style.backgroundColor !== 'transparent') {
-          ghost.el.style.backgroundColor = ghost.color;
+        if (ghost.element.style.backgroundColor !== 'transparent') {
+          ghost.element.style.backgroundColor = ghost.color;
 
-          let fringes = Array.from(ghost.el.getElementsByClassName('fringe'));
+          let fringes = Array.from(ghost.element.getElementsByClassName('fringe'));
           fringes.forEach(fringe => {
             let { backgroundColor, backgroundImage } = fringe.style;
             if (backgroundColor.match(/blue|white/)) {fringe.style.backgroundColor = ghost.color;}
             else {fringe.style.backgroundImage = backgroundImage.replace(/blue|white/, ghost.color);}
           })
-          let divs = [...Array.from(ghost.el.getElementsByClassName('eyeball')), 
-                      ...Array.from(ghost.el.getElementsByClassName('pupil')),
-                      ...Array.from(ghost.el.getElementsByClassName('blue-frown')),
-                      ...Array.from(ghost.el.getElementsByClassName('blue-pupil'))];
+          let divs = [...Array.from(ghost.element.getElementsByClassName('eyeball')), 
+                      ...Array.from(ghost.element.getElementsByClassName('pupil')),
+                      ...Array.from(ghost.element.getElementsByClassName('blue-frown')),
+                      ...Array.from(ghost.element.getElementsByClassName('blue-pupil'))];
           divs.forEach(div => div.style.display = div.style.display === 'none' ? '' : 'none');
 
         }
@@ -648,3 +656,22 @@ function teleport(item,board=board2) {
     item.rcPos.col = 0;
   }
 }
+
+let test = document.getElementsByClassName('test-div')
+if (test[0].style.display == 'none') {isMobile = true;}
+drawBoardNew(board2);
+
+const row = board2.layout.findIndex(x => x.includes('P'));
+const col = board2.layout[row].indexOf('P');
+export const msPacMan = new MsPacMan(new RcPos(row, col, board2), 'right');
+window.startGame = startGame;
+window.restartGame = restartGame;
+
+//window.onload = (event) => {
+//  console.log('loaded');
+//  let test = document.getElementsByClassName('test-div')
+//  if (test[0].style.display == 'none') {isMobile = true;}
+//  console.log('board2',board2);
+//  drawBoardNew(board2);
+//  msPacMan = new MsPacMan(board2);
+//}

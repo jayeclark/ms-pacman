@@ -30,13 +30,20 @@ body {
 .arrow-div {
   position: absolute;
   left: 0px;
-  margin: 20px 0px 20px 0px;
+  margin: 15px 0px;
 }
 
 .arrow {
   z-index: 2000;
   margin: 0px;
   position: absolute;
+  cursor: pointer;
+}
+
+.arrow:hover {
+  transform: scale(1.1);
+  transition: scale 1s ease;
+  opacity: 0.9;
 }
 
 .outer-ghostbox {
@@ -133,12 +140,20 @@ body {
 
 .message {
   position: absolute;
-  z-index: 50;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  z-index: 999;
   background-color: transparent;
   font-family: 'Press Start 2P', cursive;
   color: yellow;
   text-align: center;
-  align-content: center;
+}
+
+.message-inner {
+  position: relative;
+  width: 100%;
+  z-index: 9999;
 }
 
 .ghost-score {
