@@ -10,19 +10,25 @@
     <script src="./mspacman.js" type="module"></script>
 </head>
 
-<body style="background-color:black;">
-    <div id="header" style="position: absolute; top: 20; left: 20; z-index: 800;">
-        <button id="start" type="button" class="btn btn-success" onclick='startGame()' style='width:120px;margin: 10px;position: relative; z-index: 101'>Start Game</button>
-        <button id="stop" type="button" class="btn btn-danger" onclick='startGame()' style='width:120px;display: none; margin: 10px; position: relative; z-index: 101'>Pause Game</button>
-        <button id="restart" type="button" class="btn btn-success" onclick='restartGame()' width='200' height='30' style='display: none; margin: 10px; position: relative; z-index: 101'>Play Again?</button>
-        <div id="score-board" style="position:absolute;color:chartreuse;font-family:'Press Start 2P',cursive;z-index:400;top:10;padding:10px;display:flex;left:60vw;width:200px;background-color: black;">
-            <div style="width:50px;flex-shrink:0">Score: </div>
-            <div id='score' style="width:100px;text-align:right;flex-shrink:1">0</div>
+<body style="background-color:black;padding: 10px;">
+    <div style="position:relative; display: flex; margin: 0px auto; justify-content: center;">
+        <div id="header" style="position: absolute;z-index: 800;margin: 0px auto;">
+            <button id="start" type="button" class="btn btn-success" onclick='startGame()' style='width:120px;margin: 10px;position: relative; z-index: 101'>Start Game</button>
+            <button id="stop" type="button" class="btn btn-danger" onclick='startGame()' style='width:120px;display: none; margin: 10px; position: relative; z-index: 101'>Pause Game</button>
+            <button id="restart" type="button" class="btn btn-success" onclick='restartGame()' width='200' height='30' style='display: none; margin: 10px; position: relative; z-index: 101'>Play Again?</button>
+            <div id="score-board" style="position:absolute;color:chartreuse;font-family:'Press Start 2P',cursive;z-index:400;top:10;padding:10px;display:flex;justify-content:right;right:10px;width:200px;background-color: black;">
+                <div style="width:50px;flex-shrink:0">Score: </div>
+                <div id='score' style="width:100px;text-align:right;flex-shrink:1">0</div>
+            </div>
         </div>
     </div>
-    <div id='game' style='position: absolute; top: 90; left: 20; z-index: 100;'>
+    <div style="position: relative; display: flex; margin: 0px auto; width: fit-content; height: 100%; justify-content: center; padding: 20px;">
 
+        <div id='game' style='position: absolute; z-index: 100;margin: 0px auto;'>
+
+        </div>
     </div>
+
     <div class='test-div'></div>
 </body>
 

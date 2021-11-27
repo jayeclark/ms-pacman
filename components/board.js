@@ -26,12 +26,14 @@ export class RcPos {
   get up() { return (new RcPos(this.row - 1, this.col, this.board)) } 
   get findXY() { return { x: this.col * this.board.tileW, y: this.row * this.board.tileW } }
   get xyCoordinates() { return { x: this.col * this.board.tileW, y: this.row * this.board.tileW } }
+
   checkRunLength(direction) {
-    const [{ typeOf }, d] = [Tile, new Directions()];
-    const pos = new RcPos(this.row, this.col, this.board);
+    if (direction === 'same') {return 0;}
+    const [{ typeOf }, d] = [Tile, new Directions(this.board)];
+    let pos = new RcPos(this.row, this.col, this.board);
     let [hitWall, runCount] = [false, 0];
     while (hitWall === false && pos.col > 0 && pos.col < this.board.cols - 1) {
-      if (typeOf(Tile.at(tempPos)).isBarrier()) {
+      if (typeOf(Tile.at(pos)).isBarrier()) {
         hitWall = true;
       } else {
         runCount++; 
@@ -65,7 +67,7 @@ class Board {
   get pacWidth() { return this.tileW * 1.5 }
   get boardWidth() { return this.tileW * this.cols;}
   get boardHeight() { return this.tileW * this.rows;}
-  get rowHeight() { return Math.floor((+window.innerHeight - 40) / ((this.rows + 2) * this.speed)) * this.speed;}
+  get rowHeight() { return Math.floor((+window.innerHeight - 40) / ((this.rows + 3) * this.speed)) * this.speed;}
   get colHeight() { return Math.floor((+window.innerWidth - 40) / (this.cols * this.speed)) * this.speed;}
 
   adjustStyleSheet(styleSheet) {
@@ -197,14 +199,14 @@ export function drawBoardNew(board) {
   const {tileW, boardWidth, boardHeight, ghostContainer : { start, end }} = board;
   const [top, width, height] = [start.y, boardWidth, (end.y - start.y) + 'px'];
   let mgs = [{id: 'ready', 
-              innerHTML: '<div class="message-inner">READY!</div>', 
-              style: {top: top + tileW * 3, width, height, fontSize: '2rem'}},
+              innerHTML: '<div class="message-inner"><br><br><br><br>READY!</div>', 
+              style: { fontSize: '2rem', top, width, height }},
              {id: 'game-over', 
-              innerHTML: '<div class="message-inner">GAME&nsp;OVER!</div>', 
-              style: {top, width, height, fontSize: '4rem', display: 'none'}},
+              innerHTML: `<div class="message-inner message-inner-shadow">GAME&nbsp;OVER!</div>`, 
+              style: { fontSize: '3rem', display: 'none', top, width, height }},
              {id: 'winner', 
-              innerHTML: '<div class="message-inner">WINNER!!</div>', 
-              style: {top, width, height, fontSize: '3.5rem', display: 'none'}}];
+              innerHTML: `<div class="message-inner message-inner-shadow">WINNER!!</div>`, 
+              style: { fontSize: '3.5rem', display: 'none', top, width, height }}];
 
   mgs.forEach(msg => {
     const message = new MessageDiv(msg, board);
@@ -227,17 +229,17 @@ export function drawBoardNew(board) {
     // Make arrow divs
       // make arrow divs and put them below the main game
   let arrowsDiv = document.createElement('div');
-  let arrowH = Math.floor((window.innerHeight - boardHeight - 130) / 3);
+  let arrowH = Math.floor((window.innerHeight - boardHeight - 130) / 4);
   let arrowW = arrowH * 2;
   let upArrowL = (boardWidth - arrowW) / 2 ;
 
-  arrowsDiv.style.top = (boardHeight) + 'px';
+  arrowsDiv.style.top = (boardHeight + tileW * 2) + 'px';
   arrowsDiv.style.width = boardWidth + 'px'
   arrowsDiv.classList.add('arrow-div');
 
   //if (isMobile === false) {arrowsDiv.style.display = 'none';}
 
-  const positions = {up: upArrowL, down: upArrowL, left: upArrowL - arrowW, right: upArrowL + arrowW};              
+  const positions = {up: upArrowL, down: upArrowL, left: upArrowL - arrowH * 1.75, right: upArrowL + arrowH * 1.75};              
 
   for (let dir in positions) {
     const tempArrow = makeArrow(dir,arrowW); 
@@ -249,7 +251,7 @@ export function drawBoardNew(board) {
     const arrowImg = makeArrowImg(arrowW,dir);
     arrow.appendChild(arrowImg);
     arrow.classList.add('arrow');
-    [arrow.id, arrow.style.left, arrow.style.top] = [dir + '-arrow', positions[dir] + 'px', (arrowH + d[dir].row * arrowH) + 'px'];
+    [arrow.id, arrow.style.left, arrow.style.top] = [dir + '-arrow', positions[dir] + 'px', (arrowH + d[dir].row * 1.75 * arrowH) + 'px'];
     arrow.setAttribute('onclick','cache(\''+dir+'\')');
     return arrow;
   }
@@ -261,15 +263,4 @@ export function drawBoardNew(board) {
     return img;
   }
   game.appendChild(arrowsDiv);
-}
-
-export function findXY(rcPos,board=board2) {return {x: rcPos.col * board.tileW, y: rcPos.row * board.tileW} }
-
-export function nextPos(pos,dir) {return dir === '' ? pos : {col: pos.col + d[dir].col, row: pos.row + d[dir].row} }
-
-export function isWall(pos,dir,board=board2) {
-  const [row1, row2] = [dir === 'down' ? pos.row + 1 : pos.row, dir === 'up' ? pos.row : pos.row + 1];
-  const [col1, col2] = [dir === 'right'? pos.col + 1 : pos.col, dir === 'left' ? pos.col : pos.col + 1];
-  const [res1, res2]  = [board.layout[row1].charAt(col1), board.layout[row2].charAt(col2)];
-  return (res1.search(/[XG]/) >= 0 || res2.search(/[XG]/) >= 0)
 }

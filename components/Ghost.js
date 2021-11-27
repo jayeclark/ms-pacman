@@ -4,6 +4,8 @@ import { Tile } from './Tile.js';
 import { msPacMan } from '../mspacman.js';
 import { portals } from './board.js';
 
+String.prototype.isBarrier = function() {return this === 'wall' || this === 'ghostbox'};
+
 export const ghosts = [];
 Array.prototype.includesAll = function(...args) {
   return args.map(arg => this.includes(arg)).every(x => x === true);
@@ -43,7 +45,7 @@ export class Ghost extends GamePiece {
   }
 
   get isInBox() {
-    const { rcPos: { row, col, board: { ghostStart: start, ghostEnd: end } } } = this;
+    const { rcPos: { row, col, board: { ghostContainer: {start, end } } } } = this;
     return (row >= start.row && row < --end.row && col >= start.col && col <= end.col); 
   }
   
@@ -259,7 +261,7 @@ export class Ghost extends GamePiece {
     if (this.direction !== direction) { 
       this.moveEyes(direction);
       this.direction = direction; 
-      this.speed = d[direction].speed;
+      this.speed = new Directions(this.board)[direction].speed;
     }    
   }
 
@@ -278,14 +280,23 @@ export class Ghost extends GamePiece {
 
   filterDirections() {
 
-    const { typeOf } = Tile;
+    const [{ typeOf }, d ] = [Tile, new Directions(this.board)];
   
     let directions = ['left','right','up','down'].filter(direction => {
-      let nextPosition = this.rcPos[direction];
-      if (direction === 'right' || direction === 'down') {
-        nextPosition = nextPosition[direction];
+      let next;
+      if (direction === 'right') {
+        next = [this.rcPos[direction][direction], this.rcPos[direction][direction].down]
       }
-      return typeOf(Tile.at(nextPosition)).isBarrier() === false && direction !== d[this.direction].reverse;
+      else if (direction === 'down') {
+        next = [this.rcPos[direction][direction], this.rcPos[direction][direction].right]
+      }
+      else if (direction === 'left') {
+        next = [this.rcPos[direction], this.rcPos[direction].down]
+      }
+      else if (direction === 'up') {
+        next = [this.rcPos[direction], this.rcPos[direction].right];
+      }
+      return next.every(pos => typeOf(Tile.at(pos)).isBarrier() === false) && direction !== d[this.direction].reverse;
     })
     return directions;
   }
@@ -343,7 +354,7 @@ export class Ghost extends GamePiece {
     
           const [yRun, xRun] = [this.rcPos.checkRunLength(yDir), this.rcPos.checkRunLength(xDir)];
               
-          if (mode !== 'returning' && options.includes(pacDir) && /blinky|pinky/.test(id)) {
+          if (mode !== 'returning' && options.includes(pacDir) && /blinky|pinky/.test(this.element.id)) {
             this.setDirection(pacDir);
           }
           else if (options.includesAll(yDir, xDir) && yRun > xRun) {
@@ -366,7 +377,7 @@ export class Ghost extends GamePiece {
             this.setDirection(options[index]);
           }
 
-          teleport(this);
+          this.teleport();
 
           if (mode === 'returning' && !(targY === currY && currX > targX - 2 * tileW && currX < targX + 2 * tileW)) {
             let item = this;
@@ -445,9 +456,8 @@ export class Ghost extends GamePiece {
       
   }
     
-  moveEyes(dir,board=board2,dirArray=d) {
-    console.log(dirArray);
-    const {fringeW} = board;
+  moveEyes(dir, dirArray=new Directions(this.board)) {
+    const {fringeW} = this.board;
     let eyes = Array.from(this.element.getElementsByClassName('eyeball'));
     let pupils = Array.from(this.element.getElementsByClassName('pupil'));
   

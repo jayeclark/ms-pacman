@@ -1,10 +1,12 @@
-import { board2, d, dots, drawBoardNew, findXY, nextPos, isWall, RcPos } from './components/board.js';
+import { board2, d, dots, drawBoardNew, RcPos } from './components/board.js';
 import { Ghost, ghosts } from './components/Ghost.js';
 import { MsPacMan } from './components/MsPacman.js';
 import { Tile } from './components/Tile.js';
+import { Directions } from './components/Directions.js';
 
 let [count, gCount, dCount, powerCount, eatenCount, score] = [0,0,0,0,0,0];
 let [munchModeActive, stop, started, restarted, restartGhosts, restartRelease] = [false, false, false, false, false, false];
+String.prototype.isHall = function() {return this === 'hall'};
 
 // Swap the visibility of the 'Start' and 'Stop' buttons when they are clicked
 const buttonSwap = () => {
@@ -138,28 +140,24 @@ function update(board=board2) {
 // Update the position of free ghosts
 function updateGhosts() {
 
-  if (restarted === true && restartGhosts === false) {return false;}
+  if (restarted === true && restartGhosts === false) { return false; }
 
   // correct starting position if applicable
-
   ghosts.forEach(ghost=> {
-    if (ghost.free === 'free') {
-      if (ghost.position.x % ghost.speed > 0) {
-        ghost.position.x = ghost.position.x + ghost.position.x % ghost.speed;
-        ghost.element.style.left = ghost.position.x;
-      }
-      if (ghost.position.y % ghost.speed > 0) {
-        ghost.position.y = ghost.position.y + ghost.position.y % ghost.speed;
-        ghost.element.style.top = ghost.position.y;
-      }
+    let { status: mode, speed, position: { x, y }, element } = ghost;
+    if (mode === 'free' && x % speed > 0) {
+      x = x + x % speed;
+      element.style.left = x;
+    }
+    else if (mode === 'free' && y % speed > 0) {
+      y = y + y % speed;
+      element.style.top = y;
     }
   })
 
   if (stop === false) {
-
     for (let ghost of ghosts) {
-
-      if(ghost.free === 'free' || ghost.free === 'returning') {
+      if(ghost.status.mode === 'free' || ghost.status.mode === 'returning') {
         // check if the ghost can change directions
         ghost.pickDir();
         ghost.move(ghost.direction);
@@ -172,7 +170,7 @@ function updateGhosts() {
 function checkDots(item) {
   // find all dots in the current cell
   let classCode = 'dot-'+item.rcPos.col + '-' + item.rcPos.row;
-  let next = nextPos(item.rcPos,item.direction);
+  let next = item.rcPos[item.direction];
   let classCode2 = 'dot-'+ next.col + '-' + next.row;
  
   if (item.direction === 'right') {classCode2 = 'pac-dot-' + (next.col + 1) + '-' + next.row;}
@@ -250,7 +248,6 @@ function checkDots(item) {
 function checkGhostCollision() {
 
   // if collided with a ghost, end game
- 
   let collidedGhosts = [];
 
   const { left, margin, top, width } = window.getComputedStyle(msPacMan.element);
@@ -264,7 +261,7 @@ function checkGhostCollision() {
   ghosts.forEach(ghost => {
 
     let ghostCollision = false;
-    if (ghost.free === 'free') {
+    if (ghost.status.mode === 'free') {
 
       const {margin: gMargin, left: gLeft, top: gTop, width: gWidth, height: gHeight} = window.getComputedStyle(ghost.element);
 
@@ -361,37 +358,47 @@ function checkCollisions(item) {
   if (item.cache !== '') {
 
     // figure out the next position based on the desired direction
-    let next = nextPos(item.rcPos,item.cache);
+    const { typeOf } = Tile;
+
+    const nextPositionOf = ({cache, rcPos}) => {
+      if (cache === 'down') {return [rcPos[cache][cache], rcPos[cache][cache].right];}
+      if (cache === 'right') {return [rcPos[cache][cache], rcPos[cache][cache].down];}
+      if (cache === 'up') {return [rcPos[cache], rcPos[cache].right];}
+      return [rcPos[cache], rcPos[cache].down];
+    }
+    
 
     // if there is no wall there, AND the item is at a transition point, change the direction and speed and clear the cache
-    let canTurn = false;
-    if (findXY(item.rcPos).x === item.position.x && findXY(item.rcPos).y === item.position.y) {
-      canTurn = true;}
+   
+    const canTurn = ({position: { x,y }, rcPos: { findXY }}) => x === findXY.x && y === findXY.y;
+    const canReverse = ({cache, direction, board}) => cache === new Directions(board)[direction].reverse;
 
-    let canReverse = false;
-    if (item.cache === d[item.direction].reverse) {canReverse = true;}
+    if (nextPositionOf(item).every(pos => typeOf(Tile.at(pos)).isHall()) && (canTurn(item) || canReverse(item))) {
 
-    if (isWall(next, item.cache) === false && (canTurn === true || canReverse === true)) {
+          const { cache, direction: dir } = item;
+          const downLeft = 'rotate(270deg) rotateY(180deg)';
+          const upLeft = 'rotate(90deg) rotateY(180deg)';
+          const transform = item.element.style.transform;
 
-          let stats = d[item.cache];
-          let transformStr = stats.transform;
-
-          let currDir = item.direction;
-
-          let currTransform = item.element.style.transform;
-          if (item.cache === 'down' && currDir === 'left') {transformStr = 'rotate(270deg) rotateY(180deg)';}
-          else if (item.cache === 'down' && currDir === 'right') {transformStr = 'rotate(90deg)';}
-          else if (item.cache === 'up' && currDir === 'left') {transformStr = 'rotate(90deg) rotateY(180deg)';}
-          else if (item.cache === 'up' && currDir === 'right') {transformStr = 'rotate(-90deg)';}
-          else if (item.cache === 'up' && currDir === 'down') {
-            if (currTransform.includes('rotate(270deg) rotateY(180deg)')) {transformStr = 'rotate(270deg)';}
+          switch (cache, dir, transform) {
+            case cache === 'down' && dir === 'left':
+              item.element.style.transform = 'rotate(270deg) rotateY(180deg)'; break;
+            case cache === 'down' && dir === 'right':
+              item.element.style.transform = 'rotate(90deg)'; break;
+            case cache === 'up' && dir === 'left':
+              item.element.style.transform = 'rotate(90deg) rotateY(180deg)'; break;
+            case cache === 'up' && dir === 'right':
+              item.element.style.transform = 'rotate(-90deg)'; break;
+            case cache === 'up' && dir === 'down' && transform.includes(downLeft):
+              item.element.style.transform = 'rotate(270deg)'; break;
+            case cache === 'down' && dir === 'up' && transform.includes(upLeft):
+              item.element.style.transform = 'rotate(90deg)'; break;
+            default:
+              item.element.style.transform = new Directions(item.board)[cache].transform;
           }
-          else if (item.cache === 'down' && currDir === 'up') {
-            if (currTransform.includes('rotate(90deg) rotateY(180deg)')) {transformStr = 'rotate(90deg)';}
-          }
-          item.element.style.transform = transformStr;
-          item.speed = stats.speed;
-          item.direction = item.cache;
+
+          item.speed = new Directions(item.board)[cache].speed;
+          item.direction = cache;
           item.cache = '';
 
           return true;
@@ -410,97 +417,29 @@ function checkCollisions(item) {
     item.cache = '';
   }
 
-  teleport(item);
+  item.teleport();
 
 }
-
-function spawn(item) {
-
-  let blinkCount = 0;
-
-  function blink(item) {
-
-    if (blinkCount === 44) {
-               item.speed = d[item.direction].speed; item.free = 'free'; 
-               if (munchModeActive === true) {
-                      item.element.style.backgroundColor = 'blue';
-                      let fringes = Array.from(item.element.getElementsByClassName('fringe'));
-                      fringes.forEach(fringe=> {
-                                 
-                       if (fringe.style.backgroundColor === item.color) {fringe.style.backgroundColor = 'blue';}
-                       else if (fringe.style.backgroundColor === 'white') {fringe.style.backgroundColor = 'blue';}
-                       else {
-                         let gradient = fringe.style.backgroundImage;
-                         let newGradient = gradient.replace(item.color,'blue');
-                         newGradient = newGradient.replace('white','blue');
-                         fringe.style.backgroundImage = newGradient;
-                       }
-
-                     })
-
-                     let eyes = [...Array.from(item.element.getElementsByClassName('eyeball')),
-                                 ...Array.from(item.element.getElementsByClassName('pupil'))];
-                     eyes.forEach(eye => eye.style.display = 'none');
-
-                     let frowns = [...Array.from(item.element.getElementsByClassName('blue-frown')),
-                                   ...Array.from(item.element.getElementsByClassName('blue-pupil'))];
-                     frowns.forEach(frown=> frown.style.display = '');
-                          
-               }      
-               return true;}
-             
-      let display = 'none';
-      if (blinkCount % 8 === 0 || blinkCount === 0) {display = '';}
-      if (blinkCount % 4 === 0) {
-
-      item.element.style.display = display;
-
-    }
-    blinkCount++;
-    setTimeout(function() {blink(item);},50);
-  }
-
-  blink(item);
-
-}
-
-function scoreDivAdd(pos,board=board2) {
-  const tile = board.tileW;
-  let newDiv = document.createElement('div');
-  newDiv.classList.add('ghost-score');
-  newDiv.style.width = tile * 2;
-  newDiv.style.height = tile * 2;
-  newDiv.style.left = pos.x;
-  newDiv.style.top = pos.y;
-  newDiv.innerHTML = '200';
-
-  let game = document.getElementById('game');
-  game.appendChild(newDiv);
-
-  setTimeout(function() {game.removeChild(newDiv)},1500);
-
-}
-
 
 // releases new ghosts from the box as applicable
 function release(board) {
 
+  console.log('release started');
   // stop function if the game is restarted
   if (restarted === true || restartRelease === true) {return false;}
 
   // only proceed if there are ghosts in position in the box
   const positions = Ghost.boxPositions();
-  if (Object.keys(positions).every(pos => !positions[pos]) === false) {
-
-    let targetBoxPos = '';
+  if (Object.values(positions).some(val => val)) {
 
     // center leaves first, followed by left and then right
-    if (positions.center) {targetBoxPos = 'center'}
-    else if (positions.left) {targetBoxPos = 'left'}
-    else if (positions.right) {targetBoxPos = 'right'}
+    const {center, left, right} = positions
+    const targetBoxPosition = (center && 'center') || (left && 'left') || (right && 'right');
+
+    console.log(targetBoxPosition);
 
     // get the ghost in the target position
-    let ghost = ghosts.filter(g => g.boxPosition === targetBoxPos)[0];
+    let ghost = ghosts.filter(g => g.boxPosition === targetBoxPosition)[0];
 
     // open the gate
     const ghostGate = document.getElementById('ghost-gate');
@@ -646,19 +585,12 @@ function munchMode() {
 
 }
 
-function teleport(item,board=board2) {
-  if (item.position.x <= 0 && item.direction === 'left') {
-    item.position.x = (board.cols - 2) * board.tileW - board.speed;
-    item.rcPos.col = board.cols - 3;
-  }
-  else if (item.position.x > (board.cols - 2) * board.tileW && item.direction === 'right') {
-    item.position.x = 0;
-    item.rcPos.col = 0;
-  }
-}
-
 let test = document.getElementsByClassName('test-div')
 if (test[0].style.display == 'none') {isMobile = true;}
+
+document.getElementById('game').style.top = board2.tileW * 3;
+document.getElementById('game').style.width = board2.boardWidth;
+document.getElementById('header').style.width = board2.boardWidth;
 drawBoardNew(board2);
 
 const row = board2.layout.findIndex(x => x.includes('P'));

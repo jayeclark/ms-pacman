@@ -1,5 +1,6 @@
 import { RcPos } from './board.js';
 import { Element } from './Element.js';
+import { Directions } from './Directions.js';
 Boolean.prototype.or = function(bool2) { return this || bool2 };
 
 export class GamePiece extends Element {
@@ -7,7 +8,7 @@ export class GamePiece extends Element {
   constructor(position, startingDirection) {
     super();
     this.board = position.board;
-    this.speed = position.board.speed;
+    this.speed = new Directions(position.board)[startingDirection].speed;
     this.position = position.xyCoordinates;
     this.direction = startingDirection;
   }
@@ -25,6 +26,15 @@ export class GamePiece extends Element {
     } else if (direction.includes('up').or(direction.includes('down'))) {
       this.position.y += this.speed;
       this.element.style.top = this.position.y;
+    }
+  }
+
+  teleport() {
+    const { position: { x }, direction, board: { cols, tileW }, speed } = this;
+    if (x <= 0 && direction === 'left') {
+      this.position.x = (cols - 2) * tileW - speed;
+    } else if (x > (cols - 2) * tileW && direction === 'right') {
+      this.position.x = 0;
     }
   }
 
