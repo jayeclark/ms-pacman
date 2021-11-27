@@ -9,7 +9,7 @@ export class Wall extends Element {
   constructor(position) {
     super();
     this.position = position;
-    this.block = this.makeElement('div', 'wall', this.makeStyle(position));
+    this.element = this.makeElement('div', 'wall', this.makeStyle(position));
     this.ref = ref++;
     this.innerCorners = this.addInnerCorners(position);
   }

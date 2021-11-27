@@ -44,10 +44,25 @@ export class GhostBox extends Element {
 
 export class MessageDiv extends Element {
 
-  constructor({style, id, innerHTML}) {
+  constructor(style, id, innerHTML) {
     super();
     this.element = this.makeElement('div', 'message', style, id);
     this.element.innerHTML = innerHTML;
   }
 
+}
+
+export class Arrow extends Element {
+  constructor(classNames, style, id=null, innerHTML=null) {
+    super();
+    this.element = this.makeElement('div', classNames, style, id);
+    this.element.innerHTML = innerHTML;
+  }
+}
+export class ScoreDiv extends Element {
+  constructor(classNames, style, id=null, innerHTML=null) {
+    super();
+    this.element = this.makeElement('div', classNames, style, id);
+    this.element.innerHTML = innerHTML;
+  }
 }

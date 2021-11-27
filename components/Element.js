@@ -13,10 +13,8 @@ export class Element {
         } else {
             classNames.forEach(className => element.classList.add(className));
         }
-        for (let key in style) {
-            element.style[key] = style[key];
-        } 
-        if (id) {element.id = id;}
+        for (let key in style) { element.style[key] = style[key]; } 
+        if (id) { element.id = id; }
         return element;
     }
 

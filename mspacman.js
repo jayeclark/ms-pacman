@@ -1,4 +1,5 @@
-import { board2, d, dots, drawBoardNew, RcPos } from './components/board.js';
+import { board2, dots } from './components/Board.js';
+import { RcPos } from './components/RcPos.js';
 import { Ghost, ghosts } from './components/Ghost.js';
 import { MsPacMan } from './components/MsPacman.js';
 import { Tile } from './components/Tile.js';
@@ -35,6 +36,7 @@ export function startGame() {
   }
   else {
     stop = !stop;
+    ghosts.forEach(ghost => ghost.status.stop = !ghost.status.stop);
   }
 
   buttonSwap(`start`);
@@ -59,10 +61,10 @@ export function restartGame() {
   ghosts.splice(0,ghosts.length);
 
   function redraw() {
-    drawBoardNew(board2);
-    const row = board2.findIndex(x=> x.includes('P'));
-    const col = board2[row].indexOf('P');
-    msPacMan = new MsPacMan(new RcPos(row, col, board2));
+    board2.addToGame(dots);
+    const row = board2.layout.findIndex(x=> x.includes('P'));
+    const col = board2.layout[row].indexOf('P');
+    msPacMan = new MsPacMan(new RcPos(row, col, board2), 'right');
   }
   
   setTimeout(redraw,500);
@@ -429,7 +431,8 @@ function release(board) {
   if (restarted === true || restartRelease === true) {return false;}
 
   // only proceed if there are ghosts in position in the box
-  const positions = Ghost.boxPositions();
+  const positions = Ghost.boxPositions(ghosts);
+  console.log(positions);
   if (Object.values(positions).some(val => val)) {
 
     // center leaves first, followed by left and then right
@@ -440,18 +443,19 @@ function release(board) {
 
     // get the ghost in the target position
     let ghost = ghosts.filter(g => g.boxPosition === targetBoxPosition)[0];
+    console.log(ghost);
 
     // open the gate
     const ghostGate = document.getElementById('ghost-gate');
     ghostGate.style.backgroundColor = 'black';
 
-    leave(ghost,board);
+    leave(ghost);
 
     function leave(ghost) {
       if (restarted === true) {return false;}
-      if (ghost.free === 'free') {
+      if (ghost.status.mode === 'free') {
         // recalculate box positions
-        let newPos = Ghost.boxPositions();
+        let newPos = Ghost.boxPositions(ghosts);
         if (newPos.center !== '' && (newPos.left === false || newPos.right === false)) {
           // find and move center ghost
           otherGhost = ghosts.filter(g => g.boxPosition === 'center')[0];
@@ -591,11 +595,11 @@ if (test[0].style.display == 'none') {isMobile = true;}
 document.getElementById('game').style.top = board2.tileW * 3;
 document.getElementById('game').style.width = board2.boardWidth;
 document.getElementById('header').style.width = board2.boardWidth;
-drawBoardNew(board2);
+board2.addToGame(dots);
 
 const row = board2.layout.findIndex(x => x.includes('P'));
 const col = board2.layout[row].indexOf('P');
-export const msPacMan = new MsPacMan(new RcPos(row, col, board2), 'right');
+export let msPacMan = new MsPacMan(new RcPos(row, col, board2), 'right');
 window.startGame = startGame;
 window.restartGame = restartGame;
 

@@ -2,11 +2,11 @@ import { GamePiece } from './GamePiece.js';
 import { Directions } from './Directions.js';
 import { Tile } from './Tile.js';
 import { msPacMan } from '../mspacman.js';
-import { portals } from './board.js';
 
 String.prototype.isBarrier = function() {return this === 'wall' || this === 'ghostbox'};
 
 export const ghosts = [];
+
 Array.prototype.includesAll = function(...args) {
   return args.map(arg => this.includes(arg)).every(x => x === true);
 }
@@ -14,39 +14,38 @@ Array.prototype.includesAll = function(...args) {
 export class Ghost extends GamePiece {
 
   constructor(position, startingDirection, color, id, mode ) {
-
     super(position, startingDirection);
     this.color = color;
     this.element = this.makeElement('div', 'ghost', this.makeStyle(), id);
     this.addFringe().addEyes().addBlueFeatures();
     this.status = { munchModeActive: false, restarted: false, stop: false, mode };
     ghosts.push(this);
-
   }
   
-  static boxPositions() {
+  static boxPositions(ghosts) {
     const positions = {};
     for (let ghost of ghosts) {
       const ghostPosition = ghost.boxPosition;
+      console.log(ghostPosition);
       if (ghostPosition && ghostPosition !== 'none') {
-        positions[ghostPosition] = ghost.element.id;}
+        positions[ghostPosition] = ghost.element.id;
       }
+    }
     return positions;
   }
 
   get boxPosition() {
     const { rcPos: { board }, position: { x } } = this;
-    const { ghostGateX: xS, tileW } = board;
-
-    if (x > xS && this.isInBox) { return 'right'; } 
-    else if (x < xS && this.isInBox) { return 'left'; }
-    else if (x === xS + tileW / 2 && this.isInBox) { return 'center'; }
+    const { ghostContainer: { gateStart: { x: xS }}, tileW } = board;
+    if (x > xS + tileW && this.isInBox) { return 'right'; } 
+    else if (x < xS + tileW && this.isInBox) { return 'left'; }
+    else if (x === xS + tileW && this.isInBox) { return 'center'; }
     return 'none';
   }
 
   get isInBox() {
-    const { rcPos: { row, col, board: { ghostContainer: {start, end } } } } = this;
-    return (row >= start.row && row < --end.row && col >= start.col && col <= end.col); 
+    const { position: { x, y }, rcPos: { board: { ghostContainer: { start, end } } } } = this;
+    return (y >= start.y && y < end.y && x >= start.x && x <= end.x); 
   }
   
   addFringe() {
@@ -109,40 +108,50 @@ export class Ghost extends GamePiece {
 
   leaveBox() {
   
-    if (this.status.restarted === true) {return false;}
+    if (this.status.restarted === true) { return false; }
   
     if (this.status.stop === false) {
   
-      const { board, x: xG, y: yG, status: { mode } } = this;
-      const { ghostGateX: xS, ghostGateY: { start: yS } } = board;
+      const { speed, board, position: { x: xG, y: yG }, status: { mode } } = this;
+      const { tileW, ghostContainer: { gateStart: { x: xS, y: yS } } } = board;
   
-      if (xG === xS && yG > yS && mode === 'notfree') { this.move('up'); }
-      else if (xG > xS && xS - xG < this.speed && this.free === 'notfree') {
+      console.log(xG, xS + tileW, yG, yS);
+      if (xG === xS + tileW && yG > yS && mode === 'notfree') { 
+        console.log('up');
+        this.direction = 'up';
+        this.speed = new Directions(this.board).up.speed;
+        this.move(); 
+      }
+      else if (xG > xS + tileW && xS - xG < parseInt(speed) && mode === 'notfree') {
           this.position.x = xS;
           this.element.style.left = this.position.x;
-          this.rcPos.col = Math.floor(this.position.x / board.tileW);
       }
-      else if (xG === xS && yG === yS && mode === 'notfree') {
+      else if (xG === xS + tileW && yG === yS && mode === 'notfree') {
           this.status.mode = 'free';
           this.board.ghostsInBox.splice(this.board.ghostsInBox.indexOf(this.element.id),1);
   
-          if (this.position.x % board.tileW > 0) {
+          if (this.position.x % tileW > 0) {
             this.position.x -= this.position.x % board.tileW;
             this.element.style.left = this.position.x;
-            this.rcPos.col = Math.floor(this.position.x/board.tileW);
           }
           
           setTimeout(function() {
             const ghostGate = document.getElementById('ghost-gate');
             ghostGate.style.backgroundColor = '#e1e1fb';
-          },500)
+          }, 500)
           
         }
-        else if (xG < xS && mode === 'notfree') {this.move('right')}
-        else if (xG > xS && mode === 'notfree') {this.move('left')}  
-  
+        else if (xG < xS + tileW && mode === 'notfree') {
+          this.direction = 'right';
+          this.speed = new Directions(this.board).right.speed;
+          this.move();
+        }
+        else if (xG > xS + tileW && mode === 'notfree') {
+          this.direction = 'left';
+          this.speed = new Directions(this.board).left.speed;
+          this.move();
+        }  
       }
-  
   }
   
   reShuffle() {
@@ -307,7 +316,7 @@ export class Ghost extends GamePiece {
         const { status: { mode }, 
                 position: {x: currX , y: currY }, 
                 rcPos: { col, row },
-                board: { tileW, cols, boardWidth }, 
+                board: { tileW, cols, boardWidth, portals }, 
                 targetCoordinates: {x: targX, y: targY} } = this;
             
         if (currX === targX && currY === targY && mode === 'returning' && this.board.ghostsInBox.length >= 3) {
@@ -349,7 +358,7 @@ export class Ghost extends GamePiece {
           if (portals.includes(row)) {
             let optA = Math.abs(targX - currX);
             let optB = Math.min(targX, (boardWidth - targX)) + Math.min(currX, (boardWidth - currX));
-            if (xDir !== 'same' && optB < optA) { xDir = d[xDir].reverse; }
+            if (xDir !== 'same' && optB < optA) { xDir = new Directions(this.board)[xDir].reverse; }
           }
     
           const [yRun, xRun] = [this.rcPos.checkRunLength(yDir), this.rcPos.checkRunLength(xDir)];
