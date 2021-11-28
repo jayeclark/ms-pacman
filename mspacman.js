@@ -1,358 +1,65 @@
-import { board2, dots } from './components/Board.js';
+import { Board } from './components/Board.js';
 import { RcPos } from './components/RcPos.js';
 import { Ghost, ghosts } from './components/Ghost.js';
 import { MsPacMan } from './components/MsPacman.js';
 import { Tile } from './components/Tile.js';
 import { Directions } from './components/Directions.js';
+import { loadBoards } from './data/boards.js';
 
-let [count, gCount, dCount, powerCount, eatenCount, score] = [0,0,0,0,0,0];
+let [dots, count, dCount, powerCount, eatenCount, score] = [{ dotCount: 0 }, 0, 0, 0, 0, 0, 0];
 let [munchModeActive, stop, started, restarted, restartGhosts, restartRelease] = [false, false, false, false, false, false];
 String.prototype.isHall = function() {return this === 'hall'};
-
-// Swap the visibility of the 'Start' and 'Stop' buttons when they are clicked
-const buttonSwap = () => {
-
-  const ids = ['start','stop'];
-  ids.forEach(id=>{
-    const button = document.getElementById(id);
-    button.style.display = button.style.display.includes('none') ? '' : button.style.display = 'none';
-  })
-
+function get(str) {
+  if (str.startsWith('#')) { return document.getElementById(str.replace('#','')) }
+  return document.getElementsByClassName(str.replace(/\./,''))
 }
 
-export function startGame() {
+// create initial board
+const { array: layout, speed }  = await loadBoards().then(res => res.board1);
 
-  if (stop === false && started === false) {
-    
-    restarted = false;
-    update();
-    setTimeout(updateGhosts,1000);
-    setTimeout(function() {restartRelease = false; release(board2);},7000)
+// create inline stylesheet for changing properties
+const styleSheet = document.createElement('style');
+styleSheet.id = "header-style-sheet";
+document.head.appendChild(styleSheet);
 
-    started = true;
-    let readyDiv = document.getElementById('ready');
-    readyDiv.style.display = 'none';
+// make a board out of the layout
+const board = new Board(layout, speed);
+document.getElementById('game').style.top = board.tileW * 3;
+document.getElementById('game').style.width = board.boardWidth;
+document.getElementById('header').style.width = board.boardWidth;
+board.addToGame(dots);
 
-  }
-  else {
-    stop = !stop;
-    ghosts.forEach(ghost => ghost.status.stop = !ghost.status.stop);
-  }
+const [row, col] = [layout.findIndex(x => x.match`P`), layout.find(x => x.match`P`).indexOf`P`];
+export let msPacMan = new MsPacMan(new RcPos(row, col, board), 'right');
 
-  buttonSwap(`start`);
+// Add event listeners to buttons
+document.getElementById('start').addEventListener('click', startGame);
+document.getElementById('stop').addEventListener('click', startGame);
+document.getElementById('restart').addEventListener('click', restartGame);
 
+// Add event listeners to arrows
+document.getElementById('up-arrow').addEventListener('click', (e) => cache(e.currentTarget.id, msPacMan));
+document.getElementById('down-arrow').addEventListener('click', (e) => cache(e.currentTarget.id, msPacMan));
+document.getElementById('left-arrow').addEventListener('click', (e) => cache(e.currentTarget.id, msPacMan));
+document.getElementById('right-arrow').addEventListener('click', (e) => cache(e.currentTarget.id, msPacMan));
+
+// Swaps the visibility of the 'Start' and 'Stop' buttons when they are clicked
+function buttonSwap() {
+  get('#start').style.display = (!get('#start').style.display && 'none' ) || '';
+  get('#stop').style.display = (!get('#stop').style.display && 'none' ) || '';
 }
 
-export function restartGame() {
-
-  started = stop = restartGhosts = false;
-  restarted = restartRelease = true;
-  
-  // erase board, ghosts, and msPacMan
-  const oldGame = document.getElementById('game');
-  oldGame.innerHTML = '';
-
-  document.getElementById('score').innerHTML = 0;
-  score = 0;
-
-  const msPacKeys = Object.keys(msPacMan);
-  msPacKeys.forEach(key=> {delete msPacMan[key];})
-
-  ghosts.splice(0,ghosts.length);
-
-  function redraw() {
-    board2.addToGame(dots);
-    const row = board2.layout.findIndex(x=> x.includes('P'));
-    const col = board2.layout[row].indexOf('P');
-    msPacMan = new MsPacMan(new RcPos(row, col, board2), 'right');
-  }
-  
-  setTimeout(redraw,500);
-
-  let restart = document.getElementById('restart');
-  restart.style.display = 'none';
-
-  let start = document.getElementById('start');
-  start.style.display = ''; 
-
-}
-
-function cache(dir) {
+// Adds a direction to msPacMan's cache when an arrow is clicked
+function cache(id, msPacMan) {
+  const dir = id.replace('-arrow','');
   msPacMan.cache = dir;
-  let el = dir + '-arrow';
-  let arrow = document.getElementById(el);
+  const arrow = document.getElementById(id);
   arrow.style.opacity = '60%';
   arrow.style.transform = 'translate(0px, 2px)';
-  let unclick = () => {
+  setTimeout(() => {
     arrow.style.opacity = '';
-    arrow.style.transform = '';
-  }
-  setTimeout(unclick,100);
+    arrow.style.transform = '';}, 100);
 }
-
-// Update the position of Ms PacMan
-function update(board=board2) {
-
-  if (restarted === true) {return false;}
-  count++;
-  dCount++;
-
-  if (stop === false) {
-
-    document.onkeydown = checkKey;
-
-    function checkKey(e) {
-        e = e || window.event;
-        if (e.keyCode == '38' || e.keyCode == '87') { msPacMan.cache = 'up'; } 
-        else if (e.keyCode == '40' || e.keyCode == '83') { msPacMan.cache = 'down'; } 
-        else if (e.keyCode == '37' || e.keyCode == '65') { msPacMan.cache = 'left'; } 
-        else if (e.keyCode == '39' || e.keyCode == '68') { msPacMan.cache = 'right'; }
-    }
-  
-    checkGhostCollision();
-
-    if (msPacMan.speed !== 0 || msPacMan.cache !== '') {
-  
-      checkCollisions(msPacMan);
-      checkDots(msPacMan);
-      msPacMan.move();
-
-    }
-
-  }
-
-  if (count === 3) {
-      msPacMan.element.src = msPacMan.element.src.includes('mspacman1.png') ? 
-                        './images/mspacman2.png' : './images/mspacman1.png'  
-      count = 0;
-    }
-
-  if (dCount === 9) {
-    let bigDots = Array.from(document.getElementsByClassName('big'));
-    bigDots.forEach(dot=>{
-      if (dot.style.display === '') {dot.style.display = 'none';} else {dot.style.display = '';}
-    })
-    dCount = 0;
-  }
-
-  setTimeout(update, 50);
-
-}
-
-// Update the position of free ghosts
-function updateGhosts() {
-
-  if (restarted === true && restartGhosts === false) { return false; }
-
-  // correct starting position if applicable
-  ghosts.forEach(ghost=> {
-    let { status: mode, speed, position: { x, y }, element } = ghost;
-    if (mode === 'free' && x % speed > 0) {
-      x = x + x % speed;
-      element.style.left = x;
-    }
-    else if (mode === 'free' && y % speed > 0) {
-      y = y + y % speed;
-      element.style.top = y;
-    }
-  })
-
-  if (stop === false) {
-    for (let ghost of ghosts) {
-      if(ghost.status.mode === 'free' || ghost.status.mode === 'returning') {
-        // check if the ghost can change directions
-        ghost.pickDir();
-        ghost.move(ghost.direction);
-      }
-    }
-  }
-  setTimeout(updateGhosts, 50);
-}
-
-function checkDots(item) {
-  // find all dots in the current cell
-  let classCode = 'dot-'+item.rcPos.col + '-' + item.rcPos.row;
-  let next = item.rcPos[item.direction];
-  let classCode2 = 'dot-'+ next.col + '-' + next.row;
- 
-  if (item.direction === 'right') {classCode2 = 'pac-dot-' + (next.col + 1) + '-' + next.row;}
-  if (item.direction === 'down') {classCode2 = 'pac-dot-' + next.col + '-' + (next.row + 1);}
-
-  let dots = [document.getElementById(classCode),document.getElementById(classCode2)].filter(x => x !== null);
-
-  // check if any are in the mouth
-  for (let i = 0; i < dots.length; i++) {
-
-    const dot = dots[i];
-    let {tileW, pacDotW, pacWidth} = board2; 
-    if (dot.classList.contains('big')) {pacDotW = parseInt(dot.style.width);} 
-
-    let dotLeft = parseInt(dot.style.left);
-    let dotRight = dotLeft + pacDotW;
-    let dotTop = parseInt(dot.style.top);
-    let dotBottom = dotTop + pacDotW;
-    let itemLeft = parseInt(item.element.style.left);
-    let itemTop = parseInt(item.element.style.top);
-
-
-    let leftBoundary = itemLeft + tileW - pacWidth / 2;
-    let rightBoundary = leftBoundary + pacWidth;
-    let topBoundary = itemTop + tileW - pacWidth / 2;
-    let bottomBoundary = topBoundary + pacWidth;
-
-    function removeDot(id) {
-      let dotToRemove = document.getElementById(id);
-      let game = document.getElementById('game');
-      let removedDot = game.removeChild(dotToRemove);
-      if (removedDot !== '') {
-        if (removedDot.classList.contains('big')) {
-          score += 50;
-          if (munchModeActive === true) {powerCount = 0;} else {munchMode();}
-        }
-        else {score += 10;}
-        let scoreDiv = document.getElementById('score');
-        scoreDiv.innerHTML = score;
-      }
-    }
-
-    if (dotLeft > leftBoundary && dotRight < rightBoundary && dotTop > topBoundary && dotBottom < bottomBoundary) {
-      removeDot(dot.id); eatenCount++;
-      if (eatenCount === dots.dotCount) {
-
-            // stop movement
-            stop = true;
-
-            // disappear ghosts
-            ghosts.forEach(ghost => {
-              if (ghost.free === 'free') {
-                ghost.element.style.display = 'none';
-              }
-            })
-
-            // appear 'winner'
-            let win = document.getElementById('winner');
-            win.style.display = '';
-
-            // change button to 'restart'
-            let stopButton = document.getElementById('stop');
-            stopButton.style.display = 'none';
-
-            let restart = document.getElementById('restart');
-            restart.style.display = '';
-
-      }
-    }
-
-  }
-
-}
-
-function checkGhostCollision() {
-
-  // if collided with a ghost, end game
-  let collidedGhosts = [];
-
-  const { left, margin, top, width } = window.getComputedStyle(msPacMan.element);
-
-  let pacL = parseInt(left) + parseInt(margin);
-  let pacR = parseInt(left) + parseInt(margin) + parseInt(width);
-  let pacT = parseInt(top) + parseInt(margin);
-  let pacB = parseInt(top) + parseInt(margin) + parseInt(width);
-  let pacDir = msPacMan.direction;
-
-  ghosts.forEach(ghost => {
-
-    let ghostCollision = false;
-    if (ghost.status.mode === 'free') {
-
-      const { margin: gMargin, left: gLeft, top: gTop, width: gWidth, height: gHeight } = window.getComputedStyle(ghost.element);
-
-      const ghostL = parseFloat(gLeft) + parseFloat(gMargin);
-      const ghostR = parseFloat(gLeft) + parseFloat(gMargin) + parseFloat(gWidth);
-      const ghostT = parseFloat(gTop) + parseFloat(gMargin);
-      const ghostB = parseFloat(gTop) + parseFloat(gMargin) + parseFloat(gHeight);
-      const ghostCx = (ghostL + ghostR) / 2;
-      const ghostCy = (ghostT + ghostB) / 2;
-
-      if ((ghostR >= pacL && ghostR <= pacR) || (ghostL <= pacR && ghostL >= pacL)) {
-        if (ghostCy <= pacB && ghostCy >= pacT) {ghostCollision = true;}
-        else if (ghostT <= pacB && ghostT >= pacT) { ghostCollision = true; } 
-        else if (ghostB >= pacT && ghostB <= pacB) { ghostCollision = true; }
-      }
-      else if ((ghostB >= pacT && ghostB <= pacB) || (ghostT <= pacB && ghostT >= pacT)) {
-        if (ghostCx <= pacR && ghostCx >= pacL) {ghostCollision = true;}
-        else if (ghostL <= pacR && ghostL >= pacL) { ghostCollision = true; } 
-        else if (ghostR >= pacL && ghostR <= pacR) { ghostCollision = true; }
-      }
-
-      if (ghostCollision === true) {
-        collidedGhosts.push(ghost.element.id); 
-      }
-    }
-
-  })
-
-  if (collidedGhosts.length > 0 && powerCount === 0) {
-    
-    // stop movement
-    stop = true;
-    eatenCount = 0;
-    dots.dotCount = 0;
-
-    // disappear msPacMan
-    msPacMan.element.style.display = 'none';
-
-    // appear 'game over'
-    let over = document.getElementById('game-over');
-    over.style.display = '';
-
-    // change button to 'restart'
-    let stopButton = document.getElementById('stop');
-    stopButton.style.display = 'none';
-
-    let restart = document.getElementById('restart');
-    restart.style.display = '';
-
-  }
-  else if (collidedGhosts.length > 0 && powerCount > 0) {
-
-    collidedGhosts.forEach(id=>{
-      let ghostEl = document.getElementById(id);
-      const {margin: gMargin, left: gLeft, top: gTop, width: gWidth, height: gHeight} = window.getComputedStyle(ghostEl);
-
-      let ghostL = parseFloat(gLeft) + parseFloat(gMargin);
-      let ghostT = parseFloat(gTop) + parseFloat(gMargin);
-      let ghostEaten = false;
-
-      if ((ghostL <= pacL && pacDir === 'left') || (ghostL >= pacL && pacDir === 'right') ||
-          (ghostT <= pacT && pacDir === 'up') || (ghostT >= pacT && pacDir === 'down')) {
-            ghosts.forEach(x => {
-              if (x.element.id === id && x.free === 'free') ghostEaten = true
-            })
-      }
-
-      if (ghostEaten === true) { 
-
-        const ghost = ghosts.filter(g => g.element.id === id)[0];
-
-        if (ghost.status.mode === 'free') {
-
-          ghost.disAppear();
-
-          board2.scoreDivAdd({'x': parseFloat(ghost.element.style.left), 'y': parseFloat(ghost.element.style.top)});
-          score += 200;
-          document.getElementById('score').innerHTML = score;
-        }
-
-      }
-
-    })
-
-  }
-
-}
-
-function toggleDisplay(item) {item.style.display = item.style.display === 'none' ? '' : 'none'}
 
 // Check prosimity to edges and reverse direction and image if needed
 function checkCollisions(item) {
@@ -423,62 +130,159 @@ function checkCollisions(item) {
 
 }
 
-// releases new ghosts from the box as applicable
-function release(board) {
+// Tests if player has encountered a dot that should be eaten, and removes the dot if so
+function checkDots(item) {
 
-  console.log('release started');
-  // stop function if the game is restarted
-  if (restarted === true || restartRelease === true) {return false;}
+  const { rcPos, direction, element: { style: {top: itemT, left: itemL} } } = item;
+  const { board } = rcPos;
+  // find all dots in the current cell
+  let classCode = `dot-${rcPos.col}-${rcPos.row}`;
+  let next = rcPos[item.direction];
+  let classCode2 = `dot-${next.col}-${next.row}`;
+  if (direction === 'right') { classCode2 = `dot-${next.col + 1}-${next.row}`; }
+  if (direction === 'down') { classCode2 = `dot-${next.col}-${next.row + 1}`; }
 
-  // only proceed if there are ghosts in position in the box
-  const positions = Ghost.boxPositions(ghosts);
-  console.log(positions);
-  if (Object.values(positions).some(val => val)) {
+  let dots = [document.getElementById(classCode),
+              document.getElementById(classCode2)].filter(x => x !== null);
 
-    // center leaves first, followed by left and then right
-    const {center, left, right} = positions
-    const targetBoxPosition = (center && 'center') || (left && 'left') || (right && 'right');
+  // check if any are in the mouth
+  for (let i = 0; i < dots.length; i++) {
 
-    console.log(targetBoxPosition);
+    const [dot, { tileW, pacWidth }] = [dots[i], board]; 
+    const pacDotW = parseFloat(dot.style.width) || board.pacDotW;
+    const [left, top] = [parseFloat(dot.style.left), parseFloat(dot.style.top)];
+    const [right, bottom] = [left + pacDotW, top + pacDotW];
 
-    // get the ghost in the target position
-    let ghost = ghosts.filter(g => g.boxPosition === targetBoxPosition)[0];
-    console.log(ghost);
+    const bounds = (pos) => [pos + tileW - pacWidth / 2, pos + tileW + pacWidth / 2];
+    const [pacL, pacR, pacT, pacB] = [...bounds(parseFloat(itemL)), ...bounds(parseFloat(itemT)) ]
 
-    // open the gate
-    const ghostGate = document.getElementById('ghost-gate');
-    ghostGate.style.backgroundColor = 'black';
+    if (left > pacL && right < pacR && top > pacT && bottom < pacB) {
+      removeDot(dot.id); eatenCount++;
+      if (eatenCount === dots.dotCount) {
 
-    leave(ghost);
+            stop = true;
 
-    function leave(ghost) {
-      if (restarted === true) {return false;}
-      if (ghost.status.mode === 'free') {
-        // recalculate box positions
-        let newPos = Ghost.boxPositions(ghosts);
-        if (newPos.center !== '' && (newPos.left === false || newPos.right === false)) {
-          // find and move center ghost
-          otherGhost = ghosts.filter(g => g.boxPosition === 'center')[0];
-          reArrange(otherGhost);
-        }
-        return true;
+            // disappear ghosts
+            ghosts.forEach(({ element, status: { mode } }) => {
+              element.style.display = mode === 'free' ? 'none' : '';
+            })
+
+            // appear 'winner'
+            document.getElementById('winner').style.display = '';
+
+            // change button to 'restart'
+            document.getElementById('stop').style.display = 'none';
+            document.getElementById('restart').style.display = '';
       }
-      ghost.leaveBox();
-      setTimeout(function() {leave(ghost)},50);
     }
 
-    function reArrange(ghost) {
-      let result = ghost.reshuffle();
-      if (result || restarted) {return false;}
-      setTimeout(function() {reArrange(ghost)},50)
+    function removeDot(id) {
+      const removedDot = document.getElementById('game').removeChild(document.getElementById(id));
+      const isBig = removedDot.classList.contains('big');
+
+      if (removedDot && isBig && munchModeActive) { score += 50; powerCount = 0; } 
+      else if (removedDot && isBig) { score += 50; munchMode(); } 
+      else { score += 10; }
+
+      document.getElementById('score').innerHTML = score;
     }
-    
+  }
+}
+
+// Checks whether the player has collided with a ghost, and either ends the game or eats the ghost
+function checkGhostCollision() {
+
+  // if collided with a ghost, end game
+  const collidedGhosts = [];
+
+  function getBoundaries(element) {
+    const { left, margin, top, width } = window.getComputedStyle(element);
+    return [parseFloat(left) + parseFloat(margin),
+            parseFloat(left) + parseFloat(margin) + parseFloat(width),
+            parseFloat(top) + parseFloat(margin),
+            parseFloat(top) + parseFloat(margin) + parseFloat(width)]
   }
 
-  setTimeout(function() {release(board);},4000)
+  const [pacL, pacR, pacT, pacB] = getBoundaries(msPacMan.element)
+  const pacDir = msPacMan.direction;
+
+  ghosts.forEach(ghost => {
+
+    let ghostCollision = false;
+    if (ghost.status.mode === 'free') {
+      const [left, right, top, bottom] = getBoundaries(ghost.element)
+      const centerX = (left + right) / 2;
+      const centerY = (top + bottom) / 2;
+
+      if ((right >= pacL && right <= pacR) || (left <= pacR && left >= pacL)) {
+        if (centerY <= pacB && centerY >= pacT) { ghostCollision = true; }
+        else if (top <= pacB && top >= pacT) { ghostCollision = true; } 
+        else if (bottom >= pacT && bottom <= pacB) { ghostCollision = true; }
+      }
+      else if ((bottom >= pacT && bottom <= pacB) || (top <= pacB && top >= pacT)) {
+        if (centerX <= pacR && centerX >= pacL) { ghostCollision = true; }
+        else if (left <= pacR && left >= pacL) { ghostCollision = true; } 
+        else if (right >= pacL && right <= pacR) { ghostCollision = true; }
+      }
+      if (ghostCollision === true) { collidedGhosts.push(ghost.element.id); }
+    }
+  })
+
+  if (collidedGhosts.length > 0 && powerCount === 0) {
+    // stop all movement
+    stop = true;
+    eatenCount = 0;
+    dots.dotCount = 0;
+
+    // disappear msPacMan
+    msPacMan.element.style.display = 'none';
+
+    // appear 'game over' message
+    document.getElementById('game-over').style.display = '';
+
+    // change button to 'restart'
+    document.getElementById('stop').style.display = 'none';
+    document.getElementById('restart').style.display = '';
+  }
+  else if (collidedGhosts.length > 0 && powerCount > 0) {
+
+    collidedGhosts.forEach(id=>{
+      let ghostEl = document.getElementById(id);
+      const {margin: gMargin, left: gLeft, top: gTop, width: gWidth, height: gHeight} = window.getComputedStyle(ghostEl);
+
+      let ghostL = parseFloat(gLeft) + parseFloat(gMargin);
+      let ghostT = parseFloat(gTop) + parseFloat(gMargin);
+      let ghostEaten = false;
+
+      if ((ghostL <= pacL && pacDir === 'left') || (ghostL >= pacL && pacDir === 'right') ||
+          (ghostT <= pacT && pacDir === 'up') || (ghostT >= pacT && pacDir === 'down')) {
+            ghosts.forEach(x => {
+              if (x.element.id === id && x.free === 'free') ghostEaten = true
+            })
+      }
+
+      if (ghostEaten === true) { 
+
+        const ghost = ghosts.filter(g => g.element.id === id)[0];
+
+        if (ghost.status.mode === 'free') {
+
+          ghost.disAppear();
+
+          board.scoreDivAdd({'x': parseFloat(ghost.element.style.left), 'y': parseFloat(ghost.element.style.top)});
+          score += 200;
+          document.getElementById('score').innerHTML = score;
+        }
+
+      }
+
+    })
+
+  }
 
 }
 
+// Activates munchmode
 function munchMode() {
 
   if (stop === false) {
@@ -593,25 +397,153 @@ function munchMode() {
 
 }
 
-let test = document.getElementsByClassName('test-div')
-if (test[0].style.display == 'none') {isMobile = true;}
+// releases new ghosts from the box as applicable
+function release(board) {
 
-document.getElementById('game').style.top = board2.tileW * 3;
-document.getElementById('game').style.width = board2.boardWidth;
-document.getElementById('header').style.width = board2.boardWidth;
-board2.addToGame(dots);
+  // stop function if the game is restarted
+  if (restarted === true || restartRelease === true) {return false;}
 
-const row = board2.layout.findIndex(x => x.includes('P'));
-const col = board2.layout[row].indexOf('P');
-export let msPacMan = new MsPacMan(new RcPos(row, col, board2), 'right');
-window.startGame = startGame;
-window.restartGame = restartGame;
+  // only proceed if there are ghosts in position in the box
+  const positions = Ghost.boxPositions(ghosts);
+  if (Object.values(positions).some(val => val)) {
 
-//window.onload = (event) => {
-//  console.log('loaded');
-//  let test = document.getElementsByClassName('test-div')
-//  if (test[0].style.display == 'none') {isMobile = true;}
-//  console.log('board2',board2);
-//  drawBoardNew(board2);
-//  msPacMan = new MsPacMan(board2);
-//}
+    // center leaves first, followed by left and then right
+    const {center, left, right} = positions
+    const targetBoxPosition = (center && 'center') || (left && 'left') || (right && 'right');
+
+    // get the ghost in the target position
+    let ghost = ghosts.filter(g => g.boxPosition === targetBoxPosition)[0];
+
+    // open the gate
+    const ghostGate = document.getElementById('ghost-gate');
+    ghostGate.style.backgroundColor = 'black';
+
+    leave(ghost);
+
+    function leave(ghost) {
+      if (restarted === true) {return false;}
+      if (ghost.status.mode === 'free') {
+        // recalculate box positions
+        let newPos = Ghost.boxPositions(ghosts);
+        if (newPos.center !== '' && (newPos.left === false || newPos.right === false)) {
+          // find and move center ghost
+          otherGhost = ghosts.filter(g => g.boxPosition === 'center')[0];
+          reArrange(otherGhost);
+        }
+        return true;
+      }
+      ghost.leaveBox();
+      setTimeout(function() {leave(ghost)},50);
+    }
+
+    function reArrange(ghost) {
+      let result = ghost.reshuffle();
+      if (result || restarted) {return false;}
+      setTimeout(function() {reArrange(ghost)},50)
+    }
+    
+  }
+
+  setTimeout(function() {release(board);},4000)
+
+}
+
+// Redraws board and restarts the game
+function restartGame() {
+
+  started = stop = restartGhosts = false;
+  restarted = restartRelease = true;
+  
+  // erase board, score, ghosts, and msPacMan
+  document.getElementById('game').innerHTML = '';
+  document.getElementById('score').innerHTML = 0;
+  score = 0;
+
+  ghosts.splice(0, ghosts.length);
+  const msPacKeys = Object.keys(msPacMan);
+  msPacKeys.forEach(key=> { delete msPacMan[key]; })
+
+  setTimeout(redraw, 500);
+
+  document.getElementById('restart').style.display = 'none';
+  document.getElementById('start').style.display = ''; 
+
+  function redraw() {
+    board.addToGame(dots);
+    const [row, col] = [layout.findIndex(x=> x.match`P`), layout.find(x => x.match`P`).indexOf`P`];
+    msPacMan = new MsPacMan(new RcPos(row, col, board), 'right');
+  }
+}
+// Starts the game
+function startGame() {
+
+  if (stop === false && started === false) {
+    restarted = false;
+    update();
+    setTimeout(updateGhosts, 1000);
+    setTimeout(() => { restartRelease = false; release(board); }, 7000);
+
+    let readyDiv = document.getElementById('ready');
+    readyDiv.style.display = 'none';
+    started = true;
+  } else {
+    stop = !stop;
+    ghosts.forEach(ghost => ghost.status.stop = !ghost.status.stop);
+  }
+  buttonSwap();
+}
+
+// Updates the position of Ms PacMan
+function update() {
+
+  if (restarted === true) { return false; }
+  count++; dCount++;
+  const { speed, cache, element } = msPacMan;
+
+  if (stop === false) {
+
+    document.onkeydown = checkKey;
+    checkGhostCollision();
+    if (speed || cache) { checkCollisions(msPacMan); checkDots(msPacMan); msPacMan.move(); }
+
+    function checkKey(e) {
+      const dirs = [['up', 38, 87],['down', 40, 83],['left', 37, 65],['right', 39, 68]]
+      if (dirs.find(dir => dir.includes(e.keyCode))) {
+        msPacMan.cache = dirs.find(dir => dir.includes(e.keyCode))[0];
+      }
+    }
+  }
+
+  if (count === 3) {
+      element.src = element.src.includes('1') ? './images/mspacman2.png' : './images/mspacman1.png';
+      count = 0;
+  }
+
+  if (dCount === 9) {
+    let bigDots = [...document.getElementsByClassName('big')];
+    bigDots.forEach(({ style }) => style.display = (!style.display && 'none') || null )
+    dCount = 0;
+  }
+
+  setTimeout(update, 50);
+}
+
+// Updates the position of free and returning ghosts
+function updateGhosts() {
+
+  if (restarted === true && restartGhosts === false) { return false; }
+
+  // correct starting position if applicable
+  ghosts.forEach(ghost=> {
+    let { element, speed, position: { x, y }, status: { mode } } = ghost;
+    if (mode === 'free' && x % speed > 0) { x += x % speed; element.style.left = x; }
+    else if (mode === 'free' && y % speed > 0) { y += y % speed; element.style.top = y; }
+  })
+
+  if (stop === false) {
+    const filteredGhosts = ghosts.filter(({ status: { mode } }) =>  mode.match(/^free|returning/));
+    for (let ghost of filteredGhosts) { ghost.pickDir(); ghost.move(); }
+  }
+
+  setTimeout(updateGhosts, 50);
+}
