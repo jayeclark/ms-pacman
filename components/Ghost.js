@@ -405,8 +405,8 @@ export class Ghost extends GamePiece {
   }
   
   reAppear() {
-      let [color, showDivs] = [this.color, {eyeball: '', pupil: '', fringe: '', 'blue-frown': 'none', 'blue-pupil': 'none'}];
-      if (munchModeActive === true) {
+      let [ { color }, showDivs] = [this, {eyeball: '', pupil: '', fringe: '', 'blue-frown': 'none', 'blue-pupil': 'none'}];
+      if (this.status.munchModeActive === true) {
         [color, showDivs] = ['blue', {'blue-frown': '', 'blue-pupil': '', fringe: '', eyeball: 'none', pupil: 'none'}]
       }
   

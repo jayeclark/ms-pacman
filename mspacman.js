@@ -265,7 +265,7 @@ function checkGhostCollision() {
     let ghostCollision = false;
     if (ghost.status.mode === 'free') {
 
-      const {margin: gMargin, left: gLeft, top: gTop, width: gWidth, height: gHeight} = window.getComputedStyle(ghost.element);
+      const { margin: gMargin, left: gLeft, top: gTop, width: gWidth, height: gHeight } = window.getComputedStyle(ghost.element);
 
       const ghostL = parseFloat(gLeft) + parseFloat(gMargin);
       const ghostR = parseFloat(gLeft) + parseFloat(gMargin) + parseFloat(gWidth);
@@ -335,7 +335,7 @@ function checkGhostCollision() {
 
         const ghost = ghosts.filter(g => g.element.id === id)[0];
 
-        if (ghost.free === 'free') {
+        if (ghost.status.mode === 'free') {
 
           ghost.disAppear();
 
@@ -483,7 +483,10 @@ function munchMode() {
 
   if (stop === false) {
 
-    if (munchModeActive === false) {munchModeActive = true;}
+    if (munchModeActive === false) {
+      munchModeActive = true;
+      ghosts.forEach(ghost => ghost.status.munchModeActive = true);
+    }
 
     // make free ghosts blue, turn off their eyes and turn on their frowns
     if (powerCount === 0) {
@@ -577,6 +580,7 @@ function munchMode() {
       // stop function
       powerCount = 0;
       munchModeActive = false;
+      ghosts.forEach(ghost => ghost.status.munchModeActive = false);
       return true;
 
     }
@@ -585,7 +589,7 @@ function munchMode() {
 
   }
 
-  setTimeout(munchMode,50);
+  setTimeout(munchMode, 50);
 
 }
 
