@@ -8,7 +8,15 @@ import { loadBoards } from './data/boards.js';
 
 let [dots, count, dCount, powerCount, eatenCount, score] = [{ dotCount: 0 }, 0, 0, 0, 0, 0, 0];
 let [munchModeActive, stop, started, restarted, restartGhosts, restartRelease] = [false, false, false, false, false, false];
+
 String.prototype.isHall = function() {return this === 'hall'};
+String.prototype.isBarrier = function() {return this === 'wall' || this === 'ghostbox'};
+Array.prototype.includesAll = function(...args) {
+  return args.map(arg => this.includes(arg)).every(x => x === true);
+}
+Boolean.prototype.or = function(bool2) { return this || bool2 };
+
+
 function get(str) {
   if (str.startsWith('#')) { return document.getElementById(str.replace('#','')) }
   return document.getElementsByClassName(str.replace(/\./,''))
@@ -515,8 +523,8 @@ function update() {
   }
 
   if (count === 3) {
-      element.src = element.src.includes('1') ? './images/mspacman2.png' : './images/mspacman1.png';
-      count = 0;
+    element.src = element.src.includes('man1') ? './images/mspacman2.png' : './images/mspacman1.png';
+    count = 0;
   }
 
   if (dCount === 9) {

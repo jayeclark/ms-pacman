@@ -102,7 +102,7 @@ export class Board {
   
     // if there are ghosts in the box from a prior run, remove them
     if (this.ghostsInBox.length > 0) { this.ghostsInBox.splice(0,this.ghostsInBox.length - 1); }
-    this.ghostsInBox.push(...ghosts.filter(g => g.boxPosition !== 'none'));
+    this.ghostsInBox.push(...ghosts.filter(g => g.boxPosition !== 'none').map(g => g.element.id));
 
     // Make arrow divs and put them below the main game
     const arrowAreaStyle = { top: (boardHeight + tileW * 2) + 'px', width: width + 'px' }
@@ -136,7 +136,7 @@ export class Board {
     })
     
     const gateStart = { x: (start.x + end.x - tileW * 3) / 2, y: start.y };
-    const gateEnd = { x: (start.x + end.x + tileW * 3) / 2, y: start.y };
+    const gateEnd = { x: (start.x + end.x + tileW * 3) / 2, y: start.y + tileW };
 
     return { start, end, gateStart, gateEnd };
   }

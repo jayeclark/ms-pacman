@@ -3,13 +3,7 @@ import { Directions } from './Directions.js';
 import { Tile } from './Tile.js';
 import { msPacMan } from '../mspacman.js';
 
-String.prototype.isBarrier = function() {return this === 'wall' || this === 'ghostbox'};
-
 export const ghosts = [];
-
-Array.prototype.includesAll = function(...args) {
-  return args.map(arg => this.includes(arg)).every(x => x === true);
-}
 
 export class Ghost extends GamePiece {
 
@@ -112,45 +106,39 @@ export class Ghost extends GamePiece {
     if (this.status.stop === false) {
   
       const { speed, board, position: { x: xG, y: yG }, status: { mode } } = this;
-      const { tileW, ghostContainer: { gateStart: { x: xS, y: yS } } } = board;
-  
-      console.log(xG, xS + tileW, yG, yS);
-      if (xG === xS + tileW && yG > yS && mode === 'notfree') { 
-        console.log('up');
-        this.direction = 'up';
+      const { tileW, ghostContainer: { gateStart: { x, y } } } = board;
+      const [xS, yS] = [x + tileW / 2, y - tileW * 2];
+      if (xG === xS && yG > yS && mode === 'notfree') { 
+        this.setDirection('up');
         this.speed = new Directions(this.board).up.speed;
         this.move(); 
       }
-      else if (xG > xS + tileW && xS - xG < parseInt(speed) && mode === 'notfree') {
-          this.position.x = xS;
+      else if ((xG > xS || xG > xS) && xS - xG < parseInt(speed) && mode === 'notfree') {
+        this.position.x = xS;
+        this.element.style.left = this.position.x;
+      }
+      else if (xG === xS && yG === yS && mode === 'notfree') {
+        this.status.mode = 'free';
+        this.board.ghostsInBox.splice(this.board.ghostsInBox.indexOf(this.element.id),1);
+
+        if (this.position.x % tileW > 0) {
+          this.position.x -= this.position.x % board.tileW;
           this.element.style.left = this.position.x;
-      }
-      else if (xG === xS + tileW && yG === yS && mode === 'notfree') {
-          this.status.mode = 'free';
-          this.board.ghostsInBox.splice(this.board.ghostsInBox.indexOf(this.element.id),1);
-  
-          if (this.position.x % tileW > 0) {
-            this.position.x -= this.position.x % board.tileW;
-            this.element.style.left = this.position.x;
-          }
-          
-          setTimeout(function() {
-            const ghostGate = document.getElementById('ghost-gate');
-            ghostGate.style.backgroundColor = '#e1e1fb';
-          }, 500)
-          
         }
-        else if (xG < xS + tileW && mode === 'notfree') {
-          this.direction = 'right';
-          this.speed = new Directions(this.board).right.speed;
-          this.move();
-        }
-        else if (xG > xS + tileW && mode === 'notfree') {
-          this.direction = 'left';
-          this.speed = new Directions(this.board).left.speed;
-          this.move();
-        }  
+        
+        setTimeout(function() {
+          const ghostGate = document.getElementById('ghost-gate');
+          ghostGate.style.backgroundColor = '#e1e1fb';
+        }, 500)
+          
       }
+      else if (mode === 'notfree') {
+        const options = new Directions(this.board);
+        xG < xS ? this.setDirection('right') : this.setDirection('left');
+        this.speed = xG < xS ? options.right.speed : options.left.speed;
+        this.move();
+      }
+    }
   }
   
   reShuffle() {
@@ -181,57 +169,50 @@ export class Ghost extends GamePiece {
   
   enterBox() {
   
-      if (this.status.stop === false) {
-        const { board: { tileW, ghostContainer: { gateStart: { x: xS, y }, gateEnd: { y: yE } } }, 
-                element: { style }, 
-                status: { mode },
-                direction,
-                position: { x: xG, y: yG } } = this;
-        const leftPos = xS - parseInt(style.width) - parseFloat(style.margin) * 2;
-        const rightPos = xS + parseInt(style.width) + parseFloat(style.margin) * 2;
-        const yS = y - tileW * 2;
-          
-        console.log(yS, yE);
-        if (xG === xS && yG >= yS && mode === 'returning') {
-          this.direction = 'down'; this.move(); this.status.mode = 'notfree';}
-        else if (xG === xS && mode === 'notfree' && yG < yE) {
-          this.direction = 'down'; this.move();
-        }
-        else if (xG === xS && mode === 'notfree' && yG >= yE) {
-  
-          // decide which way to turn based on whether another ghost is in that area
-          let [leftOccupied, rightOccupied] = [false, false];
-    
-          ghosts.forEach(({element: { id }, isInBox, position: { x } }) => {
-            if (id !== this.element.id && isInBox && x > xS) {rightOccupied = true;}
-            else if (id !== this.element.id && isInBox && x > xS) {leftOccupied = true;}
-          })
-    
-          if (!rightOccupied) {this.setDirection('right'); this.move();}
-          else if (!leftOccupied) {this.setDirection('left'); this.move();}
-          else {
-            this.speed = 0;
-            this.setDirection('up');
-            this.reAppear();
-            return true;
-          }
-        }
-        else if (direction === 'right' && mode === 'notfree' && xG < rightPos) {
-          this.setDirection('right'); this.move();
-        }
-        else if (direction === 'left' && mode === 'notfree' && xG > leftPos) {
-          this.setDirection('left'); this.move();
-        }
-        else {
-          this.speed = 0;
-          this.setDirection('down');
-          // make visible again
-          this.reAppear();
-          return true;
-        }
+    const { board: { tileW, ghostContainer: { gateStart: { x, y }, gateEnd: { y: yE } } }, 
+            element, 
+            status: { mode, stop, restarted },
+            direction,
+            position: { x: xG, y: yG } } = this;
+    const [xS, yS] = [x + tileW / 2, y - tileW * 2];
+    const [leftPos, rightPos] = [xS - tileW * 2, xS - tileW * 2];
+
+    if (!stop && xG === xS && yG >= yS && mode === 'returning') {
+      this.setDirection('down'); this.move(); this.status.mode = 'notfree';
+    } else if (!stop && xG === xS && mode === 'notfree' && yG < yE) {
+      this.setDirection('down'); this.move();
+    } else if (!stop && xG === xS && mode === 'notfree' && yG >= yE) {
+
+      // decide which way to turn based on whether another ghost is in that area
+      let [leftOccupied, rightOccupied] = [false, false];
+
+      ghosts.forEach(({ element: { id }, isInBox, position: { x } }) => {
+        if (id !== this.element.id && isInBox && x > xS) { rightOccupied = true; }
+        else if (id !== this.element.id && isInBox && x > xS) { leftOccupied = true; }
+      })
+
+      if (rightOccupied === false) {this.setDirection('right'); this.move();}
+      else if (leftOccupied === false) {this.setDirection('left'); this.move();}
+      else {
+        this.setDirection('up');
+        this.speed = 0;
+        this.reAppear();
+        return true;
       }
-   
-      if (this.status.restarted === true) { return false; }
+    }
+    else if (!stop && mode === 'notfree' && direction === 'right' && xG < rightPos) {
+      this.setDirection('right'); this.move();
+    }
+    else if (!stop && mode === 'notfree' && direction === 'left' && xG > leftPos) {
+      this.setDirection('left'); this.move();
+    }
+    else if (!stop) {
+      this.setDirection('down');
+      this.speed = 0;
+      this.reAppear();
+      return true;
+    }
+    if (restarted === true) { return false; }
   }
 
   get targetCoordinates() {
@@ -242,24 +223,25 @@ export class Ghost extends GamePiece {
             element: { id }, 
             speed,
             position: { x: xG, y: yG } } = this;
+    const [isFree, isReturning] = [mode === 'free', mode === 'returning'];
     
     // Find MsPacMan location
     const [xP, yP] = [parseInt(msPacMan.element.style.left), parseInt(msPacMan.element.style.top)];
     const isCloseToPac = (Math.abs(yP - yG) + Math.abs(yP - yG)) > (boardHeight + boardWidth) / 3;
 
-    if (id === 'clyde' && isCloseToPac && mode === 'free' && munchModeActive === false ) {
+    if (id === 'clyde' && isCloseToPac && isFree && munchModeActive === false ) {
       return { x: boardWidth, y: boardHeight };
     } 
-    else if (mode === 'free' && munchModeActive === false) {
+    else if (isFree && munchModeActive === false) {
       return { x: xP, y: yP };
     } 
-    else if (mode === 'free' && munchModeActive === true) {
+    else if (isFree && munchModeActive) {
       return { x: boardWidth - xG, y: boardHeight - yG };
     } 
-    else if (mode === 'returning') {
+    else if (isReturning) {
       let { board: { tileW, ghostContainer: { gateStart: { x: xGG, y: yGG } } } } = this;
       if (xGG % Math.abs(speed) > 0) { xGG -= xGG % Math.abs(speed); }
-      return { x: xGG + tileW / 3, y: yGG - tileW * 2 };
+      return { x: xGG + tileW * 2 / 3, y: yGG - tileW * 2 };
     }
     return { x: xP, y: yP };
   }
@@ -308,10 +290,9 @@ export class Ghost extends GamePiece {
         const { status: { mode }, 
                 position: {x: currX , y: currY }, 
                 rcPos: { row },
-                board: { tileW, boardWidth: boardW , portals, ghostsInBox }, 
+                board: { tileW, boardWidth: { boardW } , portals, ghostsInBox }, 
                 targetCoordinates: {x: targX, y: targY} } = this;
-        
-        if (this.status.mode == 'returning') {console.log(currX, targX, currY, targY);}     
+            
         if (currX === targX && currY === targY && mode === 'returning' && ghostsInBox.length >= 3) {
           // returning ghost has hit the way to get into the ghost box but there are three ghosts in the box
             this.setDirection('left');
@@ -325,11 +306,11 @@ export class Ghost extends GamePiece {
             this.element.style.left = this.position.x + "px";
       
             document.getElementById('ghost-gate').style.backgroundColor = 'black';
-      
-            this.board.ghostsInBox.push(this.element.id);
-  
+            if (ghostsInBox.includes(this.element.id) === false) {
+              this.board.ghostsInBox.push(this.element.id);
+            }
             this.reEnter();
-      
+
         }
             
         // do these calculations if the ghost has hit a tile square-on

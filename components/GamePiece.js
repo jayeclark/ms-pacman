@@ -1,7 +1,6 @@
 import { RcPos } from './RcPos.js';
 import { Element } from './Element.js';
 import { Directions } from './Directions.js';
-Boolean.prototype.or = function(bool2) { return this || bool2 };
 
 export class GamePiece extends Element {
 
@@ -30,7 +29,11 @@ export class GamePiece extends Element {
   }
 
   teleport() {
-    const { position: { x }, rcPos: {row}, direction, board: { cols, tileW, portals }, speed } = this;
+    const { position: { x }, 
+            rcPos: { row }, 
+            direction, 
+            board: { cols, tileW, portals }, 
+            speed } = this;
     if (x <= 0 && direction === 'left' && portals.includes(row)) {
       this.position.x = (cols - 2) * tileW - speed;
     } else if (x > (cols - 2) * tileW && direction === 'right' && portals.includes(row)) {

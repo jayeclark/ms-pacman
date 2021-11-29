@@ -1,5 +1,3 @@
-const game = document.getElementById('game');
-
 export class Element {
 
     constructor() {
