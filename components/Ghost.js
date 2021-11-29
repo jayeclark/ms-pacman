@@ -26,7 +26,6 @@ export class Ghost extends GamePiece {
     const positions = {};
     for (let ghost of ghosts) {
       const ghostPosition = ghost.boxPosition;
-      console.log(ghostPosition);
       if (ghostPosition && ghostPosition !== 'none') {
         positions[ghostPosition] = ghost.element.id;
       }
@@ -246,7 +245,6 @@ export class Ghost extends GamePiece {
     
     // Find MsPacMan location
     const [xP, yP] = [parseInt(msPacMan.element.style.left), parseInt(msPacMan.element.style.top)];
-
     const isCloseToPac = (Math.abs(yP - yG) + Math.abs(yP - yG)) > (boardHeight + boardWidth) / 3;
 
     if (id === 'clyde' && isCloseToPac && mode === 'free' && munchModeActive === false ) {
@@ -276,47 +274,36 @@ export class Ghost extends GamePiece {
 
   reEnter() {
 
-    if (this.enterBox() === true) {
+    if (this.enterBox()) {
       setTimeout(function() {
         document.getElementById('ghost-gate').style.backgroundColor = '#e1e1fb';
-      },500)
+      }, 500)
       return true;
     }
-
     setTimeout(function() { reEnter(ghost) }, 50);
-
   }
 
   filterDirections() {
-
     const [{ typeOf }, d ] = [Tile, new Directions(this.board)];
   
-    let directions = ['left','right','up','down'].filter(direction => {
+    const directions = ['left','right','up','down'].filter(dir => {
       let next;
-      if (direction === 'right') {
-        next = [this.rcPos[direction][direction], this.rcPos[direction][direction].down]
-      }
-      else if (direction === 'down') {
-        next = [this.rcPos[direction][direction], this.rcPos[direction][direction].right]
-      }
-      else if (direction === 'left') {
-        next = [this.rcPos[direction], this.rcPos[direction].down]
-      }
-      else if (direction === 'up') {
-        next = [this.rcPos[direction], this.rcPos[direction].right];
-      }
-      return next.every(pos => typeOf(Tile.at(pos)).isBarrier() === false) && direction !== d[this.direction].reverse;
+      if (dir === 'right') { next = [this.rcPos[dir][dir], this.rcPos[dir][dir].down] }
+      else if (dir === 'down') { next = [this.rcPos[direction][dir], this.rcPos[dir][dir].right] }
+      else if (dir === 'left') { next = [this.rcPos[dir], this.rcPos[dir].down] }
+      else if (dir === 'up') { next = [this.rcPos[dir], this.rcPos[dir].right]; }
+      return next.every(pos => typeOf(Tile.at(pos)).isBarrier() === false) && dir !== d[this.dir].reverse;
     })
     return directions;
   }
 
   pickDir() {
       
-        let pacDir = msPacMan.direction;
+        const pacDir = msPacMan.direction;
         const { status: { mode }, 
                 position: {x: currX , y: currY }, 
-                rcPos: { col, row },
-                board: { tileW, cols, boardWidth, portals }, 
+                rcPos: { row },
+                board: { tileW, boardWidth: boardW , portals }, 
                 targetCoordinates: {x: targX, y: targY} } = this;
             
         if (currX === targX && currY === targY && mode === 'returning' && this.board.ghostsInBox.length >= 3) {
@@ -350,41 +337,25 @@ export class Ghost extends GamePiece {
           const options = this.filterDirections();
 
           // find target row and column direction relative to ghost
-          let yDir = targY > currY ? 'down' : targY < currY ? 'up' : 'same';
-          let xDir = targX > currX ? 'right' : targX < currX ? 'left' : 'same';
-          let randomNumber = Math.random();
+          const yDir = targY > currY ? 'down' : targY < currY ? 'up' : 'same';
+          const xDir = targX > currX ? 'right' : targX < currX ? 'left' : 'same';
+          const randNum = Math.random();
     
           // if the item is in a portal row, see if it would be better to go through the portal
           if (portals.includes(row)) {
-            let optA = Math.abs(targX - currX);
-            let optB = Math.min(targX, (boardWidth - targX)) + Math.min(currX, (boardWidth - currX));
+            const [optA, optB] = [Math.abs(targX - currX), Math.min(targX, (boardW - targX)) + Math.min(currX, (boardW - currX))];
             if (xDir !== 'same' && optB < optA) { xDir = new Directions(this.board)[xDir].reverse; }
           }
     
-          const [yRun, xRun] = [this.rcPos.checkRunLength(yDir), this.rcPos.checkRunLength(xDir)];
+          const [yRun, xRun, { element: { id } }] = [this.rcPos.checkRunLength(yDir), this.rcPos.checkRunLength(xDir), this];
               
-          if (mode !== 'returning' && options.includes(pacDir) && /blinky|pinky/.test(this.element.id)) {
-            this.setDirection(pacDir);
-          }
-          else if (options.includesAll(yDir, xDir) && yRun > xRun) {
-            this.setDirection(yDir);
-          }
-          else if (options.includesAll(yDir, xDir) && yRun < xRun) {
-            this.setDirection(xDir);
-          }
-          else if (options.includes(yDir) || (options.includesAll(yDir, xDir) && randomNumber < 0.5)) {
-            this.setDirection(yDir);
-          }
-          else if (options.includes(xDir) || (options.includesAll(yDir, xDir) && randomNumber >= 0.5)) {
-            this.setDirection(xDir);
-          }
-          else if (options.includes(this.direction)) {
-            this.setDirection(this.direction);
-          }
-          else {
-            let index = Math.floor(Math.random() * options.length);
-            this.setDirection(options[index]);
-          }
+          if (mode !== 'returning' && options.includes(pacDir) && id.match(/blinky|pinky/)) { this.setDirection(pacDir); }
+          else if (options.includesAll(yDir, xDir) && yRun > xRun) { this.setDirection(yDir); }
+          else if (options.includesAll(yDir, xDir) && yRun < xRun) { this.setDirection(xDir); }
+          else if (options.includes(yDir) || (options.includesAll(yDir, xDir) && randNum < 0.5)) { this.setDirection(yDir); }
+          else if (options.includes(xDir) || (options.includesAll(yDir, xDir) && randNum >= 0.5)) { this.setDirection(xDir); }
+          else if (options.includes(this.direction)) { this.setDirection(this.direction); }
+          else { this.setDirection(options[Math.floor(Math.random() * options.length)]); }
 
           this.teleport();
 
@@ -392,9 +363,7 @@ export class Ghost extends GamePiece {
             let item = this;
             setTimeout(function() {item.move(item.direction);},25);
           }
-      
         }
-      
   }
   
   disAppear() {
@@ -405,40 +374,34 @@ export class Ghost extends GamePiece {
   }
   
   reAppear() {
-      let [ { color }, showDivs] = [this, {eyeball: '', pupil: '', fringe: '', 'blue-frown': 'none', 'blue-pupil': 'none'}];
+      let [ { color, element }, divs] = [this, { eyeball: '', pupil: '', fringe: '', 'blue-frown': 'none', 'blue-pupil': 'none' }];
       if (this.status.munchModeActive === true) {
-        [color, showDivs] = ['blue', {'blue-frown': '', 'blue-pupil': '', fringe: '', eyeball: 'none', pupil: 'none'}]
+        [color, divs] = ['blue', { eyeball: 'none', pupil: 'none', fringe: '', 'blue-frown': '', 'blue-pupil': '' }]
       }
   
       this.element.style.backgroundColor = color;
       const fringes = Array.from(this.element.getElementsByClassName('fringe'))
-      fringes.forEach(fringe => {
-        if (fringe.style.backgroundColor !== 'transparent') {fringe.style.backgroundColor = color;} 
-        else {fringe.style.backgroundImage = fringe.style.backgroundImage.replace(/blue|white/, color);}
+      fringes.forEach(({ style }) => {
+        if (style.backgroundColor !== 'transparent') { style.backgroundColor = color; } 
+        else { style.backgroundImage = style.backgroundImage.replace(/blue|white/, color); }
       })
   
-      for (let dClass in showDivs) {
-        Array.from(this.element.getElementsByClassName(dClass)).forEach(d => d.style.display = showDivs[dClass]);
-      }
-  
+      for (let key in divs) { [...element.getElementsByClassName(key)].forEach(({ style }) => style.display = divs[key]); }
   }
   
   spawn(freeStatusOnSpawn) {
   
     // Change appearance back to normal
-
     this.status.mode = 'spawning';
     this.element.style.backgroundColor = this.color;
 
     let fringes = Array.from(this.element.getElementsByClassName('fringe'))
     fringes.forEach(fringe => {
       if (fringe.style.backgroundColor !== '' && fringe.style.backgroundColor !== 'transparent') {
-        fringe.style.backgroundColor = this.color;
-        fringe.style.display = '';
+        fringe.style.backgroundColor = this.color; fringe.style.display = '';
       } else {
         let newBgImage = fringe.style.backgroundImage.replace('blue',this.color).replace('white',this.color);
-        fringe.style.backgroundImage = newBgImage;
-        fringe.style.display = '';
+        fringe.style.backgroundImage = newBgImage; fringe.style.display = '';
       }
     })
     Array.from(this.element.getElementsByClassName('blue-frown')).forEach(frown => frown.style.display = 'none')
@@ -447,18 +410,16 @@ export class Ghost extends GamePiece {
     // Blink several times before solidifying
 
       let blinkCount = 0;
-    
       blink(this);
 
       function blink(item) {
         if (blinkCount === 44) {
-          item.speed = d[item.direction].speed; item.status.mode = freeStatusOnSpawn; 
+          item.speed = new Directions[item.direction].speed; item.status.mode = freeStatusOnSpawn; 
           item.reAppear();
           return true;
         }
-        let display = 'none';
-        if (blinkCount % 8 === 0 || blinkCount === 0) { display = ''; }
-        if (blinkCount % 4 === 0) { item.element.style.display = display; }
+        if (blinkCount % 8 === 0) { item.element.style.display = ''; }
+        else if (blinkCount % 4 === 0) { item.element.style.display = 'none'; }
         blinkCount++;
         setTimeout(function() { blink(item); }, 50);
       }
@@ -466,19 +427,15 @@ export class Ghost extends GamePiece {
   }
     
   moveEyes(dir, dirArray=new Directions(this.board)) {
-    const {fringeW} = this.board;
-    let eyes = Array.from(this.element.getElementsByClassName('eyeball'));
-    let pupils = Array.from(this.element.getElementsByClassName('pupil'));
+    const { fringeW } = this.board;
+    let eyes = [...this.element.getElementsByClassName('eyeball')];
+    let pupils = [...this.element.getElementsByClassName('pupil')];
   
     eyes[0].style.left = dirArray[dir].eyeleft + 'px';
     eyes[1].style.left = (dirArray[dir].eyeleft + fringeW * 5) + 'px';
-  
     pupils[0].style.left = parseFloat(dirArray[dir].pupilleft) + 'px';
     pupils[1].style.left = (parseFloat(dirArray[dir].pupilleft) + fringeW * 5) + 'px';
-
     pupils[0].style.top = pupils[1].style.top = dirArray[dir].pupiltop;
-  
   }
-  
 }
   
