@@ -1,6 +1,6 @@
 import { Directions } from './Directions.js';
 import { Ghost, ghosts } from './Ghost.js';
-import { GhostBox, MessageDiv, Arrow, ArrowImg, ScoreDiv } from './Element.js';
+import { GhostBox, MessageDiv, Arrow, ArrowImg, ScoreDiv, ExtraLives } from './Element.js';
 import { RcPos } from './RcPos.js';
 import { Wall } from './Wall.js';
 import { Tile } from './Tile.js';
@@ -122,6 +122,9 @@ export class Board {
       const imgStyle = { width: arrowH * 2, height: arrowH, transform: `rotate(${rotate[dir]})` };
       new ArrowImg('./images/arrow.png', 'arrow-img', imgStyle).addTo(dir + '-arrow');
     }
+
+    // Add extra lives
+    new ExtraLives(this).addTo('game');
   }
 
   calculateGhostContainer() {
