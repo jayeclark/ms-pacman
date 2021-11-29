@@ -1,20 +1,12 @@
 import { Directions } from './Directions.js';
 import { Ghost, ghosts } from './Ghost.js';
-import { GhostBox, MessageDiv, Arrow, ScoreDiv } from './GhostBox.js';
+import { GhostBox, MessageDiv, Arrow, ArrowImg, ScoreDiv } from './Element.js';
 import { RcPos } from './RcPos.js';
 import { Wall } from './Wall.js';
 import { Tile } from './Tile.js';
 import { PacDot } from './PacDot.js';
-import { loadBoards } from '../data/boards.js';
 
-const boardObj = await loadBoards().then(res => res.board1);
-const [board, speed] = [await boardObj.array, await boardObj.speed];
-
-//create inline stylesheet for changing properties
-const styleSheet = document.createElement('style');
-document.head.appendChild(styleSheet);
-
-class Board {
+export class Board {
   constructor(arr, speed) {
     this.layout = arr;
     this.rows = arr.length;
@@ -24,7 +16,7 @@ class Board {
     this.portals = this.portalPositions;
     this.ghostContainer = this.calculateGhostContainer();
     this.ghostsInBox = [];
-    this.adjustStyleSheet(styleSheet)
+    this.adjustStyleSheet(document.getElementById('header-style-sheet'));
   }
 
   get fringeW() { return Math.floor(this.tileW * 1.5 / 12) }
@@ -43,18 +35,17 @@ class Board {
 
   adjustStyleSheet(styleSheet) {
     const { tileW, cornerW, pacDotW, fringeW } = this;
-
     styleSheet.innerHTML += `.wall {height: ${tileW + 1}; width: ${tileW + 1}}`;
     styleSheet.innerHTML += `.inner-corner {height: ${tileW / 2}; width: ${tileW / 2}}`;
 
-    let radial = `radial-gradient(circle ${cornerW}px at POSITION,`
-    radial += `rgba(0,0,0,0) 0%, rgba(0,0,0,0) ${cornerW - 3}px,`
-    radial += ` #e33022 ${cornerW - 3}px, #e33022 100%, #f4bb9c 100%)`;
+    let radial = `radial-gradient(circle ${cornerW}px at POSITION, rgba(0,0,0,0) 0%, `
+    radial += `rgba(0,0,0,0) ${cornerW - 3}px, #e33022 ${cornerW - 3}px, #e33022 100%, #f4bb9c 100%)`;
 
     let positions = {'top-left': 'right 100% bottom 100%',
                      'top-right': 'left 100% bottom 100%', 
                      'bottom-left': 'right 100% top 100%', 
                      'bottom-right': 'left 100% top 100%'};
+
     for (let dir in positions) {
       styleSheet.innerHTML += `.inner-${dir} {background-image: ${radial.replace('POSITION', positions[dir])}}`;
     }
@@ -71,21 +62,18 @@ class Board {
   }
 
   addToGame(dots) {
-    let game = document.getElementById('game');
-
     // Add the basic board elements
     this.layout.forEach((cols, row) => {
 
       for (let col = 0; col < cols.length; col++) {
-        const [pos, char] = [new RcPos(row, col, this), cols.charAt(col)];
-        const { cornerTypesAt } = Tile;
-  
-        if (char === 'X') { game.appendChild(new Wall(pos).element) /* Add a wall */ }
+
+        const [pos, char, { cornerTypesAt }] = [new RcPos(row, col, this), cols.charAt(col), Tile];
+        if (char === 'X') { new Wall(pos).addTo('game') /* Add a wall */ }
         else if (char.match(/[^GSP]/) && cornerTypesAt(pos).bottomRight === 'outer') {
           // Add a pacDot
           const [current , right , below] = [Tile.at(pos), Tile.at(pos.right), Tile.at(pos.bottom)];
           if (current.match(/[^P]/) && right.match(/[^SP]/) && below.match(/[^S]/)) {
-              game.appendChild(new PacDot(pos, current === 'B').element);
+              new PacDot(pos, current === 'B').addTo('game');
               dots.dotCount++;
           } 
         }
@@ -93,71 +81,56 @@ class Board {
     })  
     
     // Add the ghost box
-    game.appendChild(new GhostBox(this).element);
+    new GhostBox(this).addTo(game);
   
     // Add the message divs
     const { tileW, boardWidth: width, boardHeight, ghostContainer : { start, end } } = this;
     const [top, height] = [start.y, (end.y - start.y) + 'px'];
-    let msgs = [  [ { fontSize: '2rem', top, width, height },
-                    'ready', 
+    let msgs = [  [ { fontSize: '2rem', top, width, height }, 'ready', 
                     '<div class="message-inner"><br><br><br><br>READY!</div>' ],
-                  [ { fontSize: '3rem', display: 'none', top, width, height },
-                    'game-over', 
+                  [ { fontSize: '3rem', display: 'none', top, width, height }, 'game-over', 
                     `<div class="message-inner message-inner-shadow">GAME&nbsp;OVER!</div>`], 
-                  [ { fontSize: '3.5rem', display: 'none', top, width, height },
-                    'winner', 
+                  [ { fontSize: '3.5rem', display: 'none', top, width, height }, 'winner', 
                     `<div class="message-inner message-inner-shadow">WINNER!!</div>`]]; 
-    msgs.forEach(msg => game.append(new MessageDiv(...msg).element))
+    msgs.forEach(msg => new MessageDiv(...msg).addTo('game'));
   
     // Add the ghosts
-    new Ghost(new RcPos(11, 14, this), 'left', 'red', 'inky', 'free');
-    new Ghost(new RcPos(14, 12, this), 'up', 'aqua', 'blinky', 'notfree');
-    new Ghost(new RcPos(14, 14, this), 'down', 'plum', 'pinky', 'notfree');
-    new Ghost(new RcPos(14, 16, this), 'right', 'orange', 'clyde', 'notfree');
+    new Ghost(new RcPos(11, 14, this), 'left', 'red', 'inky', 'free').addTo('game');
+    new Ghost(new RcPos(14, 12, this), 'up', 'aqua', 'blinky', 'notfree').addTo('game');
+    new Ghost(new RcPos(14, 14, this), 'down', 'plum', 'pinky', 'notfree').addTo('game');
+    new Ghost(new RcPos(14, 16, this), 'right', 'orange', 'clyde', 'notfree').addTo('game');
   
     // if there are ghosts in the box from a prior run, remove them
-    if (this.ghostsInBox.length > 0) {this.ghostsInBox.splice(0,this.ghostsInBox.length - 1);}
-  
-    for (let ghost of ghosts) {
-      game.appendChild(ghost.element);
-      if (ghost.boxPosition !== 'none') { this.ghostsInBox.push(ghost.element.id) };
-    }
-  
+    if (this.ghostsInBox.length > 0) { this.ghostsInBox.splice(0,this.ghostsInBox.length - 1); }
+    this.ghostsInBox.push(...ghosts.filter(g => g.boxPosition !== 'none'));
+
     // Make arrow divs and put them below the main game
     const arrowAreaStyle = { top: (boardHeight + tileW * 2) + 'px', width: width + 'px' }
-    const arrowArea = new Arrow('arrow-div', arrowAreaStyle, 'arrow-div-area').element;
+    new Arrow('arrow-div', arrowAreaStyle, 'arrow-div-area').addTo('game');
+
     const arrowH = Math.floor((window.innerHeight - parseInt(boardHeight) - 130) / 4);
     const positions = { up:    parseInt(width) / 2 - arrowH, 
                         down:  parseInt(width) / 2 - arrowH, 
                         left:  parseInt(width) / 2 - arrowH * 2.75, 
-                        right: parseInt(width) / 2 + arrowH * 0.75 };              
+                        right: parseInt(width) / 2 + arrowH * 0.75 };     
+    const rotate = { up: '180deg', down: '0deg', left: '90deg', right: '-90deg'};
+               
     for (let dir in positions) { 
       const arrowStyle = { left: positions[dir] + 'px', 
-                           top: (arrowH + new Directions(board)[dir].row * 1.75 * arrowH) + 'px' };
-      const arrow = new Arrow('arrow', arrowStyle, dir + '-arrow').element;
-      arrow.appendChild(makeArrowImg(arrowH * 2, dir));
-      arrow.setAttribute('onclick',`cache(${dir})`);
-      arrowArea.appendChild(arrow);
-    }
-  
-    game.appendChild(arrowArea);
-  
-    function makeArrowImg(arrowW, dir='down') {
-      const rotate = { up: 'rotate(180deg)', down: '', left: 'rotate(90deg)', right: 'rotate(-90deg)'}
-      const img = document.createElement('img');
-      [img.src, img.width, img.height, img.style.transform] = ['./images/arrow.png', arrowW, arrowW / 2, rotate[dir]];
-      return img;
+                           top: (arrowH + new Directions(this)[dir].row * 1.75 * arrowH) + 'px' };
+      new Arrow('arrow', arrowStyle, dir + '-arrow').addTo('arrow-div-area');
+      const imgStyle = { width: arrowH * 2, height: arrowH, transform: `rotate(${rotate[dir]})` };
+      new ArrowImg('./images/arrow.png', 'arrow-img', imgStyle).addTo(dir + '-arrow');
     }
   }
 
   calculateGhostContainer() {
+    let [{ tileW, layout }, start, end] = [this, null, null];
 
-    const { tileW } = this;
-    let start, end;
-    this.layout.forEach((cols, row)=>{
-      if (cols.includes('G') && board[row - 1].includes('G') === false) {
+    layout.forEach((cols, row) => {
+      if (cols.includes('G') && !start ) {
         start = { y: row * tileW, x: cols.indexOf('G') * tileW };
-      } else if (cols.includes('G') && board[row + 1].includes('G') === false) {
+      } else if (cols.includes('G') && layout[row + 1].includes('G') === false) {
         end = { y: (row + 1 ) * tileW, x: (cols.lastIndexOf('G') + 1 ) * tileW };
       }
     })
@@ -168,14 +141,10 @@ class Board {
     return { start, end, gateStart, gateEnd };
   }
 
-  scoreDivAdd(pos) {
-    const style = { width: pos.board.tileW * 2, height: pos.board.tileW * 2, left: pos.x, top: pos.y }
-    let ghostScore = new ScoreDiv('ghost-score', style, 'ghost-score-div', '200');
+  scoreDivAdd({ x, y }) {
+    const style = { width: this.tileW * 2, height: this.tileW * 2, left: x, top: y }
+    const ghostScore = new ScoreDiv('ghost-score', style, 'ghost-score-div', '200');
     document.getElementById('game').appendChild(ghostScore);
     setTimeout(function() { document.getElementById('game').removeChild(ghostScore) }, 1500);
   }
 }
-
-// make a board out of the map, with speed set to 6
-export const board2 = new Board(board, speed);
-export const dots = { dotCount: 0 };
