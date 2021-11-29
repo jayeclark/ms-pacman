@@ -170,3 +170,11 @@ body {
   z-index: 1000;
   text-align: center;
 }
+
+.extra-lives {
+  text-align: left;
+  font-family: 'Press Start 2P', cursive;
+  color: lightgray;
+  margin: 0px 5px;
+  width: 100%;
+}
