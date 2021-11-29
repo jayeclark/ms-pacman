@@ -81,7 +81,7 @@ export class Board {
     })  
     
     // Add the ghost box
-    new GhostBox(this).addTo(game);
+    new GhostBox(this).addTo('game');
   
     // Add the message divs
     const { tileW, boardWidth: width, boardHeight, ghostContainer : { start, end } } = this;
