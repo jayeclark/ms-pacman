@@ -179,60 +179,59 @@ export class Ghost extends GamePiece {
   
   }
   
-  
   enterBox() {
   
-      if (stop === false) {
-  
-        const {board, status: { mode } } = this;
-        const [xS, yS, yE, xG, yG] = [board.ghostGateX, board.ghostGateY.start, board.ghostGateY.end, this.position.x, this.position.y];
-        const leftPos = xS - parseInt(this.element.style.width) - parseFloat(this.element.style.margin) * 2;
-        const rightPos = xS + parseInt(this.element.style.width) + parseFloat(this.element.style.margin) * 2;
+      if (this.status.stop === false) {
+        const { board: { tileW, ghostContainer: { gateStart: { x: xS, y }, gateEnd: { y: yE } } }, 
+                element: { style }, 
+                status: { mode },
+                direction,
+                position: { x: xG, y: yG } } = this;
+        const leftPos = xS - parseInt(style.width) - parseFloat(style.margin) * 2;
+        const rightPos = xS + parseInt(style.width) + parseFloat(style.margin) * 2;
+        const yS = y - tileW * 2;
           
-        if (xG === xS && yG >= yS && mode === 'returning') {this.move('down'); this.status.mode = 'notfree';}
-        else if (xG === xS && mode === 'notfree' && yG < yE) {this.move('down');}
+        console.log(yS, yE);
+        if (xG === xS && yG >= yS && mode === 'returning') {
+          this.direction = 'down'; this.move(); this.status.mode = 'notfree';}
+        else if (xG === xS && mode === 'notfree' && yG < yE) {
+          this.direction = 'down'; this.move();
+        }
         else if (xG === xS && mode === 'notfree' && yG >= yE) {
   
           // decide which way to turn based on whether another ghost is in that area
           let [leftOccupied, rightOccupied] = [false, false];
     
-          ghosts.forEach(obj => {
-            if (obj.element.id !== this.element.id && obj.isInBox && obj.position.x > xS) {rightOccupied = true;}
-            else if (obj.element.id !== this.element.id && obj.isInBox && obj.position.x > xS) {leftOccupied = true;}
+          ghosts.forEach(({element: { id }, isInBox, position: { x } }) => {
+            if (id !== this.element.id && isInBox && x > xS) {rightOccupied = true;}
+            else if (id !== this.element.id && isInBox && x > xS) {leftOccupied = true;}
           })
     
-          if (rightOccupied === false) {this.move('right');}
-          else if (leftOccupied === false) {this.move('left');}
+          if (!rightOccupied) {this.setDirection('right'); this.move();}
+          else if (!leftOccupied) {this.setDirection('left'); this.move();}
           else {
-  
             this.speed = 0;
-            this.direction = 'up';
-            
-            // make visible again
+            this.setDirection('up');
             this.reAppear();
-      
             return true;
-    
           }
         }
-        else if (this.direction === 'right' && mode === 'notfree' && this.position.x < rightPos) {
-          this.move('right');
+        else if (direction === 'right' && mode === 'notfree' && xG < rightPos) {
+          this.setDirection('right'); this.move();
         }
-        else if (this.direction === 'left' && mode === 'notfree' && this.position.x > leftPos) {
-          this.move('left')
+        else if (direction === 'left' && mode === 'notfree' && xG > leftPos) {
+          this.setDirection('left'); this.move();
         }
         else {
           this.speed = 0;
-          this.direction = 'down';
+          this.setDirection('down');
           // make visible again
           this.reAppear();
           return true;
         }
-  
       }
    
-      if (restarted === true) {return false;}
-  
+      if (this.status.restarted === true) { return false; }
   }
 
   get targetCoordinates() {
@@ -241,6 +240,7 @@ export class Ghost extends GamePiece {
     const { board: { boardHeight, boardWidth }, 
             status: { munchModeActive, mode }, 
             element: { id }, 
+            speed,
             position: { x: xG, y: yG } } = this;
     
     // Find MsPacMan location
@@ -257,9 +257,9 @@ export class Ghost extends GamePiece {
       return { x: boardWidth - xG, y: boardHeight - yG };
     } 
     else if (mode === 'returning') {
-      const { board: { ghostGateX: xGG, ghostGateY: { start: yGG } }} = this;
+      let { board: { tileW, ghostContainer: { gateStart: { x: xGG, y: yGG } } } } = this;
       if (xGG % Math.abs(speed) > 0) { xGG -= xGG % Math.abs(speed); }
-      return { x: xGG, y: yGG };
+      return { x: xGG + tileW / 3, y: yGG - tileW * 2 };
     }
     return { x: xP, y: yP };
   }
@@ -274,13 +274,18 @@ export class Ghost extends GamePiece {
 
   reEnter() {
 
-    if (this.enterBox()) {
-      setTimeout(function() {
-        document.getElementById('ghost-gate').style.backgroundColor = '#e1e1fb';
-      }, 500)
-      return true;
-    }
-    setTimeout(function() { reEnter(ghost) }, 50);
+    enter(this);
+
+    function enter(item) {
+      if (item.enterBox()) {
+        setTimeout(function() {
+          document.getElementById('ghost-gate').style.backgroundColor = '#e1e1fb';
+        }, 500)
+        return true;
+      }
+
+      setTimeout(function() { enter(item) }, 50);
+    }   
   }
 
   filterDirections() {
@@ -289,10 +294,10 @@ export class Ghost extends GamePiece {
     const directions = ['left','right','up','down'].filter(dir => {
       let next;
       if (dir === 'right') { next = [this.rcPos[dir][dir], this.rcPos[dir][dir].down] }
-      else if (dir === 'down') { next = [this.rcPos[direction][dir], this.rcPos[dir][dir].right] }
+      else if (dir === 'down') { next = [this.rcPos[dir][dir], this.rcPos[dir][dir].right] }
       else if (dir === 'left') { next = [this.rcPos[dir], this.rcPos[dir].down] }
       else if (dir === 'up') { next = [this.rcPos[dir], this.rcPos[dir].right]; }
-      return next.every(pos => typeOf(Tile.at(pos)).isBarrier() === false) && dir !== d[this.dir].reverse;
+      return next.every(pos => typeOf(Tile.at(pos)).isBarrier() === false) && dir !== d[this.direction].reverse;
     })
     return directions;
   }
@@ -303,23 +308,19 @@ export class Ghost extends GamePiece {
         const { status: { mode }, 
                 position: {x: currX , y: currY }, 
                 rcPos: { row },
-                board: { tileW, boardWidth: boardW , portals }, 
+                board: { tileW, boardWidth: boardW , portals, ghostsInBox }, 
                 targetCoordinates: {x: targX, y: targY} } = this;
-            
-        if (currX === targX && currY === targY && mode === 'returning' && this.board.ghostsInBox.length >= 3) {
-  
+        
+        if (this.status.mode == 'returning') {console.log(currX, targX, currY, targY);}     
+        if (currX === targX && currY === targY && mode === 'returning' && ghostsInBox.length >= 3) {
           // returning ghost has hit the way to get into the ghost box but there are three ghosts in the box
-
             this.setDirection('left');
             this.speed = 0;
             this.spawn('free');
-
-        } 
-        else if (currX === targX && currY === targY && mode === 'returning' ) {
+        } else if (currX === targX && currY === targY && mode === 'returning' ) {
       
             // returning ghost has hit the way to get into the ghost box and there is room to get into the box
             this.setDirection('down');
-
             this.position.x = tileW * 14 - tileW / 2;
             this.element.style.left = this.position.x + "px";
       
@@ -338,7 +339,7 @@ export class Ghost extends GamePiece {
 
           // find target row and column direction relative to ghost
           const yDir = targY > currY ? 'down' : targY < currY ? 'up' : 'same';
-          const xDir = targX > currX ? 'right' : targX < currX ? 'left' : 'same';
+          let xDir = targX > currX ? 'right' : targX < currX ? 'left' : 'same';
           const randNum = Math.random();
     
           // if the item is in a portal row, see if it would be better to go through the portal
@@ -361,7 +362,7 @@ export class Ghost extends GamePiece {
 
           if (mode === 'returning' && !(targY === currY && currX > targX - 2 * tileW && currX < targX + 2 * tileW)) {
             let item = this;
-            setTimeout(function() {item.move(item.direction);},25);
+            setTimeout(function() {item.move();},25);
           }
         }
   }

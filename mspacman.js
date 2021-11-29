@@ -246,7 +246,7 @@ function checkGhostCollision() {
   }
   else if (collidedGhosts.length > 0 && powerCount > 0) {
 
-    collidedGhosts.forEach(id=>{
+    collidedGhosts.forEach(id => {
       let ghostEl = document.getElementById(id);
       const {margin: gMargin, left: gLeft, top: gTop, width: gWidth, height: gHeight} = window.getComputedStyle(ghostEl);
 
@@ -257,7 +257,7 @@ function checkGhostCollision() {
       if ((ghostL <= pacL && pacDir === 'left') || (ghostL >= pacL && pacDir === 'right') ||
           (ghostT <= pacT && pacDir === 'up') || (ghostT >= pacT && pacDir === 'down')) {
             ghosts.forEach(x => {
-              if (x.element.id === id && x.free === 'free') ghostEaten = true
+              if (x.element.id === id && x.status.mode === 'free') ghostEaten = true
             })
       }
 

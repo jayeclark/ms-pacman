@@ -144,7 +144,7 @@ export class Board {
   scoreDivAdd({ x, y }) {
     const style = { width: this.tileW * 2, height: this.tileW * 2, left: x, top: y }
     const ghostScore = new ScoreDiv('ghost-score', style, 'ghost-score-div', '200');
-    document.getElementById('game').appendChild(ghostScore);
-    setTimeout(function() { document.getElementById('game').removeChild(ghostScore) }, 1500);
+    ghostScore.addTo('game');
+    setTimeout(function() { document.getElementById('game').removeChild(ghostScore.element) }, 1500);
   }
 }
