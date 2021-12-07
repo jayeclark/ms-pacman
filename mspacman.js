@@ -44,7 +44,7 @@ document.getElementById('header').style.width = board.boardWidth;
 board.addToGame(dots);
 
 const [row, col] = [layout.findIndex(x => x.match`P`), layout.find(x => x.match`P`).indexOf`P`];
-export let msPacMan = new MsPacMan(new RcPos(row, col, board), 'right');
+export let msPacMan = new MsPacMan(new RcPos({ row, col, board }), 'right');
 
 // Add event listeners to buttons
 document.getElementById('start').addEventListener('click', startGame);
@@ -479,7 +479,7 @@ function restartGame() {
   function redraw() {
     board.addToGame(dots);
     const [row, col] = [layout.findIndex(x=> x.match`P`), layout.find(x => x.match`P`).indexOf`P`];
-    msPacMan = new MsPacMan(new RcPos(row, col, board), 'right');
+    msPacMan = new MsPacMan(new RcPos({ row, col, board }), 'right');
   }
 }
 // Starts the game

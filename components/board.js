@@ -67,11 +67,11 @@ export class Board {
 
       for (let col = 0; col < cols.length; col++) {
 
-        const [pos, char, { cornerTypesAt }] = [new RcPos(row, col, this), cols.charAt(col), Tile];
+        const [pos, char, { cornerTypesAt }] = [new RcPos({ row, col, board: this }), cols.charAt(col), Tile];
         if (char === 'X') { new Wall(pos).addTo('game') /* Add a wall */ }
         else if (char.match(/[^GSP]/) && cornerTypesAt(pos).bottomRight === 'outer') {
           // Add a pacDot
-          const [current , right , below] = [Tile.at(pos), Tile.at(pos.right), Tile.at(pos.bottom)];
+          const [current, right, below] = [Tile.at(pos), Tile.at(pos.right), Tile.at(pos.down)];
           if (current.match(/[^P]/) && right.match(/[^SP]/) && below.match(/[^S]/)) {
               new PacDot(pos, current === 'B').addTo('game');
               dots.dotCount++;
@@ -95,10 +95,10 @@ export class Board {
     msgs.forEach(msg => new MessageDiv(...msg).addTo('game'));
   
     // Add the ghosts
-    new Ghost(new RcPos(11, 14, this), 'left', 'red', 'inky', 'free').addTo('game');
-    new Ghost(new RcPos(14, 12, this), 'up', 'aqua', 'blinky', 'notfree').addTo('game');
-    new Ghost(new RcPos(14, 14, this), 'down', 'plum', 'pinky', 'notfree').addTo('game');
-    new Ghost(new RcPos(14, 16, this), 'right', 'orange', 'clyde', 'notfree').addTo('game');
+    new Ghost(new RcPos({ row: 11, col: 14, board: this }), 'left', 'red', 'inky', 'free').addTo('game');
+    new Ghost(new RcPos({ row: 14, col: 12, board: this }), 'up', 'aqua', 'blinky', 'notfree').addTo('game');
+    new Ghost(new RcPos({ row: 14, col: 14, board: this }), 'down', 'plum', 'pinky', 'notfree').addTo('game');
+    new Ghost(new RcPos({ row: 14, col: 16, board: this }), 'right', 'orange', 'clyde', 'notfree').addTo('game');
   
     // if there are ghosts in the box from a prior run, remove them
     if (this.ghostsInBox.length > 0) { this.ghostsInBox.splice(0,this.ghostsInBox.length - 1); }

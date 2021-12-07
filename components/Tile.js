@@ -3,13 +3,13 @@ export class Tile {
     static adjacentTiles(position) {
 
         return {'top' : Tile.at(position.top), 
-                'topRight' : Tile.at((position.top).right), 
+                'topRight' : Tile.at(position.top.right), 
                 'right' : Tile.at(position.right), 
-                'bottomRight' : Tile.at((position.bottom).right),
+                'bottomRight' : Tile.at(position.bottom.right),
                 'bottom' : Tile.at(position.bottom), 
-                'bottomLeft' : Tile.at((position.bottom).left), 
+                'bottomLeft' : Tile.at(position.bottom.left), 
                 'left' : Tile.at(position.left), 
-                'topLeft' : Tile.at((position.top).left)};
+                'topLeft' : Tile.at(position.top.left)};
     }
 
     static at(position) {

@@ -323,7 +323,7 @@ export class Ghost extends GamePiece {
             if (xDir !== 'same' && optB < optA) { xDir = new Directions(this.board)[xDir].reverse; }
           }
     
-          const [dirPreference, { element: { id } }] = [this.rcPos.checkRunLength(yDir, xDir), this];
+          const [dirPreference, { element: { id } }] = [this.rcPos.resolveDirection(yDir, xDir), this];
               
           if (mode !== 'returning' && options.includes(pacDir) && id.match(/blinky|pinky/)) { this.setDirection(pacDir); }
           else if (options.includesAll(yDir, xDir)) { this.setDirection(dirPreference); }

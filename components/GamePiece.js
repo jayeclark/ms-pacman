@@ -14,7 +14,7 @@ export class GamePiece extends Element {
 
   get rcPos() {
     const { position: { x, y }, board: { tileW } } = this;
-    return new RcPos(Math.floor(y / tileW), Math.floor(x / tileW), this.board);
+    return new RcPos({ row: Math.floor(y / tileW), col: Math.floor(x / tileW), board: this.board});
   }
 
   move() {
