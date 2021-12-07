@@ -20,7 +20,7 @@ Array.prototype.includesAny = function(...args) {
   return args.map(arg => this.includes(arg)).some(x => x === true);
 }
 Boolean.prototype.or = function(bool2) { return this || bool2 };
-Number.prototype.isBetween = function(a,b) {return this >= a && this <= b};
+Number.prototype.isBetween = function isBetween(a,b) { return a < b ? this >= a && this <= b : this >= b && this <= a };
 
 
 function get(str) {
@@ -334,7 +334,7 @@ function munchMode() {
     }
 
     // flashing while winding down - count 80 (4 seconds)
-    else if (powerCount < 120 && powerCount >= 80) {
+    else if (powerCount.isBetween(80, 119)) {
       let tempColor = 'white';
       if (powerCount % 8 === 0) {tempColor = 'blue';}
       if (powerCount % 4 === 0) {
