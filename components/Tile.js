@@ -1,9 +1,3 @@
-// TODO Move util to separate file?
-Number.prototype.isBetween = function(a,b) {return this >= a && this <= b};
-String.prototype.isHall = function() {return this === 'hall'};
-String.prototype.isWall = function() {return this === 'wall'};
-String.prototype.isBarrier = function() {return this === 'wall' || this === 'ghostbox'};
-
 export class Tile {
 
     static adjacentTiles(position) {

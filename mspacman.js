@@ -9,12 +9,18 @@ import { loadBoards } from './data/boards.js';
 let [dots, count, dCount, powerCount, eatenCount, score] = [{ dotCount: 0 }, 0, 0, 0, 0, 0, 0];
 let [munchModeActive, stop, started, restarted, restartGhosts, restartRelease] = [false, false, false, false, false, false];
 
-String.prototype.isHall = function() {return this === 'hall'};
-String.prototype.isBarrier = function() {return this === 'wall' || this === 'ghostbox'};
+String.prototype.isHall = function() { return this === 'hall' };
+String.prototype.isWall = function() { return this === 'wall' };
+String.prototype.isOpen = function() { return this !== 'wall' && this !== 'ghostbox' };
+String.prototype.isBlocked = function() { return this === 'wall' || this === 'ghostbox' };
 Array.prototype.includesAll = function(...args) {
   return args.map(arg => this.includes(arg)).every(x => x === true);
 }
+Array.prototype.includesAny = function(...args) {
+  return args.map(arg => this.includes(arg)).some(x => x === true);
+}
 Boolean.prototype.or = function(bool2) { return this || bool2 };
+Number.prototype.isBetween = function(a,b) {return this >= a && this <= b};
 
 
 function get(str) {
@@ -77,20 +83,14 @@ function checkCollisions(item) {
     // figure out the next position based on the desired direction
     const { typeOf } = Tile;
 
-    const nextPositionOf = ({cache, rcPos}) => {
-      if (cache === 'down') {return [rcPos[cache][cache], rcPos[cache][cache].right];}
-      if (cache === 'right') {return [rcPos[cache][cache], rcPos[cache][cache].down];}
-      if (cache === 'up') {return [rcPos[cache], rcPos[cache].right];}
-      return [rcPos[cache], rcPos[cache].down];
-    }
-    
 
     // if there is no wall there, AND the item is at a transition point, change the direction and speed and clear the cache
    
     const canTurn = ({position: { x,y }, rcPos: { findXY }}) => x === findXY.x && y === findXY.y;
     const canReverse = ({cache, direction, board}) => cache === new Directions(board)[direction].reverse;
 
-    if (nextPositionOf(item).every(pos => typeOf(Tile.at(pos)).isHall()) && (canTurn(item) || canReverse(item))) {
+    const nextPositionOf = ({cache, rcPos}) => rcPos.check(cache, 2, 2);    
+    if (nextPositionOf(item).every(pos => pos.isOpen()) && (canTurn(item) || canReverse(item))) {
 
           const { cache, direction: dir } = item;
           const downLeft = 'rotate(270deg) rotateY(180deg)';
@@ -129,7 +129,7 @@ function checkCollisions(item) {
   let next = rcPos[direction];
   if (direction.includes('right').or(direction.includes('down'))) { next = next[direction];}
   let [{ x, y }, { typeOf }] = [rcPos.xyCoordinates, Tile];
-  if (typeOf(Tile.at(next)).isBarrier() && x === item.position.x && y === item.position.y) {
+  if (typeOf(Tile.at(next)).isBlocked() && x === item.position.x && y === item.position.y) {
     item.speed = 0;
     item.cache = '';
   }

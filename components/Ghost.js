@@ -247,7 +247,7 @@ export class Ghost extends GamePiece {
   }
 
   setDirection(direction) {
-    if (this.direction !== direction) { 
+    if (this.direction !== direction && this.direction !== 'same') { 
       this.moveEyes(direction);
       this.direction = direction; 
       this.speed = new Directions(this.board)[direction].speed;
@@ -270,18 +270,12 @@ export class Ghost extends GamePiece {
     }   
   }
 
-  filterDirections() {
-    const [{ typeOf }, d ] = [Tile, new Directions(this.board)];
-  
-    const directions = ['left','right','up','down'].filter(dir => {
-      let next;
-      if (dir === 'right') { next = [this.rcPos[dir][dir], this.rcPos[dir][dir].down] }
-      else if (dir === 'down') { next = [this.rcPos[dir][dir], this.rcPos[dir][dir].right] }
-      else if (dir === 'left') { next = [this.rcPos[dir], this.rcPos[dir].down] }
-      else if (dir === 'up') { next = [this.rcPos[dir], this.rcPos[dir].right]; }
-      return next.every(pos => typeOf(Tile.at(pos)).isBarrier() === false) && dir !== d[this.direction].reverse;
-    })
-    return directions;
+  filterDirections(options=['left','right','up','down']) {
+    const d = new Directions(this.board);
+    return options.filter(dir => {
+      const next = this.rcPos.check(dir, 2, 2);
+      return next.every(tile => tile.isOpen()) && dir !== d[this.direction].reverse;
+    });
   }
 
   pickDir() {
@@ -329,15 +323,16 @@ export class Ghost extends GamePiece {
             if (xDir !== 'same' && optB < optA) { xDir = new Directions(this.board)[xDir].reverse; }
           }
     
-          const [yRun, xRun, { element: { id } }] = [this.rcPos.checkRunLength(yDir), this.rcPos.checkRunLength(xDir), this];
+          const [dirPreference, { element: { id } }] = [this.rcPos.checkRunLength(yDir, xDir), this];
               
           if (mode !== 'returning' && options.includes(pacDir) && id.match(/blinky|pinky/)) { this.setDirection(pacDir); }
-          else if (options.includesAll(yDir, xDir) && yRun > xRun) { this.setDirection(yDir); }
-          else if (options.includesAll(yDir, xDir) && yRun < xRun) { this.setDirection(xDir); }
-          else if (options.includes(yDir) || (options.includesAll(yDir, xDir) && randNum < 0.5)) { this.setDirection(yDir); }
-          else if (options.includes(xDir) || (options.includesAll(yDir, xDir) && randNum >= 0.5)) { this.setDirection(xDir); }
-          else if (options.includes(this.direction)) { this.setDirection(this.direction); }
-          else { this.setDirection(options[Math.floor(Math.random() * options.length)]); }
+          else if (options.includesAll(yDir, xDir)) { this.setDirection(dirPreference); }
+          else if (options.includesAny(yDir, xDir)) { 
+            const dir = options.filter(x => x === yDir || x === xDir);
+            this.setDirection(dir[0]);
+          }
+          else if (options.includes(xDir)) { this.setDirection(xDir); }
+          else if (!options.includes(this.direction)) { this.setDirection(options[Math.floor(Math.random() * options.length)]); }
 
           this.teleport();
 
