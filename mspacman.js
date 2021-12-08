@@ -86,8 +86,8 @@ function checkCollisions(item) {
 
     // if there is no wall there, AND the item is at a transition point, change the direction and speed and clear the cache
    
-    const canTurn = ({position: { x,y }, rcPos: { findXY }}) => x === findXY.x && y === findXY.y;
-    const canReverse = ({cache, direction, board}) => cache === new Directions(board)[direction].reverse;
+    const canTurn = ({ position: { x,y }, rcPos: { xyCoordinates } }) => x === xyCoordinates.x && y === xyCoordinates.y;
+    const canReverse = ({ cache, direction, board }) => cache === new Directions(board)[direction].reverse;
 
     const nextPositionOf = ({cache, rcPos}) => rcPos.check(cache, 2, 2);    
     if (nextPositionOf(item).every(pos => pos.isOpen()) && (canTurn(item) || canReverse(item))) {
@@ -222,18 +222,15 @@ function checkGhostCollision() {
       const centerX = (left + right) / 2;
       const centerY = (top + bottom) / 2;
 
-      if ((right >= pacL && right <= pacR) || (left <= pacR && left >= pacL)) {
-        if (centerY <= pacB && centerY >= pacT) { ghostCollision = true; }
-        else if (top <= pacB && top >= pacT) { ghostCollision = true; } 
-        else if (bottom >= pacT && bottom <= pacB) { ghostCollision = true; }
+      if (right.isBetween(pacL, pacR) || left.isBetween(pacR, pacL)) {
+          ghostCollision = top.isBetween(pacT, pacB) || bottom.isBetween(pacT, pacB);
       }
-      else if ((bottom >= pacT && bottom <= pacB) || (top <= pacB && top >= pacT)) {
-        if (centerX <= pacR && centerX >= pacL) { ghostCollision = true; }
-        else if (left <= pacR && left >= pacL) { ghostCollision = true; } 
-        else if (right >= pacL && right <= pacR) { ghostCollision = true; }
+      else if (bottom.isBetween(pacT, pacB) || top.isBetween(pacT, pacB)) {
+        ghostCollision = left.isBetween(pacL, pacR) || right.isBetween(pacL, pacR);
       }
-      if (ghostCollision === true) { collidedGhosts.push(ghost.element.id); }
+      ghostCollision && collidedGhosts.push(ghost.element.id); 
     }
+
   })
 
   if (collidedGhosts.length > 0 && powerCount === 0) {
@@ -243,7 +240,10 @@ function checkGhostCollision() {
     dots.dotCount = 0;
 
     // disappear msPacMan
-    msPacMan.element.style.display = 'none';
+    const handleReappearance = (item) => {
+      item.element.style.display = 'none';
+    }
+    msPacMan.blink(handleReappearance);
 
     // appear 'game over' message
     document.getElementById('game-over').style.display = '';
