@@ -39,7 +39,7 @@ export class RcPos {
     return { x: col * tileW, y: row * tileW };
   }
 
-  check(dir, width=1, height=1) {
+  check(dir, width = 1, height = 1) {
     let [results, pos, { typeOf }] = [[], new RcPos(this), Tile];
     if (dir === "right" && width > 1) {
       for (let i = 0; i < width; i++) {
@@ -103,7 +103,9 @@ export class RcPos {
           length > 0
         ) {
           canTurn = true;
-        } else if (pos.check(direction, 2, 2).some((tile) => tile.isBlocked())) {
+        } else if (
+          pos.check(direction, 2, 2).some((tile) => tile.isBlocked())
+        ) {
           stop = true;
         } else {
           length++;

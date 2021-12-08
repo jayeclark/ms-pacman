@@ -612,10 +612,10 @@ export class Ghost extends GamePiece {
       [...element.getElementsByClassName("pupil")],
     ];
     eyes.forEach((eye, i) => {
-      eye.style.left = (eyeLeft + f * 5 * i) + "px";
+      eye.style.left = eyeLeft + f * 5 * i + "px";
     });
     pupils.forEach((pupil, i) => {
-      pupil.style.left = (pupilLeft + f * 5 * i) + "px";
+      pupil.style.left = pupilLeft + f * 5 * i + "px";
       pupil.style.top = pupilTop + "px";
     });
   }
