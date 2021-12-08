@@ -35,29 +35,31 @@ export class RcPos {
   }
 
   resolveDirection(dirA, dirB) {
-    if (dirA === 'same' || dirA === 'same') { return (dirB === 'same' && dirA) || dirB; }
-
-    const [run1, run2] = [walk(new RcPos(this), dirA), walk(new RcPos(this), dirB)];
-    if (run1.canTurn !== run2.canTurn) { return (turns1 && dirA) || dirB }
+    if (dirA === 'same') { return dirB; }
+    else if (dirB === 'same') { return dirA; }
+    console.log(dirA, dirB);
+    const [run1, run2] = [walk(new RcPos(this), dirA, dirB), walk(new RcPos(this), dirB, dirA)];
+    console.log(dirA, run1);
+    console.log(dirB, run2);
+    if (run1.canTurn !== run2.canTurn) { console.log((run1.canTurn && dirA) || dirB); return (run1.canTurn && dirA) || dirB }
+    console.log((run1.length < run2.length && dirA) || dirB);
     return (run1.length < run2.length && dirA) || dirB; 
 
-    function walk(pos, direction) {
-      const [{ typeOf }, d, stop, canTurn, length] = [Tile, new Directions(this.board), false, false, 0];
-      let { col, board: { cols } } = pos;
-      while (canTurn === false && stop === false && col.isBetween(0, cols - 1)) {
-        if (pos.check(direction, 2, 2).every(tile => tile.isOpen())) {
-          canTurn = true;
-        }
-        else if (typeOf(Tile.at(pos)).isBlocked()) {
-          stop = true;
-        }
+    function walk(pos, direction, otherDirection) {
+      let [{ typeOf }, d, stop, canTurn, length] = [Tile, new Directions(pos.board), false, false, 0];
+      let { board: { cols } } = pos[direction];
+      while (canTurn === false && stop === false && pos.col.isBetween(0, cols - 1)) {
+        if (pos.check(otherDirection, 2, 2).every(tile => tile.isOpen()) && length > 0) { canTurn = true; }
+        else if (pos.check(direction).some(tile => tile.isBlocked())) { stop = true; }
         else {
           length++;
           pos.row += d[direction].row;
           pos.col += d[direction].col;
+          if (pos.col < 0) { pos.col = cols - 1; }
+          else if (pos.col > cols - 1) { pos.col = 1; }
         }
       }
-      return { canTurn, length};
+      return { canTurn, length };
     }
   }
 }
