@@ -385,34 +385,22 @@ export class Ghost extends GamePiece {
     Array.from(this.element.getElementsByClassName('blue-pupil')).forEach(eye => eye.style.display = 'none')
     
     // Blink several times before solidifying
+    const handleReappearance = (item) => {
+      item.speed = new Directions[item.direction].speed;
+      item.status.mode = freeStatusOnSpawn;
+      item.reAppear();
+    }
 
-      let blinkCount = 0;
-      blink(this);
+    this.blink(handleReappearance);
 
-      function blink(item) {
-        if (blinkCount === 44) {
-          item.speed = new Directions[item.direction].speed; item.status.mode = freeStatusOnSpawn; 
-          item.reAppear();
-          return true;
-        }
-        if (blinkCount % 8 === 0) { item.element.style.display = ''; }
-        else if (blinkCount % 4 === 0) { item.element.style.display = 'none'; }
-        blinkCount++;
-        setTimeout(function() { blink(item); }, 50);
-      }
-      
   }
     
-  moveEyes(dir, dirArray=new Directions(this.board)) {
-    const { fringeW } = this.board;
-    let eyes = [...this.element.getElementsByClassName('eyeball')];
-    let pupils = [...this.element.getElementsByClassName('pupil')];
-  
-    eyes[0].style.left = dirArray[dir].eyeleft + 'px';
-    eyes[1].style.left = (dirArray[dir].eyeleft + fringeW * 5) + 'px';
-    pupils[0].style.left = parseFloat(dirArray[dir].pupilleft) + 'px';
-    pupils[1].style.left = (parseFloat(dirArray[dir].pupilleft) + fringeW * 5) + 'px';
-    pupils[0].style.top = pupils[1].style.top = dirArray[dir].pupiltop;
+  moveEyes(dir) {
+    const { element, board: { fringeW: f } } = this;
+    const { eyeLeft, pupilLeft, pupilTop } = new Directions(this.board)[dir];
+    const [eyes, pupils] = [[...element.getElementsByClassName('eyeball')], [...element.getElementsByClassName('pupil')]];
+    eyes.every(({ style }, i) => { style.left = (eyeLeft + f * 5 * i) + 'px'; })
+    pupils.every(({ style }, i) => { style.left = (pupilLeft + f * 5 * i) + 'px'; style.top = pupilTop + 'px'; })
   }
 }
   

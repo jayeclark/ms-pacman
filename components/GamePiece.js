@@ -17,6 +17,22 @@ export class GamePiece extends Element {
     return new RcPos({ row: Math.floor(y / tileW), col: Math.floor(x / tileW), board: this.board});
   }
 
+  blink(handleReappearance) {
+
+    doBlink(this, handleReappearance);
+
+    function doBlink(item, handleReappearance, blinkCount=0) {
+      const { element: { style } } = item;
+      if (blinkCount === 11) {
+        handleReappearance(item);
+        return true;
+      }
+      else if (blinkCount % 2 === 0) { style.display = ''; }
+      else { style.display = 'none'; }
+      setTimeout(function() { doBlink(item, handleReappearance, blinkCount + 1) }, 200);
+    }
+  }
+
   move() {
     const { direction, speed } = this;
     if (direction.includes('left').or(direction.includes('right'))) {
