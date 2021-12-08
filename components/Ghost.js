@@ -395,10 +395,11 @@ export class Ghost extends GamePiece {
 
   filterDirections(options = ["left", "right", "up", "down"]) {
     const d = new Directions(this.board);
-    return options.filter((dir) => {
-      const next = this.rcPos.check(dir, 2, 2);
+    const nextArray = options.map((x) => this.rcPos.check(x, 2, 2));
+    return options.filter((dir, i) => {
       return (
-        next.every((tile) => tile.isOpen()) && dir !== d[this.direction].reverse
+        nextArray[i].every(tile => tile.isOpen()) &&
+        dir !== d[this.direction].reverse
       );
     });
   }
@@ -445,7 +446,7 @@ export class Ghost extends GamePiece {
     else if (
       currX % tileW === 0 &&
       currY % tileW === 0 &&
-      this.isInBox === false
+      this.status.mode !== "notfree"
     ) {
       const options = this.filterDirections();
 
@@ -465,12 +466,11 @@ export class Ghost extends GamePiece {
         }
       }
 
-      const [
-        dirPreference,
-        {
-          element: { id },
-        },
-      ] = [this.rcPos.resolveDirection(yDir, xDir), this];
+      const {
+        rcPos,
+        element: { id },
+      } = this;
+      const dirPreference = rcPos.resolveDirection(yDir, xDir);
 
       if (
         mode !== "returning" &&
@@ -481,18 +481,20 @@ export class Ghost extends GamePiece {
       } else if (options.includesAll(yDir, xDir)) {
         this.setDirection(dirPreference);
       } else if (options.includesAny(yDir, xDir)) {
-        const dir = options.filter((x) => x === yDir || x === xDir);
-        this.setDirection(dir[0]);
+        const filteredOpts = options.filter((x) => x === yDir || x === xDir);
+        this.setDirection(filteredOpts[0]);
       } else if (options.includes(xDir)) {
         this.setDirection(xDir);
       } else if (!options.includes(this.direction)) {
         this.setDirection(options[Math.floor(Math.random() * options.length)]);
+      } else {
+        this.setDirection(options[0]);
       }
 
       this.teleport();
 
       if (
-        mode === "returning" &&
+        this.status.mode === "returning" &&
         !(
           targY === currY &&
           currX > targX - 2 * tileW &&
@@ -502,6 +504,7 @@ export class Ghost extends GamePiece {
         let item = this;
         setTimeout(function () {
           item.move();
+          item.pickDir();
         }, 25);
       }
     }

@@ -75,7 +75,7 @@ function cache(id, msPacMan) {
     arrow.style.transform = '';}, 100);
 }
 
-// Check prosimity to edges and reverse direction and image if needed
+// Check proximity to edges and reverse direction and image if needed
 function checkCollisions(item) {
 
   if (item.cache !== '') {

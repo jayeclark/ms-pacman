@@ -9,20 +9,20 @@ export class RcPos {
   }
 
   get left() {
-    let { col, ...props } = this;
-    return new RcPos({ col: --col, ...props });
+    let { col: c, ...props } = this;
+    return new RcPos({ ...props, col: c - 1 });
   }
   get right() {
-    let { col, ...props } = this;
-    return new RcPos({ col: ++col, ...props });
+    let { col: c, ...props } = this;
+    return new RcPos({ ...props, col: c + 1 });
   }
   get down() {
-    let { row, ...props } = this;
-    return new RcPos({ row: ++row, ...props });
+    let { row: r, ...props } = this;
+    return new RcPos({ ...props, row: r + 1 });
   }
   get up() {
-    let { row, ...props } = this;
-    return new RcPos({ row: --row, ...props });
+    let { row: r, ...props } = this;
+    return new RcPos({ ...props, row: r - 1 });
   }
   get top() {
     return this.up;
@@ -84,7 +84,6 @@ export class RcPos {
 
     function walk(pos, direction, otherDirection) {
       let [d, stop, canTurn, length] = [
-        Tile,
         new Directions(pos.board),
         false,
         false,
@@ -100,7 +99,7 @@ export class RcPos {
       ) {
         if (
           pos.check(otherDirection, 2, 2).every((tile) => tile.isOpen()) &&
-          length > 0
+          length > 1
         ) {
           canTurn = true;
         } else if (
