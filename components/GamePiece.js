@@ -1,9 +1,8 @@
-import { RcPos } from './RcPos.js';
-import { Element } from './Element.js';
-import { Directions } from './Directions.js';
+import { RcPos } from "./RcPos.js";
+import { Element } from "./Element.js";
+import { Directions } from "./Directions.js";
 
 export class GamePiece extends Element {
-
   constructor(position, startingDirection) {
     super();
     this.board = position.board;
@@ -13,46 +12,64 @@ export class GamePiece extends Element {
   }
 
   get rcPos() {
-    const { position: { x, y }, board: { tileW } } = this;
-    return new RcPos({ row: Math.floor(y / tileW), col: Math.floor(x / tileW), board: this.board});
+    const {
+      position: { x, y },
+      board: { tileW },
+    } = this;
+    return new RcPos({
+      row: Math.floor(y / tileW),
+      col: Math.floor(x / tileW),
+      board: this.board,
+    });
   }
 
   blink(handleReappearance) {
-
     doBlink(this, handleReappearance);
 
-    function doBlink(item, handleReappearance, blinkCount=0) {
-      const { element: { style } } = item;
+    function doBlink(item, handleReappearance, blinkCount = 0) {
+      const {
+        element: { style },
+      } = item;
       if (blinkCount === 11) {
         handleReappearance(item);
         return true;
+      } else if (blinkCount % 2 === 0) {
+        style.display = "";
+      } else {
+        style.display = "none";
       }
-      else if (blinkCount % 2 === 0) { style.display = ''; }
-      else { style.display = 'none'; }
-      setTimeout(function() { doBlink(item, handleReappearance, blinkCount + 1) }, 200);
+      setTimeout(function () {
+        doBlink(item, handleReappearance, blinkCount + 1);
+      }, 200);
     }
   }
 
   move() {
     const { direction, speed } = this;
-    if (direction.includes('left').or(direction.includes('right'))) {
+    if (direction.includes("left").or(direction.includes("right"))) {
       this.position.x += parseInt(speed);
       this.element.style.left = this.position.x;
-    } else if (direction.includes('up').or(direction.includes('down'))) {
+    } else if (direction.includes("up").or(direction.includes("down"))) {
       this.position.y += parseInt(speed);
       this.element.style.top = this.position.y;
     }
   }
 
   teleport() {
-    const { position: { x }, 
-            rcPos: { row }, 
-            direction, 
-            board: { cols, tileW, portals }, 
-            speed } = this;
-    if (x <= 0 && direction === 'left' && portals.includes(row)) {
+    const {
+      position: { x },
+      rcPos: { row },
+      direction,
+      board: { cols, tileW, portals },
+      speed,
+    } = this;
+    if (x <= 0 && direction === "left" && portals.includes(row)) {
       this.position.x = (cols - 2) * tileW - speed;
-    } else if (x > (cols - 2) * tileW && direction === 'right' && portals.includes(row)) {
+    } else if (
+      x > (cols - 2) * tileW &&
+      direction === "right" &&
+      portals.includes(row)
+    ) {
       this.position.x = 0;
     }
   }
