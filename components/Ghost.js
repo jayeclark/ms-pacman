@@ -260,7 +260,6 @@ export class Ghost extends GamePiece {
           gateEnd: { y: yE },
         },
       },
-      element,
       status: { mode, stop, restarted },
       direction,
       position: { x: xG, y: yG },
@@ -363,7 +362,7 @@ export class Ghost extends GamePiece {
       if (xGG % Math.abs(speed) > 0) {
         xGG -= xGG % Math.abs(speed);
       }
-      return { x: xGG + (tileW * 2) / 3, y: yGG - tileW * 2 };
+      return { x: xGG + tileW * 2, y: yGG - tileW * 2 };
     }
     return { x: xP, y: yP };
   }
@@ -509,8 +508,8 @@ export class Ghost extends GamePiece {
   }
 
   disAppear() {
-    (this.status.mode = "returning"),
-      (this.element.style.backgroundColor = "transparent");
+    this.status.mode = "returning";
+    this.element.style.backgroundColor = "transparent";
     const classes = ["fringe", "eyeball", "pupil", "blue-frown", "blue-pupil"];
     classes.forEach((type) =>
       Array.from(this.element.getElementsByClassName(type)).forEach(

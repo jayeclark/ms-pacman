@@ -274,9 +274,7 @@ function checkGhostCollision() {
         const ghost = ghosts.filter(g => g.element.id === id)[0];
 
         if (ghost.status.mode === 'free') {
-
           ghost.disAppear();
-
           board.scoreDivAdd({'x': parseFloat(ghost.element.style.left), 'y': parseFloat(ghost.element.style.top)});
           score += 200;
           document.getElementById('score').innerHTML = score;
