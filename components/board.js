@@ -52,7 +52,7 @@ export class Board {
 
   get rowHeight() {
     return (
-      Math.floor((+window.innerHeight - 40) / ((this.rows + 3) * this.speed)) *
+      Math.floor((+window.innerHeight - 40) / ((this.rows + 6) * this.speed)) *
       this.speed
     );
   }
