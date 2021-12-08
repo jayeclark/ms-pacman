@@ -105,7 +105,7 @@ export class Ghost extends GamePiece {
   }
 
   addEyes() {
-    const { eyetop, eyeleft, pupiltop, pupilleft } = new Directions(this.board)[
+    const { eyeTop, eyeLeft, pupilTop, pupilLeft } = new Directions(this.board)[
       this.direction
     ];
     const {
@@ -114,21 +114,21 @@ export class Ghost extends GamePiece {
     } = this;
 
     this.element.appendChild(
-      makeElement("div", "eyeball", { top: eyetop, left: eyeleft })
+      makeElement("div", "eyeball", { top: eyeTop, left: eyeLeft })
     );
     this.element.appendChild(
       makeElement("div", "eyeball", {
-        top: eyetop,
-        left: fringeW * 5 + eyeleft,
+        top: eyeTop,
+        left: fringeW * 5 + eyeLeft,
       })
     );
     this.element.appendChild(
-      makeElement("div", "pupil", { top: pupiltop, left: pupilleft })
+      makeElement("div", "pupil", { top: pupilTop, left: pupilLeft })
     );
     this.element.appendChild(
       makeElement("div", "pupil", {
-        top: pupiltop,
-        left: fringeW * 5 + pupilleft,
+        top: pupilTop,
+        left: fringeW * 5 + pupilLeft,
       })
     );
     return this;
@@ -612,12 +612,12 @@ export class Ghost extends GamePiece {
       [...element.getElementsByClassName("eyeball")],
       [...element.getElementsByClassName("pupil")],
     ];
-    eyes.every(({ style }, i) => {
-      style.left = eyeLeft + f * 5 * i + "px";
+    eyes.forEach((eye, i) => {
+      eye.style.left = (eyeLeft + f * 5 * i) + "px";
     });
-    pupils.every(({ style }, i) => {
-      style.left = pupilLeft + f * 5 * i + "px";
-      style.top = pupilTop + "px";
+    pupils.forEach((pupil, i) => {
+      pupil.style.left = (pupilLeft + f * 5 * i) + "px";
+      pupil.style.top = pupilTop + "px";
     });
   }
 }
