@@ -39,7 +39,7 @@ export class RcPos {
     return { x: col * tileW, y: row * tileW };
   }
 
-  check(dir, width, height) {
+  check(dir, width=1, height=1) {
     let [results, pos, { typeOf }] = [[], new RcPos(this), Tile];
     if (dir === "right" && width > 1) {
       for (let i = 0; i < width; i++) {
@@ -73,22 +73,17 @@ export class RcPos {
     } else if (dirB === "same") {
       return dirA;
     }
-    console.log(dirA, dirB);
     const [run1, run2] = [
       walk(new RcPos(this), dirA, dirB),
       walk(new RcPos(this), dirB, dirA),
     ];
-    console.log(dirA, run1);
-    console.log(dirB, run2);
     if (run1.canTurn !== run2.canTurn) {
-      console.log((run1.canTurn && dirA) || dirB);
       return (run1.canTurn && dirA) || dirB;
     }
-    console.log((run1.length < run2.length && dirA) || dirB);
     return (run1.length < run2.length && dirA) || dirB;
 
     function walk(pos, direction, otherDirection) {
-      let [{ typeOf }, d, stop, canTurn, length] = [
+      let [d, stop, canTurn, length] = [
         Tile,
         new Directions(pos.board),
         false,
@@ -108,7 +103,7 @@ export class RcPos {
           length > 0
         ) {
           canTurn = true;
-        } else if (pos.check(direction).some((tile) => tile.isBlocked())) {
+        } else if (pos.check(direction, 2, 2).some((tile) => tile.isBlocked())) {
           stop = true;
         } else {
           length++;
