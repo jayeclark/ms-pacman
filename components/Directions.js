@@ -10,13 +10,11 @@ export class Directions {
     const row = dir === "down" ? 1 : dir === "up" ? -1 : 0;
     const col = dir === "right" ? 1 : dir === "left" ? -1 : 0;
     const [r, rY] = [row == 0 ? 0 : 90, row + col > 0 ? 0 : 180];
-    const reverse = "updown".match(dir)
-      ? "updown".replace(dir, "")
-      : "rightleft".replace(dir, "");
+    const dict = { left: "right", down: "up", right: "left", up: "down" };
     return {
       row,
       col,
-      reverse,
+      reverse: dict[dir],
       transform: `rotate(${r}deg) rotateY(${rY}deg)`,
       speed: /up|left/.test(dir) ? -speed : speed,
       eyeTop: t / 6 + f,
