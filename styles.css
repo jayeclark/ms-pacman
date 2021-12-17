@@ -1,10 +1,12 @@
 body {
-    background-color: black;
-  }
+  background-color: black;
+}
 
 @media only screen and (max-width: 760px) {
-    #test-div { display: none; }
+  #test-div {
+    display: none;
   }
+}
 
 .wall {
   position: absolute;
@@ -18,7 +20,7 @@ body {
   position: absolute;
   background-color: black;
   z-index: 99;
-  margin: -2px;  
+  margin: -2px;
 }
 
 .pac-dot {
@@ -135,7 +137,7 @@ body {
 .ms-pac-man {
   position: absolute;
   z-index: 3000;
-  transform: rotate(0deg)
+  transform: rotate(0deg);
 }
 
 .message {
@@ -145,7 +147,7 @@ body {
   align-items: center;
   z-index: 999;
   background-color: transparent;
-  font-family: 'Press Start 2P', cursive;
+  font-family: "Press Start 2P", cursive;
   color: yellow;
   text-align: center;
 }
@@ -158,14 +160,14 @@ body {
 }
 
 .message-inner-shadow {
-  background-color:rgba(0,0,0,0.4);
-  box-shadow: 0px 0px 12px 6px rgba(0,0,0,0.5);
+  background-color: rgba(0, 0, 0, 0.4);
+  box-shadow: 0px 0px 12px 6px rgba(0, 0, 0, 0.5);
 }
 
 .ghost-score {
   position: absolute;
   background-color: transparent;
-  font-family: 'Press Start 2P', cursive;
+  font-family: "Press Start 2P", cursive;
   color: lightgray;
   z-index: 1000;
   text-align: center;
@@ -173,7 +175,7 @@ body {
 
 .extra-lives {
   text-align: left;
-  font-family: 'Press Start 2P', cursive;
+  font-family: "Press Start 2P", cursive;
   color: lightgray;
   margin: 0px 5px;
   width: 100%;

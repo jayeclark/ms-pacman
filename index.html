@@ -1,35 +1,110 @@
 <html>
-
-<head>
+  <head>
     <title>Ms. Pac-Man</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
-    <link rel="stylesheet" title="styles" href="./styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+      integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" title="styles" href="./styles.css" />
     <script src="./mspacman.js" type="module"></script>
-</head>
+  </head>
 
-<body style="background-color:black;padding: 10px;">
-    <div style="position:relative; display: flex; margin: 0px auto; justify-content: center;">
-        <div id="header" style="position: absolute;z-index: 800;margin: 0px auto;">
-            <button id="start" type="button" class="btn btn-success" style='width:120px;margin: 10px;position: relative; z-index: 101'>Start Game</button>
-            <button id="stop" type="button" class="btn btn-danger" style='width:120px;display: none; margin: 10px; position: relative; z-index: 101'>Pause Game</button>
-            <button id="restart" type="button" class="btn btn-success" width='200' height='30' style='display: none; margin: 10px; position: relative; z-index: 101'>Play Again?</button>
-            <div id="score-board" style="position:absolute;color:chartreuse;font-family:'Press Start 2P',cursive;z-index:400;top:10;padding:10px;display:flex;justify-content:right;right:10px;width:200px;background-color: black;">
-                <div style="width:50px;flex-shrink:0">Score: </div>
-                <div id='score' style="width:100px;text-align:right;flex-shrink:1">0</div>
-            </div>
+  <body style="background-color: black; padding: 10px">
+    <div
+      style="
+        position: relative;
+        display: flex;
+        margin: 0px auto;
+        justify-content: center;
+      "
+    >
+      <div
+        id="header"
+        style="position: absolute; z-index: 800; margin: 0px auto"
+      >
+        <button
+          id="start"
+          type="button"
+          class="btn btn-success"
+          style="width: 120px; margin: 10px; position: relative; z-index: 101"
+        >
+          Start Game
+        </button>
+        <button
+          id="stop"
+          type="button"
+          class="btn btn-danger"
+          style="
+            width: 120px;
+            display: none;
+            margin: 10px;
+            position: relative;
+            z-index: 101;
+          "
+        >
+          Pause Game
+        </button>
+        <button
+          id="restart"
+          type="button"
+          class="btn btn-success"
+          width="200"
+          height="30"
+          style="display: none; margin: 10px; position: relative; z-index: 101"
+        >
+          Play Again?
+        </button>
+        <div
+          id="score-board"
+          style="
+            position: absolute;
+            color: chartreuse;
+            font-family: 'Press Start 2P', cursive;
+            z-index: 400;
+            top: 10;
+            padding: 10px;
+            display: flex;
+            justify-content: right;
+            right: 10px;
+            width: 200px;
+            background-color: black;
+          "
+        >
+          <div style="width: 50px; flex-shrink: 0">Score:</div>
+          <div
+            id="score"
+            style="width: 100px; text-align: right; flex-shrink: 1"
+          >
+            0
+          </div>
         </div>
+      </div>
     </div>
-    <div style="position: relative; display: flex; margin: 0px auto; width: fit-content; height: 100%; justify-content: center; padding: 20px;">
-
-        <div id='game' style='position: absolute; z-index: 100;margin: 0px auto;'>
-
-        </div>
+    <div
+      style="
+        position: relative;
+        display: flex;
+        margin: 0px auto;
+        width: fit-content;
+        height: 100%;
+        justify-content: center;
+        padding: 20px;
+      "
+    >
+      <div
+        id="game"
+        style="position: absolute; z-index: 100; margin: 0px auto"
+      ></div>
     </div>
 
-    <div class='test-div'></div>
-</body>
-
+    <div class="test-div"></div>
+  </body>
 </html>
