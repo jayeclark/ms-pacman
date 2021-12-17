@@ -87,10 +87,10 @@ export class Ghost extends GamePiece {
 
       let classNames = ["fringe"];
       switch (i) {
-        case i === 1:
+        case 1:
           classNames.push("fringe-left");
           break;
-        case i === 7:
+        case 7:
           classNames.push("fringe-right");
           break;
         default:
@@ -397,7 +397,7 @@ export class Ghost extends GamePiece {
     const nextArray = options.map((x) => this.rcPos.check(x, 2, 2));
     return options.filter((dir, i) => {
       return (
-        nextArray[i].every(tile => tile.isOpen()) &&
+        nextArray[i].every((tile) => tile.isOpen()) &&
         dir !== d[this.direction].reverse
       );
     });
