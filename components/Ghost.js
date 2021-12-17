@@ -1,6 +1,5 @@
 import { GamePiece } from "./GamePiece.js";
 import { Directions } from "./Directions.js";
-import { Tile } from "./Tile.js";
 import { msPacMan } from "../mspacman.js";
 
 export const ghosts = [];
