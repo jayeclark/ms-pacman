@@ -173,13 +173,17 @@ function munchMode() {
       munchModeActive = true;
       ghosts.forEach((ghost) => {
         const item = ghost;
-        item.status.munchModeActive = true;
+        if (item.status.mode === 'free') {
+          item.status.munchModeActive = true;
+        }
       });
     }
 
     // make free ghosts blue, turn off their eyes and turn on their frowns
     if (powerCount === 0) {
-      ghosts.forEach((item) => {
+      const filteredGhosts = ghosts.filter(({ status }) => status.munchModeActive === true);
+      console.log(filteredGhosts);
+      filteredGhosts.forEach((item) => {
         const ghost = item;
         if (ghost.element.style.backgroundColor !== 'transparent') {
           ghost.element.style.backgroundColor = 'blue';
@@ -252,7 +256,8 @@ function munchMode() {
       }
     } else if (powerCount >= 120) {
       // done - count 120 (6 seconds) - make everything normal again
-      ghosts.forEach((item) => {
+      const filteredGhosts = ghosts.filter(({ status }) => status.munchModeActive === true);
+      filteredGhosts.forEach((item) => {
         const ghost = item;
         if (ghost.element.style.backgroundColor !== 'transparent') {
           ghost.element.style.backgroundColor = ghost.color;
@@ -437,8 +442,8 @@ function checkGhostCollision() {
     document.getElementById('game-over').style.display = '';
 
     // change button to 'restart'
-    document.getElementById('stop').style.display = 'none';
-    document.getElementById('restart').style.display = '';
+    document.getElementById('stop-button').style.display = 'none';
+    document.getElementById('restart-button').style.display = '';
   } else if (collidedGhosts.length > 0 && powerCount > 0) {
     collidedGhosts.forEach((id) => {
       const ghostEl = document.getElementById(id);
@@ -545,16 +550,16 @@ function updateGhosts() {
     let { position: { x, y } } = ghost;
     if (mode === 'free' && x % gSpeed > 0) {
       x += x % gSpeed;
-      element.style.left = x;
+      element.style.left = `${x}px`;
     } else if (mode === 'free' && y % gSpeed > 0) {
       y += y % gSpeed;
-      element.style.top = y;
+      element.style.top = `${y}px`;
     }
   });
 
   if (stop === false) {
     const filteredGhosts = ghosts.filter(({ status: { mode } }) => (
-      mode.match(/^free|returning/)
+      mode.match(/^free|returning|reentering|reshuffling/)
     ));
     filteredGhosts.forEach((ghost) => {
       ghost.pickDir(msPacMan);

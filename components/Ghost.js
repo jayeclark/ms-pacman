@@ -1,6 +1,9 @@
 /* eslint-disable import/extensions */
 import GamePiece from './GamePiece.js';
 import Directions from './Directions.js';
+import {
+  startEntry, endEntry, startReshuffle, ghostGateCoords,
+} from '../utilities/lib.js';
 
 function isOpen(str) {
   return str !== 'wall' && str !== 'ghostbox';
@@ -259,81 +262,6 @@ export default class Ghost extends GamePiece {
     return false;
   }
 
-  enterBox() {
-    const {
-      board: {
-        tileW,
-        ghostContainer: {
-          gateStart: { x, y },
-          gateEnd: { y: yE },
-        },
-      },
-      status: { mode, stop, restarted },
-      direction,
-      position: { x: xG, y: yG },
-    } = this;
-    const [xS, yS] = [x + tileW / 2, y - tileW * 2];
-    const [leftPos, rightPos] = [xS - tileW * 2, xS - tileW * 2];
-
-    if (!stop && xG === xS && yG >= yS && mode === 'returning') {
-      this.setDirection('down');
-      this.move();
-      this.status.mode = 'notfree';
-    } else if (!stop && xG === xS && mode === 'notfree' && yG < yE) {
-      this.setDirection('down');
-      this.move();
-    } else if (!stop && xG === xS && mode === 'notfree' && yG >= yE) {
-      // decide which way to turn based on whether another ghost is in that area
-      let [leftOccupied, rightOccupied] = [false, false];
-
-      ghosts.forEach(({ element: { id }, isInBox, position: { x: xPos } }) => {
-        if (id !== this.element.id && isInBox && xPos > xS) {
-          rightOccupied = true;
-        } else if (id !== this.element.id && isInBox && xPos < xS) {
-          leftOccupied = true;
-        }
-      });
-
-      if (rightOccupied === false) {
-        this.setDirection('right');
-        this.move();
-      } else if (leftOccupied === false) {
-        this.setDirection('left');
-        this.move();
-      } else {
-        this.setDirection('up');
-        this.speed = 0;
-        this.reAppear();
-        return true;
-      }
-    } else if (
-      !stop
-      && mode === 'notfree'
-      && direction === 'right'
-      && xG < rightPos
-    ) {
-      this.setDirection('right');
-      this.move();
-    } else if (
-      !stop
-      && mode === 'notfree'
-      && direction === 'left'
-      && xG > leftPos
-    ) {
-      this.setDirection('left');
-      this.move();
-    } else if (!stop) {
-      this.setDirection('down');
-      this.speed = 0;
-      this.reAppear();
-      return true;
-    }
-    if (restarted === true) {
-      return false;
-    }
-    return true;
-  }
-
   targetCoordinates(player) {
     // Destructure this' properties
     const {
@@ -362,19 +290,13 @@ export default class Ghost extends GamePiece {
       return { x: boardWidth - xG, y: boardHeight - yG };
     }
     if (isReturning) {
-      let { x: xGG } = this.board.ghostContainer.gateStart;
-      const {
-        board: {
-          tileW,
-          ghostContainer: {
-            gateStart: { y: yGG },
-          },
-        },
-      } = this;
-      if (xGG % Math.abs(speed) > 0) {
-        xGG -= xGG % Math.abs(speed);
+      const coords = ghostGateCoords(this.board);
+
+      if (coords.xS % Math.abs(speed) > 0) {
+        coords.xS -= coords.xS % Math.abs(speed);
       }
-      return { x: xGG + tileW * 2, y: yGG - tileW * 2 };
+      console.log('returning goal:', coords.xS, coords.yS, this.board.tileW);
+      return { x: coords.xS, y: coords.yS };
     }
     return { x: xP, y: yP };
   }
@@ -385,22 +307,6 @@ export default class Ghost extends GamePiece {
       this.direction = direction;
       this.speed = new Directions(this.board)[direction].speed;
     }
-  }
-
-  reEnter() {
-    function enter(item) {
-      if (item.enterBox()) {
-        setTimeout(() => {
-          document.getElementById('ghost-gate').style.backgroundColor = '#e1e1fb';
-        }, 500);
-        return true;
-      }
-
-      setTimeout(() => enter(item), 50);
-      return true;
-    }
-    enter(this);
-    return true;
   }
 
   filterDirections(options = ['left', 'right', 'up', 'down']) {
@@ -426,32 +332,52 @@ export default class Ghost extends GamePiece {
       },
     } = this;
     const { x: targX, y: targY } = this.targetCoordinates(player);
-    if (
-      currX === targX
-      && currY === targY
-      && mode === 'returning'
-      && ghostsInBox.length >= 3
-    ) {
-      // returning ghost has hit the way into the ghost box but there are three ghosts in the box
-      this.setDirection('left');
-      this.speed = 0;
-      this.spawn('free');
-    } else if (currX === targX && currY === targY && mode === 'returning') {
-      // returning ghost has hit the way into the ghost box and there is room to get into the box
-      this.setDirection('down');
-      this.position.x = tileW * 14 - tileW / 2;
-      this.element.style.left = `${this.position.x}px`;
-
-      document.getElementById('ghost-gate').style.backgroundColor = 'black';
-      if (ghostsInBox.includes(this.element.id) === false) {
-        this.board.ghostsInBox.push(this.element.id);
+    console.log(ghostsInBox);
+    if (currX === targX && currY === targY && mode === 'returning') {
+      // If the box is full, spawn in place - otherwise, enter the box
+      if (ghostsInBox.length >= 3) {
+        endEntry(this, 'left');
+      } else {
+        startEntry(this);
       }
-      this.reEnter();
+    } else if (mode === 'reentering') {
+      // figure out if ghost has hit the end on the y axis. if so pick left, right, or stay
+      const { xS, yE } = ghostGateCoords(this.board);
+      const { x: xG, y: yG } = this.position;
+      if (xG === xS && mode === 'reentering' && yG >= yE) {
+        // decide which way to turn based on whether another ghost is in that area
+        let [leftOccupied, rightOccupied] = [false, false];
+
+        ghosts.forEach(({ element: { id }, isInBox, position: { x: xPos } }) => {
+          console.log(id, isInBox, xPos, xS);
+          if (id !== this.element.id && isInBox && xPos > xS) {
+            rightOccupied = true;
+          } else if (id !== this.element.id && isInBox && xPos < xS) {
+            leftOccupied = true;
+          }
+        });
+
+        if (rightOccupied === false) {
+          startReshuffle(this, 'right');
+        } else if (leftOccupied === false) {
+          startReshuffle(this, 'left');
+        } else {
+          endEntry(this, 'up');
+        }
+      }
+    } else if (mode === 'reshuffling') {
+      // Determing if ghost has hit the edge of the box and, if so, stop
+      const { leftPos, rightPos } = ghostGateCoords(this.board);
+      const { x: xG } = this.position;
+      if (this.direction === 'left' && xG <= leftPos) {
+        endEntry(this, 'right');
+      } else if (this.direction === 'right' && xG >= rightPos) {
+        endEntry(this, 'left');
+      }
     } else if (
-    // do these calculations if the ghost has hit a tile square-on
       currX % tileW === 0
       && currY % tileW === 0
-      && this.status.mode !== 'notfree'
+      && /^free|returning/.test(mode)
     ) {
       const options = this.filterDirections();
 
@@ -575,6 +501,7 @@ export default class Ghost extends GamePiece {
   spawn(freeStatusOnSpawn) {
     // Change appearance back to normal
     this.status.mode = 'spawning';
+    this.status.munchModeActive = false;
     this.element.style.backgroundColor = this.color;
 
     const fringes = Array.from(this.element.getElementsByClassName('fringe'));
@@ -594,10 +521,10 @@ export default class Ghost extends GamePiece {
         style.display = '';
       }
     });
-    Array.from(
-      this.element.getElementsByClassName('blue-frown'),
-      this.element.getElementsByClassName('blue-pupil'),
-    ).forEach((item) => {
+    [
+      ...this.element.getElementsByClassName('blue-frown'),
+      ...this.element.getElementsByClassName('blue-pupil'),
+    ].forEach((item) => {
       const { style } = item;
       style.display = 'none';
     });
