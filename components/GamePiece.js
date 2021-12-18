@@ -1,8 +1,9 @@
-import { RcPos } from "./RcPos.js";
-import { Element } from "./Element.js";
-import { Directions } from "./Directions.js";
+/* eslint-disable import/extensions */
+import RcPos from "./RcPos.js";
+import Element from "./Element.js";
+import Directions from "./Directions.js";
 
-export class GamePiece extends Element {
+export default class GamePiece extends Element {
   constructor(position, startingDirection) {
     super();
     this.board = position.board;

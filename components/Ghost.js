@@ -1,10 +1,10 @@
-import { GamePiece } from "./GamePiece.js";
-import { Directions } from "./Directions.js";
+import GamePiece from "./GamePiece.js";
+import Directions from "./Directions.js";
 import { msPacMan } from "../mspacman.js";
 
 export const ghosts = [];
 
-export class Ghost extends GamePiece {
+export default class Ghost extends GamePiece {
   constructor(position, startingDirection, color, id, mode) {
     super(position, startingDirection);
     this.color = color;

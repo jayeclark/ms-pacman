@@ -1,10 +1,10 @@
-import { Element } from "./element.js";
-import { Tile } from "./Tile.js";
+import Element from "./Element.js";
+import Tile from "./Tile.js";
 import { camelCase } from "../utilities/lib.js";
 
 let [ref, game] = [0, document.getElementById("game")];
 
-export class Wall extends Element {
+export default class Wall extends Element {
   constructor(position) {
     super();
     this.position = position;

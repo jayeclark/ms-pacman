@@ -1,6 +1,7 @@
-import { Element } from "./Element.js";
+/* eslint-disable import/extensions */
+import Element from "./Element.js";
 
-export class PacDot extends Element {
+export default class PacDot extends Element {
   constructor(position, big = false) {
     super();
     this.position = position;

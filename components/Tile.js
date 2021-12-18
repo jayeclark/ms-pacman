@@ -1,4 +1,4 @@
-export class Tile {
+export default class Tile {
   static adjacentTiles(position) {
     return {
       top: Tile.at(position.top),

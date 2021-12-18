@@ -1,7 +1,7 @@
-import { Directions } from "./Directions.js";
-import { Tile } from "./Tile.js";
+import Directions from "./Directions.js";
+import Tile from "./Tile.js";
 
-export class RcPos {
+export default class RcPos {
   constructor({ row, col, board }) {
     this.row = row;
     this.col = col;

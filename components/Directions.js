@@ -1,4 +1,4 @@
-export class Directions {
+export default class Directions {
   constructor(board) {
     this.left = this.props("left", board);
     this.right = this.props("right", board);

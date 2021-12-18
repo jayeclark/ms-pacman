@@ -1,6 +1,6 @@
-import { GamePiece } from "./GamePiece.js";
+import GamePiece from "./GamePiece.js";
 
-export class MsPacMan extends GamePiece {
+export default class MsPacMan extends GamePiece {
   constructor(position, startingDirection) {
     super(position, startingDirection);
     this.cache = "";
