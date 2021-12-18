@@ -1,7 +1,7 @@
 /* eslint-disable import/extensions */
-import RcPos from "./RcPos.js";
-import Element from "./Element.js";
-import Directions from "./Directions.js";
+import RcPos from './RcPos.js';
+import Element from './Element.js';
+import Directions from './Directions.js';
 
 export default class GamePiece extends Element {
   constructor(position, startingDirection) {
@@ -25,33 +25,36 @@ export default class GamePiece extends Element {
   }
 
   blink(handleReappearance) {
-    doBlink(this, handleReappearance);
-
-    function doBlink(item, handleReappearance, blinkCount = 0) {
+    function doBlink(item, callback, blinkCount = 0) {
       const {
         element: { style },
       } = item;
       if (blinkCount === 11) {
-        handleReappearance(item);
+        callback(item);
         return true;
-      } else if (blinkCount % 2 === 0) {
-        style.display = "";
-      } else {
-        style.display = "none";
       }
-      setTimeout(function () {
-        doBlink(item, handleReappearance, blinkCount + 1);
+      if (blinkCount % 2 === 0) {
+        style.display = '';
+      } else {
+        style.display = 'none';
+      }
+      setTimeout(() => {
+        doBlink(item, callback, blinkCount + 1);
       }, 200);
+
+      return true;
     }
+
+    doBlink(this, handleReappearance);
   }
 
   move() {
     const { direction, speed } = this;
-    if (direction.includes("left").or(direction.includes("right"))) {
-      this.position.x += parseInt(speed);
+    if (direction.includes('left') || (direction.includes('right'))) {
+      this.position.x += parseInt(speed, 10);
       this.element.style.left = this.position.x;
-    } else if (direction.includes("up").or(direction.includes("down"))) {
-      this.position.y += parseInt(speed);
+    } else if (direction.includes('up') || (direction.includes('down'))) {
+      this.position.y += parseInt(speed, 10);
       this.element.style.top = this.position.y;
     }
   }
@@ -64,12 +67,12 @@ export default class GamePiece extends Element {
       board: { cols, tileW, portals },
       speed,
     } = this;
-    if (x <= 0 && direction === "left" && portals.includes(row)) {
+    if (x <= 0 && direction === 'left' && portals.includes(row)) {
       this.position.x = (cols - 2) * tileW - speed;
     } else if (
-      x > (cols - 2) * tileW &&
-      direction === "right" &&
-      portals.includes(row)
+      x > (cols - 2) * tileW
+      && direction === 'right'
+      && portals.includes(row)
     ) {
       this.position.x = 0;
     }

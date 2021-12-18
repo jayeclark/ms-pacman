@@ -8,36 +8,23 @@ import Tile from './components/Tile.js';
 import Directions from './components/Directions.js';
 import loadBoards from './data/boards.js';
 
+console.log('started');
 const dots = { dotCount: 0 };
 let [count, dCount, powerCount, eatenCount, score] = [0, 0, 0, 0, 0, 0];
 let [munchModeActive, stop, started, restarted, restartGhosts, restartRelease] = [
   false, false, false, false, false, false,
 ];
 
-String.prototype.isHall = function isHall() {
-  return this === 'hall';
-};
-String.prototype.isWall = function isWall() {
-  return this === 'wall';
-};
-String.prototype.isOpen = function isOpen() {
+function isOpen() {
   return this !== 'wall' && this !== 'ghostbox';
-};
-String.prototype.isBlocked = function isBlocked() {
+}
+function isBlocked() {
   return this === 'wall' || this === 'ghostbox';
-};
-Array.prototype.includesAll = function includesAll(...args) {
-  return args.map((arg) => this.includes(arg)).every((x) => x === true);
-};
-Array.prototype.includesAny = function includesAny(...args) {
-  return args.map((arg) => this.includes(arg)).some((x) => x === true);
-};
-Boolean.prototype.or = function or(bool2) {
-  return this || bool2;
-};
-Number.prototype.isBetween = function isBetween(a, b) {
-  return a < b ? this >= a && this <= b : this >= b && this <= a;
-};
+}
+
+function isBetween(val, [a, b]) {
+  return a < b ? val >= a && val <= b : val >= b && val <= a;
+}
 
 function get(str) {
   if (str.startsWith('#')) {
@@ -116,7 +103,7 @@ function checkCollisions(item) {
 
     const nextPositionOf = ({ pacCache, rcPos }) => rcPos.check(pacCache, 2, 2);
     if (
-      nextPositionOf(item).every((pos) => pos.isOpen())
+      nextPositionOf(item).every((pos) => isOpen(pos))
       && (canTurn(item) || canReverse(item))
     ) {
       const { cache: pacCache, direction: dir } = item;
@@ -160,12 +147,12 @@ function checkCollisions(item) {
   // if there is no cache, or it wasn't cleared, check whether Ms PacMan is up against a wall
   const { direction, rcPos } = item;
   let next = rcPos[direction];
-  if (direction.includes('right').or(direction.includes('down'))) {
+  if (direction.includes('right') || (direction.includes('down'))) {
     next = next[direction];
   }
   const [{ x, y }, { typeOf }] = [rcPos.xyCoordinates, Tile];
   if (
-    typeOf(Tile.at(next)).isBlocked()
+    isBlocked(typeOf(Tile.at(next)))
     && x === item.position.x
     && y === item.position.y
   ) {
@@ -221,7 +208,7 @@ function munchMode() {
       });
     } else if (powerCount < 80) {
       // animated mouth will go here
-    } else if (powerCount.isBetween(80, 119)) {
+    } else if (isBetween(powerCount, [80, 119])) {
       // flashing while winding down - count 80 (4 seconds)
       let tempColor = 'white';
       if (powerCount % 8 === 0) {
@@ -411,10 +398,10 @@ function checkGhostCollision() {
     if (ghost.status.mode === 'free') {
       const [left, right, top, bottom] = getBoundaries(ghost.element);
 
-      if (right.isBetween(pacL, pacR) || left.isBetween(pacR, pacL)) {
-        ghostCollision = top.isBetween(pacT, pacB) || bottom.isBetween(pacT, pacB);
-      } else if (bottom.isBetween(pacT, pacB) || top.isBetween(pacT, pacB)) {
-        ghostCollision = left.isBetween(pacL, pacR) || right.isBetween(pacL, pacR);
+      if (isBetween(right, [pacL, pacR]) || isBetween(left, [pacR, pacL])) {
+        ghostCollision = isBetween(top, [pacT, pacB]) || isBetween(bottom, [pacT, pacB]);
+      } else if (isBetween(bottom, [pacT, pacB]) || isBetween(top, [pacT, pacB])) {
+        ghostCollision = isBetween(left, [pacL, pacR]) || isBetween(right, [pacL, pacR]);
       }
       if (ghostCollision) { collidedGhosts.push(ghost.element.id); }
     }
@@ -555,7 +542,7 @@ function updateGhosts() {
       mode.match(/^free|returning/)
     ));
     filteredGhosts.forEach((ghost) => {
-      ghost.pickDir();
+      ghost.pickDir(msPacMan);
       ghost.move();
     });
   }
@@ -632,6 +619,7 @@ function buttonSwap() {
 
 // Starts the game
 function startGame() {
+  console.log(started);
   if (stop === false && started === false) {
     restarted = false;
     update();
@@ -651,12 +639,8 @@ function startGame() {
     });
   }
   buttonSwap();
+  return true;
 }
-
-// Add event listeners to buttons
-document.getElementById('start').addEventListener('click', startGame);
-document.getElementById('stop').addEventListener('click', startGame);
-document.getElementById('restart').addEventListener('click', restartGame);
 
 // Adds a direction to msPacMan's cache when an arrow is clicked
 function cache(id, msPacManPiece) {
@@ -670,6 +654,12 @@ function cache(id, msPacManPiece) {
     arrow.style.transform = '';
   }, 100);
 }
+
+// Add event listeners to buttons
+console.log(document.getElementById('start'));
+document.getElementById('start-button').addEventListener('click', startGame);
+document.getElementById('stop-button').addEventListener('click', startGame);
+document.getElementById('restart-button').addEventListener('click', restartGame);
 
 // Add event listeners to arrows
 document
