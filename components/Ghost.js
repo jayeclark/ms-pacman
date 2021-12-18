@@ -2,8 +2,8 @@
 import GamePiece from './GamePiece.js';
 import Directions from './Directions.js';
 
-function isOpen() {
-  return this !== 'wall' && this !== 'ghostbox';
+function isOpen(str) {
+  return str !== 'wall' && str !== 'ghostbox';
 }
 
 export const ghosts = [];

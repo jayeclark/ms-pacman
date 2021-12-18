@@ -2,12 +2,12 @@
 import Directions from './Directions.js';
 import Tile from './Tile.js';
 
-function isOpen() {
-  return this !== 'wall' && this !== 'ghostbox';
+function isOpen(str) {
+  return str !== 'wall' && str !== 'ghostbox';
 }
 
-function isBlocked() {
-  return this === 'wall' || this === 'ghostbox';
+function isBlocked(str) {
+  return str === 'wall' || str === 'ghostbox';
 }
 
 function isBetween(val, [a, b]) {
@@ -99,7 +99,8 @@ export default class RcPos {
       const newPos = pos;
       const d = new Directions(pos.board);
       let [stop, canTurn, length] = [false, false, 0];
-      const { board: { cols } } = pos[direction];
+      const { board: { cols } } = pos;
+
       while (
         canTurn === false
         && stop === false

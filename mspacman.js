@@ -8,18 +8,17 @@ import Tile from './components/Tile.js';
 import Directions from './components/Directions.js';
 import loadBoards from './data/boards.js';
 
-console.log('started');
 const dots = { dotCount: 0 };
 let [count, dCount, powerCount, eatenCount, score] = [0, 0, 0, 0, 0, 0];
 let [munchModeActive, stop, started, restarted, restartGhosts, restartRelease] = [
   false, false, false, false, false, false,
 ];
 
-function isOpen() {
-  return this !== 'wall' && this !== 'ghostbox';
+function isOpen(pos) {
+  return pos !== 'wall' && pos !== 'ghostbox';
 }
-function isBlocked() {
-  return this === 'wall' || this === 'ghostbox';
+function isBlocked(pos) {
+  return pos === 'wall' || pos === 'ghostbox';
 }
 
 function isBetween(val, [a, b]) {
@@ -102,9 +101,11 @@ function checkCollisions(el) {
       pacCache === new Directions(currentBoard)[direction].reverse
     );
 
-    const nextPositionOf = ({ pacCache, rcPos }) => rcPos.check(pacCache, 2, 2);
+    const nextPositionOf = ({ cache: pacCache, rcPos }) => rcPos.check(pacCache, 2, 2);
+    const positions = nextPositionOf(item);
+
     if (
-      nextPositionOf(item).every((pos) => isOpen(pos))
+      positions.every((pos) => isOpen(pos))
       && (canTurn(item) || canReverse(item))
     ) {
       const { cache: pacCache, direction: dir } = item;
@@ -112,7 +113,6 @@ function checkCollisions(el) {
       const upLeft = 'rotate(90deg) rotateY(180deg)';
       const { element: { style: { transform } } } = item;
 
-      console.log(item.element.style);
       switch ((pacCache, dir, transform)) {
         case pacCache === 'down' && dir === 'left':
           item.element.style.transform = 'rotate(270deg) rotateY(180deg)';
@@ -499,7 +499,7 @@ function update() {
       ['right', 39, 68],
     ];
     if (dirs.find((dir) => dir.includes(e.keyCode))) {
-      [msPacMan.cache] = [dirs.find((dir) => dir.includes(e.keyCode))];
+      [msPacMan.cache] = [dirs.find((dir) => dir.includes(e.keyCode))[0]];
     }
   }
 

@@ -43,7 +43,7 @@ export default class Wall extends Element {
       .entries(cornerTypesAt(position))
       .filter((item) => item[1] === 'outer');
     outerCorners.forEach((item) => {
-      style[camelCase(`border-${item[0]}-radius`)] = `${(tileW / 20)}px`;
+      style[camelCase(`border-${item[0]}-radius`)] = `${(tileW / 2)}px`;
     });
 
     // Remove unneeded borders
