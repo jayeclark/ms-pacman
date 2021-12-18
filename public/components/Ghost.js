@@ -519,7 +519,8 @@ export default class Ghost extends GamePiece {
     classes.forEach((type) => {
       Array.from(this.element.getElementsByClassName(type))
         .forEach((div) => {
-          div.style.setAttribute('display', div.style.display === 'none' ? '' : 'none');
+          const { style } = div;
+          style.display = div.style.display === 'none' ? '' : 'none';
         });
     });
   }
@@ -551,20 +552,22 @@ export default class Ghost extends GamePiece {
 
     this.element.style.backgroundColor = color;
     const fringes = Array.from(this.element.getElementsByClassName('fringe'));
-    fringes.forEach(({ style }) => {
+    fringes.forEach((item) => {
+      const { style } = item;
       if (style.backgroundColor !== 'transparent') {
-        style.setAttribute('backgroundColor', color);
+        style.backgroundColor = color;
       } else {
-        style.setAttribute('backgroundImage', style.backgroundImage.replace(
+        style.backgroundImage = style.backgroundImage.replace(
           /blue|white/,
           color,
-        ));
+        );
       }
     });
 
     Object.keys(divs).forEach((key) => {
-      [...element.getElementsByClassName(key)].forEach(({ style }) => {
-        style.setAttribute('display', divs[key]);
+      [...element.getElementsByClassName(key)].forEach((item) => {
+        const { style } = item;
+        style.display = divs[key];
       });
     });
   }
@@ -576,31 +579,34 @@ export default class Ghost extends GamePiece {
 
     const fringes = Array.from(this.element.getElementsByClassName('fringe'));
     fringes.forEach((fringe) => {
+      const { style } = fringe;
       if (
-        fringe.style.backgroundColor !== ''
-        && fringe.style.backgroundColor !== 'transparent'
+        style.backgroundColor !== ''
+        && style.backgroundColor !== 'transparent'
       ) {
-        fringe.style.setAttribute('backgroundColor', this.color);
-        fringe.style.setAttribute('display', '');
+        style.backgroundColor = this.color;
+        style.display = '';
       } else {
-        const newBgImage = fringe.style.backgroundImage
+        const newBgImage = style.backgroundImage
           .replace('blue', this.color)
           .replace('white', this.color);
-        fringe.style.setAttribute('backgroundImage', newBgImage);
-        fringe.style.setAttribute('display', '');
+        style.backgroundImage = newBgImage;
+        style.display = '';
       }
     });
-    Array.from(this.element.getElementsByClassName('blue-frown')).forEach((frown) => {
-      frown.style.setAttribute('display', 'none');
-    });
-    Array.from(this.element.getElementsByClassName('blue-pupil')).forEach((eye) => {
-      eye.style.setAttribute('display', 'none');
+    Array.from(
+      this.element.getElementsByClassName('blue-frown'),
+      this.element.getElementsByClassName('blue-pupil'),
+    ).forEach((item) => {
+      const { style } = item;
+      style.display = 'none';
     });
 
     // Blink several times before solidifying
-    const handleReappearance = (item) => {
-      item.setAttribute('speed', new Directions(this.board)[item.direction].speed);
-      item.status.setAttribute('mode', freeStatusOnSpawn);
+    const handleReappearance = (x) => {
+      const item = x;
+      item.speed = new Directions(this.board)[item.direction].speed;
+      item.setStatus('mode', freeStatusOnSpawn);
       item.reAppear();
     };
 
@@ -618,11 +624,17 @@ export default class Ghost extends GamePiece {
       [...element.getElementsByClassName('pupil')],
     ];
     eyes.forEach((eye, i) => {
-      eye.style.setAttribute('left', `${(eyeLeft + f * 5 * i)}px`);
+      const { style } = eye;
+      style.left = `${(eyeLeft + f * 5 * i)}px`;
     });
     pupils.forEach((pupil, i) => {
-      pupil.style.setAttribute('left', `${(pupilLeft + f * 5 * i)}px`);
-      pupil.style.setAttribute('top', `${pupilTop}px`);
+      const { style } = pupil;
+      style.left = `${(pupilLeft + f * 5 * i)}px`;
+      style.top = `${pupilTop}px`;
     });
+  }
+
+  setStatus(prop, val) {
+    this.status[prop] = val;
   }
 }

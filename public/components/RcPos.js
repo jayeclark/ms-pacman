@@ -96,31 +96,32 @@ export default class RcPos {
     }
 
     function walk(pos, direction, otherDirection) {
+      const newPos = pos;
       const d = new Directions(pos.board);
       let [stop, canTurn, length] = [false, false, 0];
       const { board: { cols } } = pos[direction];
       while (
         canTurn === false
         && stop === false
-        && isBetween(pos.col, [0, cols - 1])
+        && isBetween(newPos.col, [0, cols - 1])
       ) {
         if (
-          pos.check(otherDirection, 2, 2).every((tile) => isOpen(tile))
+          newPos.check(otherDirection, 2, 2).every((tile) => isOpen(tile))
           && length > 1
         ) {
           canTurn = true;
         } else if (
-          pos.check(direction, 2, 2).some((tile) => isBlocked(tile))
+          newPos.check(direction, 2, 2).some((tile) => isBlocked(tile))
         ) {
           stop = true;
         } else {
           length += 1;
-          pos.setAttribute('row', pos.row + d[direction].row);
-          pos.setAttribute('col', pos.col + d[direction].col);
-          if (pos.col < 0) {
-            pos.setAttribute('col', cols - 1);
-          } else if (pos.col > cols - 1) {
-            pos.setAttribute('col', 1);
+          newPos.row += d[direction].row;
+          newPos.col += d[direction].col;
+          if (newPos.col < 0) {
+            newPos.col = cols - 1;
+          } else if (newPos.col > cols - 1) {
+            newPos.col = 1;
           }
         }
       }

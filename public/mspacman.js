@@ -90,7 +90,8 @@ function restartGame() {
 }
 
 // Check proximity to edges and reverse direction and image if needed
-function checkCollisions(item) {
+function checkCollisions(el) {
+  const item = el;
   if (item.cache !== '') {
     // if no wall, AND the item is at a transition point, change direction + speed and clear cache
 
@@ -111,34 +112,35 @@ function checkCollisions(item) {
       const upLeft = 'rotate(90deg) rotateY(180deg)';
       const { element: { style: { transform } } } = item;
 
+      console.log(item.element.style);
       switch ((pacCache, dir, transform)) {
         case pacCache === 'down' && dir === 'left':
-          item.element.style.setAttribute('transform', 'rotate(270deg) rotateY(180deg)');
+          item.element.style.transform = 'rotate(270deg) rotateY(180deg)';
           break;
         case pacCache === 'down' && dir === 'right':
-          item.element.style.setAttribute('transform', 'rotate(90deg)');
+          item.element.style.transform = 'rotate(90deg)';
           break;
         case pacCache === 'up' && dir === 'left':
-          item.element.style.setAttribute('transform', 'rotate(90deg) rotateY(180deg)');
+          item.element.style.transform = 'rotate(90deg) rotateY(180deg)';
           break;
         case pacCache === 'up' && dir === 'right':
-          item.element.style.setAttribute('transform', 'rotate(-90deg)');
+          item.element.style.transform = 'rotate(-90deg)';
           break;
         case pacCache === 'up' && dir === 'down' && transform.includes(downLeft):
-          item.element.style.setAttribute('transform', 'rotate(270deg)');
+          item.element.style.transform = 'rotate(270deg)';
           break;
         case pacCache === 'down' && dir === 'up' && transform.includes(upLeft):
-          item.element.style.setAttribute('transform', 'rotate(90deg)');
+          item.element.style.transform = 'rotate(90deg)';
           break;
         default:
-          item.element.style.setAttribute('transform', new Directions(item.board)[
+          item.element.style.transform = new Directions(item.board)[
             pacCache
-          ].transform);
+          ].transform;
       }
 
-      item.setAttribute('speed', new Directions(item.board)[pacCache].speed);
-      item.setAttribute('direction', pacCache);
-      item.setAttribbute('cache', '');
+      item.speed = new Directions(item.board)[pacCache].speed;
+      item.direction = pacCache;
+      item.cache = '';
 
       return true;
     }
@@ -156,8 +158,8 @@ function checkCollisions(item) {
     && x === item.position.x
     && y === item.position.y
   ) {
-    item.setAttribute('speed', 0);
-    item.setAttribute('cache', '');
+    item.speed = 0;
+    item.cache = '';
   }
 
   item.teleport();
@@ -170,28 +172,31 @@ function munchMode() {
     if (munchModeActive === false) {
       munchModeActive = true;
       ghosts.forEach((ghost) => {
-        ghost.status.setAttribute('munchModeActive', true);
+        const item = ghost;
+        item.status.munchModeActive = true;
       });
     }
 
     // make free ghosts blue, turn off their eyes and turn on their frowns
     if (powerCount === 0) {
-      ghosts.forEach((ghost) => {
+      ghosts.forEach((item) => {
+        const ghost = item;
         if (ghost.element.style.backgroundColor !== 'transparent') {
-          ghost.element.style.setAttribute('backgroundColor', 'blue');
+          ghost.element.style.backgroundColor = 'blue';
 
           const fringes = Array.from(
             ghost.element.getElementsByClassName('fringe'),
           );
-          fringes.forEach((fringe) => {
+          fringes.forEach((x) => {
+            const fringe = x;
             const { backgroundColor: color, backgroundImage: image } = fringe.style;
             if (color !== 'transparent') {
-              fringe.style.setAttribute('backgroundColor', 'blue');
+              fringe.style.backgroundColor = 'blue';
             } else {
-              fringe.style.setAttribute('backgroundImage', image.replace(
+              fringe.style.backgroundImage = image.replace(
                 new RegExp(`white|${ghost.color}`),
                 'blue',
-              ));
+              );
             }
           });
 
@@ -201,9 +206,10 @@ function munchMode() {
             ...Array.from(ghost.element.getElementsByClassName('blue-frown')),
             ...Array.from(ghost.element.getElementsByClassName('blue-pupil')),
           ];
-          divs.forEach((div) => (
-            div.style.setAttribute('display', div.style.display === 'none' ? '' : 'none')
-          ));
+          divs.forEach((el) => {
+            const div = el;
+            div.style.display = div.style.display === 'none' ? '' : 'none';
+          });
         }
       });
     } else if (powerCount < 80) {
@@ -215,27 +221,29 @@ function munchMode() {
         tempColor = 'blue';
       }
       if (powerCount % 4 === 0) {
-        ghosts.forEach((ghost) => {
+        ghosts.forEach((el) => {
+          const ghost = el;
           let { backgroundColor } = ghost.element.style;
           if (backgroundColor !== 'transparent') {
             if (backgroundColor.match(/blue|white/)) {
-              ghost.element.style.setAttribute('backgroundColor', tempColor);
+              ghost.element.style.backgroundColor = tempColor;
             }
             const fringes = Array.from(
               ghost.element.getElementsByClassName('fringe'),
             );
 
-            fringes.forEach((fringe) => {
+            fringes.forEach((item) => {
+              const fringe = item;
               backgroundColor = fringe.style.backgroundColor;
               if (backgroundColor.match(/blue|white/)) {
-                fringe.style.setAttribute('backgroundColor', tempColor);
+                fringe.style.backgroundColor = tempColor;
               } else {
                 const gradient = fringe.style.backgroundImage;
                 if (gradient.includes(tempColor) === false) {
-                  fringe.style.setAttribute('backgroundImage', gradient.replace(
+                  fringe.style.backgroundImage = gradient.replace(
                     /blue|white/,
                     tempColor,
-                  ));
+                  );
                 }
               }
             });
@@ -244,22 +252,24 @@ function munchMode() {
       }
     } else if (powerCount >= 120) {
       // done - count 120 (6 seconds) - make everything normal again
-      ghosts.forEach((ghost) => {
+      ghosts.forEach((item) => {
+        const ghost = item;
         if (ghost.element.style.backgroundColor !== 'transparent') {
-          ghost.element.style.setAttribute('backgroundColor', ghost.color);
+          ghost.element.style.backgroundColor = ghost.color;
 
           const fringes = Array.from(
             ghost.element.getElementsByClassName('fringe'),
           );
-          fringes.forEach((fringe) => {
+          fringes.forEach((el) => {
+            const fringe = el;
             const { backgroundColor, backgroundImage } = fringe.style;
             if (backgroundColor.match(/blue|white/)) {
-              fringe.style.setAttribute('backgroundColor', ghost.color);
+              fringe.style.backgroundColor = ghost.color;
             } else {
-              fringe.style.setAttribute('backgroundImage', backgroundImage.replace(
+              fringe.style.backgroundImage = backgroundImage.replace(
                 /blue|white/,
                 ghost.color,
-              ));
+              );
             }
           });
           const divs = [
@@ -268,8 +278,9 @@ function munchMode() {
             ...Array.from(ghost.element.getElementsByClassName('blue-frown')),
             ...Array.from(ghost.element.getElementsByClassName('blue-pupil')),
           ];
-          divs.forEach((div) => {
-            div.style.setAttribute('display', div.style.display === 'none' ? '' : 'none');
+          divs.forEach((el) => {
+            const div = el;
+            div.style.display = div.style.display === 'none' ? '' : 'none';
           });
         }
       });
@@ -277,8 +288,9 @@ function munchMode() {
       // stop function
       powerCount = 0;
       munchModeActive = false;
-      ghosts.forEach((ghost) => {
-        ghost.status.setAttribute('munchModeActive', false);
+      ghosts.forEach((item) => {
+        const ghost = item;
+        ghost.status.munchModeActive = false;
       });
       return true;
     }
@@ -337,7 +349,7 @@ function checkDots(item) {
 
   // check if any are in the mouth
   for (let i = 0; i < pacDots.length; i += 1) {
-    const [dot, { tileW, pacWidth }] = [dots[i], currentBoard];
+    const [dot, { tileW, pacWidth }] = [pacDots[i], currentBoard];
     const pacDotW = parseFloat(dot.style.width) || currentBoard.pacDotW;
     const [left, top] = [parseFloat(dot.style.left), parseFloat(dot.style.top)];
     const [right, bottom] = [left + pacDotW, top + pacDotW];
@@ -359,7 +371,8 @@ function checkDots(item) {
 
         // disappear ghosts
         ghosts.forEach(({ element, status: { mode } }) => {
-          element.style.setAttribute('display', mode === 'free' ? 'none' : '');
+          const el = element;
+          el.style.display = mode === 'free' ? 'none' : '';
         });
 
         // appear 'winner'
@@ -415,7 +428,8 @@ function checkGhostCollision() {
 
     // disappear msPacMan
     const handleReappearance = (item) => {
-      item.element.style.setAttribute('display', 'none');
+      const { element } = item;
+      element.style.display = 'none';
     };
     msPacMan.blink(handleReappearance);
 
@@ -485,7 +499,7 @@ function update() {
       ['right', 39, 68],
     ];
     if (dirs.find((dir) => dir.includes(e.keyCode))) {
-      msPacMan.setAttribute('cache', dirs.find((dir) => dir.includes(e.keyCode))[0]);
+      [msPacMan.cache] = [dirs.find((dir) => dir.includes(e.keyCode))];
     }
   }
 
@@ -508,8 +522,9 @@ function update() {
 
   if (dCount === 9) {
     const bigDots = [...document.getElementsByClassName('big')];
-    bigDots.forEach(({ style }) => {
-      style.setAttribute('display', (!style.display && 'none') || null);
+    bigDots.forEach((item) => {
+      const style = item;
+      style.display = (!item.style.display && 'none') || '';
     });
     dCount = 0;
   }
@@ -613,13 +628,12 @@ function release() {
 
 // Swaps the visibility of the 'Start' and 'Stop' buttons when they are clicked
 function buttonSwap() {
-  get('#start').style.display = (!get('#start').style.display && 'none') || '';
-  get('#stop').style.display = (!get('#stop').style.display && 'none') || '';
+  get('#start-button').style.display = (!get('#start-button').style.display && 'none') || '';
+  get('#stop-button').style.display = (!get('#stop-button').style.display && 'none') || '';
 }
 
 // Starts the game
 function startGame() {
-  console.log(started);
   if (stop === false && started === false) {
     restarted = false;
     update();
@@ -635,7 +649,7 @@ function startGame() {
   } else {
     stop = !stop;
     ghosts.forEach((ghost) => {
-      ghost.status.setAttribute('stop', !ghost.status.stop);
+      ghost.setStatus('stop', !ghost.status.stop);
     });
   }
   buttonSwap();
@@ -644,8 +658,9 @@ function startGame() {
 
 // Adds a direction to msPacMan's cache when an arrow is clicked
 function cache(id, msPacManPiece) {
+  const msPac = msPacManPiece;
   const dir = id.replace('-arrow', '');
-  msPacManPiece.setAttribute('cache', dir);
+  msPac.cache = dir;
   const arrow = document.getElementById(id);
   arrow.style.opacity = '60%';
   arrow.style.transform = 'translate(0px, 2px)';
@@ -656,7 +671,6 @@ function cache(id, msPacManPiece) {
 }
 
 // Add event listeners to buttons
-console.log(document.getElementById('start'));
 document.getElementById('start-button').addEventListener('click', startGame);
 document.getElementById('stop-button').addEventListener('click', startGame);
 document.getElementById('restart-button').addEventListener('click', restartGame);
