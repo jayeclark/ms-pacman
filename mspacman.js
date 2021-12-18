@@ -52,7 +52,7 @@ const [row, col] = [
   layout.find((x) => x.match`P`).indexOf`P`,
 ];
 // eslint-disable-next-line import/prefer-default-export
-export let msPacMan = new MsPacMan(new RcPos({ row, col, board }), 'right');
+let msPacMan = new MsPacMan(new RcPos({ row, col, board }), 'right');
 
 // Redraws board and restarts the game
 function restartGame() {
@@ -379,8 +379,8 @@ function checkDots(item) {
         document.getElementById('winner').style.display = '';
 
         // change button to 'restart'
-        document.getElementById('stop').style.display = 'none';
-        document.getElementById('restart').style.display = '';
+        document.getElementById('stop-button').style.display = 'none';
+        document.getElementById('restart-button').style.display = '';
       }
     }
   }
