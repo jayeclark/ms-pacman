@@ -1,12 +1,28 @@
 export const camelCase = (str) => {
+  if (typeof str !== 'string') {
+    throw Error('the argument provided to the function camelCase must be a string!');
+  }
   let newStr = str;
-  const matches = newStr.match(/(-)([a-z])/g);
-  matches.forEach((m) => { newStr = newStr.replace(m, m[1].toUpperCase()); });
-  return newStr;
+  const matches = newStr.match(/(-+|_+)([a-z])/g);
+  if (matches) {
+    matches.forEach((m) => { newStr = newStr.replace(m, m[m.length - 1].toUpperCase()); });
+  }
+  return newStr[0].toLowerCase() + newStr.slice(1);
 };
 export const kebabCase = (str) => {
-  const newStr = str;
-  return newStr.replace(/([a-z])([A-Z])/g, (a, b, c) => `${b}-${c.toLowerCase()}`);
+  if (typeof str !== 'string') {
+    throw Error('the argument provided to the function camelCase must be a string!');
+  }
+  let newStr = str;
+  newStr = newStr.replace(/(_+)([a-z])/gi, (a, b, c) => `-${c.toLowerCase()}`);
+  newStr = newStr.replace(/([a-z])([A-Z]{1,2})(?=[^[A-Z])/g, (a, b, c) => {
+    if (c.length > 1) {
+      return `${b}-${c[0].toLowerCase()}-${c[1].toLowerCase()}`;
+    }
+    return `${b}-${c.toLowerCase()}`;
+  });
+
+  return newStr[0].toLowerCase() + newStr.slice(1);
 };
 
 export const endEntry = (item, finalDirection) => {
