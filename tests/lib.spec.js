@@ -12,8 +12,11 @@ const stylesheet = document.createElement('style');
 stylesheet.id = 'header-style-sheet';
 const game = document.createElement('div');
 game.id = 'game';
+const ghostGate = document.createElement('div');
+ghostGate.id = 'ghost-gate';
 document.head.appendChild(stylesheet);
 document.body.appendChild(game);
+game.appendChild(ghostGate);
 
 const {
   camelCase,
@@ -27,7 +30,44 @@ const { default: Ghost } = require('../components/Ghost.js');
 const { default: Board } = require('../components/Board.js');
 const { default: RcPos } = require('../components/RcPos.js');
 
-describe('\ncamelCase:', () => {
+const array = [
+  'XXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+  'X-------X-----------X-------X',
+  'XB------X-----------X-----B-X',
+  'X--XXX--X--XXXXXXX--X--XXX--X',
+  'X---------------------------X',
+  'X---------------------------X',
+  'XXX--X--XXXX--X--XXXX--X--XXX',
+  'XXX--X--XXXX--X--XXXX--X--XXX',
+  '-----X--------X--------X-----',
+  '-----X--------X--------X-----',
+  'XXX--XXXX--XXXXXXX--XXXX--XXX',
+  'SSX------SSSSSSSSSSS------XSS',
+  'SSX------SSSSSSSSSSS------XSS',
+  'SSX--XXXXSSGGGGGGGSSXXXX--XSS',
+  'SSX--X---SSGGGGGGGSS---X--XSS',
+  'SSX--X---SSGGGGGGGSS---X--XSS',
+  'XXX--X--XSSGGGGGGGSSX--X--XXX',
+  '-P------XSSSSSSSSSSSX--------',
+  '--------XSSSSSSSSSSSX--------',
+  'XXX--XXXXXXX--X--XXXXXXX--XXX',
+  'SSX-----------X-----------XSS',
+  'SSX-----------X-----------XSS',
+  'XXX--XXXX--XXXXXXX--XXXX--XXX',
+  'X---------------------------X',
+  'X---------------------------X',
+  'X--XXX--XXXX--X--XXXX--XXX--X',
+  'X--XXX--X-----X-----X--XXX--X',
+  'XB-XXX--X-----X-----X--XXXB-X',
+  'X--XXX--X--XXXXXXX--X--XXX--X',
+  'X---------------------------X',
+  'X---------------------------X',
+  'XXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+];
+
+const board = new Board(array, 6);
+
+describe('\ncamelCase(str)', () => {
   it('accepts one argument of type: string', () => {
     expect(camelCase.length).toBe(1);
   });
@@ -72,7 +112,7 @@ describe('\ncamelCase:', () => {
   });
 });
 
-describe('\nkebabCase:', () => {
+describe('\nkebabCase(str)', () => {
   it('accepts one argument of type: string', () => {
     expect(kebabCase.length).toBe(1);
   });
@@ -124,47 +164,11 @@ describe('\nkebabCase:', () => {
   });
 });
 
-describe('\nendEntry:', () => {
-  it('accepts two arguments - item: object, finalDirection: string', () => {
+describe('\nendEntry(item, finalDirection)', () => {
+  it('accepts two arguments - item: Ghost, finalDirection: string', () => {
     expect(endEntry.length).toBe(2);
   });
   it('changes two properties on the item object and calls one class method', () => {
-    const array = [
-      'XXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
-      'X-------X-----------X-------X',
-      'XB------X-----------X-----B-X',
-      'X--XXX--X--XXXXXXX--X--XXX--X',
-      'X---------------------------X',
-      'X---------------------------X',
-      'XXX--X--XXXX--X--XXXX--X--XXX',
-      'XXX--X--XXXX--X--XXXX--X--XXX',
-      '-----X--------X--------X-----',
-      '-----X--------X--------X-----',
-      'XXX--XXXX--XXXXXXX--XXXX--XXX',
-      'SSX------SSSSSSSSSSS------XSS',
-      'SSX------SSSSSSSSSSS------XSS',
-      'SSX--XXXXSSGGGGGGGSSXXXX--XSS',
-      'SSX--X---SSGGGGGGGSS---X--XSS',
-      'SSX--X---SSGGGGGGGSS---X--XSS',
-      'XXX--X--XSSGGGGGGGSSX--X--XXX',
-      '-P------XSSSSSSSSSSSX--------',
-      '--------XSSSSSSSSSSSX--------',
-      'XXX--XXXXXXX--X--XXXXXXX--XXX',
-      'SSX-----------X-----------XSS',
-      'SSX-----------X-----------XSS',
-      'XXX--XXXX--XXXXXXX--XXXX--XXX',
-      'X---------------------------X',
-      'X---------------------------X',
-      'X--XXX--XXXX--X--XXXX--XXX--X',
-      'X--XXX--X-----X-----X--XXX--X',
-      'XB-XXX--X-----X-----X--XXXB-X',
-      'X--XXX--X--XXXXXXX--X--XXX--X',
-      'X---------------------------X',
-      'X---------------------------X',
-      'XXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
-    ];
-
-    const board = new Board(array, 6);
     const ghosts = [];
     const ghost = new Ghost(
       new RcPos({ row: 5, col: 5, board }),
@@ -181,5 +185,73 @@ describe('\nendEntry:', () => {
     expect(ghost.direction).toBe('up');
     expect(ghost.speed).toBe(0);
     expect(spawn).toHaveBeenCalled();
+  });
+});
+
+describe('\nghostGateCoords(board)', () => {
+  it('accepts one argument - board: Board', () => {
+    expect(ghostGateCoords.length).toBe(1);
+  });
+  it('returns an object with five properties - xS: number, yS: number, yE: number, leftPos: number, rightPos: number', () => {
+    const result = ghostGateCoords(board);
+    expect(result.xS).toBeTruthy();
+    expect(result.yS).toBeTruthy();
+    expect(result.yE).toBeTruthy();
+    expect(result.leftPos).toBeTruthy();
+    expect(result.rightPos).toBeTruthy();
+  });
+});
+
+describe('\nstartEntry(item)', () => {
+  it('accepts one argument - item: Ghost', () => {
+    expect(endEntry.length).toBe(2);
+  });
+  it('changes four properties on the item object and updates one DOM element', () => {
+    const ghosts = [];
+    const ghost = new Ghost(
+      new RcPos({ row: 5, col: 5, board }),
+      'left',
+      'red',
+      'testGhost',
+      'free',
+    );
+    expect(ghost.direction).toBe('left');
+    expect(ghost.position.x).toBe(5 * board.tileW);
+    expect(ghost.element.style.left).toBe(`${(ghost.position.x - board.tileW / 2)}px`);
+    expect(ghost.status.mode).toBe('free');
+    expect(ghostGate.style?.backgroundColor).toBe('');
+
+    startEntry(ghost);
+    expect(ghost.direction).toBe('down');
+    expect(ghost.position.x).toBe(ghostGateCoords(board).xS);
+    expect(ghost.element.style.left).toBe(`${(ghost.position.x)}px`);
+    expect(ghost.status.mode).toBe('reentering');
+    expect(ghostGate.style?.backgroundColor).toBe('black');
+
+    setTimeout(() => {
+      expect(ghostGate.style?.backgroundColor).toBe('rgb(225, 225, 251)');
+    }, 1000);
+  });
+});
+
+describe('\nstartReshuffle(item, direction)', () => {
+  it('accepts two arguments - item: Ghost, direction: string', () => {
+    expect(startReshuffle.length).toBe(2);
+  });
+  it('changes two properties on the item object', () => {
+    const ghosts = [];
+    const ghost = new Ghost(
+      new RcPos({ row: 5, col: 5, board }),
+      'down',
+      'red',
+      'testGhost',
+      'reentering',
+    );
+    expect(ghost.direction).toBe('down');
+    expect(ghost.status.mode).toBe('reentering');
+
+    startReshuffle(ghost, 'right');
+    expect(ghost.direction).toBe('right');
+    expect(ghost.status.mode).toBe('reshuffling');
   });
 });
