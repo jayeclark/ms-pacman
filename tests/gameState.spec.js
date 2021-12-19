@@ -4,7 +4,7 @@
 
 const { useGameState } = require('../utilities/gameState.js');
 
-describe('useGameState', () => {
+describe('\nuseGameState', () => {
   test('accepts one argument of any type', () => {
     expect(useGameState.length).toBe(1);
   });
@@ -76,7 +76,7 @@ describe('useGameState', () => {
     expect(getState().value).toBe(12);
   });
 
-  test('throws an error if trying to change the type og the state variable', () => {
+  test('throws an error if trying to change the type of the state variable', () => {
     const [getState, setState] = useGameState('mySampleString');
     let errorMsg = '';
     expect(getState()).toBe('mySampleString');
