@@ -295,7 +295,6 @@ export default class Ghost extends GamePiece {
       if (coords.xS % Math.abs(speed) > 0) {
         coords.xS -= coords.xS % Math.abs(speed);
       }
-      console.log('returning goal:', coords.xS, coords.yS, this.board.tileW);
       return { x: coords.xS, y: coords.yS };
     }
     return { x: xP, y: yP };
@@ -332,7 +331,6 @@ export default class Ghost extends GamePiece {
       },
     } = this;
     const { x: targX, y: targY } = this.targetCoordinates(player);
-    console.log(ghostsInBox);
     if (currX === targX && currY === targY && mode === 'returning') {
       // If the box is full, spawn in place - otherwise, enter the box
       if (ghostsInBox.length >= 3) {
@@ -349,7 +347,6 @@ export default class Ghost extends GamePiece {
         let [leftOccupied, rightOccupied] = [false, false];
 
         ghosts.forEach(({ element: { id }, isInBox, position: { x: xPos } }) => {
-          console.log(id, isInBox, xPos, xS);
           if (id !== this.element.id && isInBox && xPos > xS) {
             rightOccupied = true;
           } else if (id !== this.element.id && isInBox && xPos < xS) {

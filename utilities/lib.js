@@ -34,7 +34,7 @@ export const ghostGateCoords = (board) => {
 export const startEntry = (item) => {
   const { xS } = ghostGateCoords(item.board);
   const ghost = item;
-  const { element: { id }, board: { ghostsInBox }} = item;
+  const { element: { id }, board: { ghostsInBox } } = item;
   ghost.setDirection('down');
   ghost.position.x = xS;
   ghost.element.style.left = `${ghost.position.x}px`;

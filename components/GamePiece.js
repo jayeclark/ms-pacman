@@ -39,7 +39,9 @@ export default class GamePiece extends Element {
         style.display = 'none';
       }
       setTimeout(() => {
-        doBlink(item, callback, blinkCount + 1);
+        if (Object.keys(item).includes('style')) {
+          doBlink(item, callback, blinkCount + 1);
+        }
       }, 200);
 
       return true;
