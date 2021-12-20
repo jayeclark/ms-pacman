@@ -2,13 +2,31 @@
 /* eslint-disable no-undef */
 /* eslint-disable import/extensions */
 
+const { JSDOM } = require('jsdom');
 const { expect } = require('@jest/globals');
+
+const dom = new JSDOM();
+global.document = dom.window.document;
+global.window = dom.window;
+
 const {
   isOpen,
   isBlocked,
   isBetween,
   get,
 } = require('../../utilities/helpers.js');
+
+const testElement1 = document.createElement('div');
+testElement1.id = 'test-element-id';
+document.body.appendChild(testElement1);
+
+const testElement2 = document.createElement('div');
+testElement2.classList.add('test-element-class');
+const testElement3 = document.createElement('div');
+testElement3.classList.add('test-element-class');
+
+document.body.appendChild(testElement2);
+document.body.appendChild(testElement3);
 
 describe('\nisOpen(pos)', () => {
   it('accepts one argument - pos: string', () => {
@@ -93,5 +111,37 @@ describe('\nisBetween(val, [a, b]', () => {
     expect(isBetween(7, [10, 4])).toBe(true);
     expect(isBetween(12, [10, 7])).toBe(false);
     expect(isBetween(3, [10, 7])).toBe(false);
+  });
+});
+
+describe('\nget(str)', () => {
+  it('accepts one argument - str: string', () => {
+    expect(get.length).toBe(1);
+  });
+
+  it('returns an HTML element or an array of HTML elements', () => {
+    const result = get('#test-element-id');
+    expect(result.constructor.toString().includes('class HTMLDivElement')).toBe(true);
+
+    const result2 = get('.test-element-class');
+    expect(result2.length).toBe(2);
+    expect(result2[0].constructor.toString().includes('class HTMLDivElement')).toBe(true);
+    expect(result2[1].constructor.toString().includes('class HTMLDivElement')).toBe(true);
+  });
+
+  it('searches by ID if the string starts with #', () => {
+    const result = get('#test-element-id');
+    expect(result).toBeTruthy();
+
+    const result2 = get('#test-element-id-fake');
+    expect(result2).toBeFalsy();
+  });
+
+  it('searches ', () => {
+    const result = get('.test-element-class');
+    expect(result).toBeTruthy();
+
+    const result2 = get('.test-element-class-fake');
+    expect(result2).toBeFalsy();
   });
 });
