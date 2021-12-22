@@ -16,13 +16,14 @@ const config = {
   collectCoverageFrom: [
     'mspacman.js',
     '**/components/**',
-    '**/data/**',
+    '**/data/boards.js',
     '**/utilities/**',
   ],
   coverageProvider: 'v8',
   coveragePathIgnorePatterns: [
     '/node_modules/',
     '/cypress/',
+    '/data/.+.json',
   ],
 };
 

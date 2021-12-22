@@ -2,9 +2,11 @@
 /* eslint-disable no-undef */
 /* eslint-disable import/extensions */
 
+const { describe } = require('@jest/globals');
 const { useGameState } = require('../../utilities/gameState.js');
+const { format } = require('../jestHelpers.js');
 
-describe('\nuseGameState(init)', () => {
+describe(format('useGameState(init)'), () => {
   test('accepts one argument of any type', () => {
     expect(useGameState.length).toBe(1);
   });

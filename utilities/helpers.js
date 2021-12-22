@@ -20,3 +20,6 @@ export function get(str) {
   if (collection.length === 0) { return false; }
   return [...document.getElementsByClassName(str.replace(/\./, ''))];
 }
+
+export function isHall(str) { return str === 'hall'; }
+export function isWall(str) { return str === 'wall'; }
