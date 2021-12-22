@@ -1,6 +1,6 @@
 # Ms Pacman
 
-This project replicates a board of a Ms. Pac-Man style game using vanilla JavasScript & CSS.
+This project replicates a Ms. Pac-Man style game using vanilla JavaScript & CSS.
 
 ## Description
 
