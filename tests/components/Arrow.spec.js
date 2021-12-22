@@ -19,7 +19,7 @@ describe(format('Arrow'), () => {
     expect(instance).toBe('Element');
   });
 
-  it('has a constructor that accepts between two to four arguments', () => {
+  it('has a constructor that accepts between two and four arguments', () => {
     expect(sampleArrow.constructor.length).toBe(2);
   });
 
