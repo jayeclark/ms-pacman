@@ -24,11 +24,11 @@ jobs:
         uses: actions/setup-node@v2
         with: 
           node-version: ${{ matrix.node-version }}
-      - run: npm install
+      - run: yarn install
 
       - name: Run test suite
         uses: actions/setup-node@v2
         with: 
           node-version: ${{ matrix.node-version }}
-      - run: npm run test
+      - run: yarn run test
       - run: echo "🍏 This job's status is ${{ job.status }}."
