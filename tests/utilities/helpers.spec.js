@@ -139,7 +139,7 @@ describe(format('Helper Functions'), () => {
       expect(result2).toBeFalsy();
     });
 
-    it('searches ', () => {
+    it('searches by Class if the string starts with .', () => {
       const result = get('.test-element-class');
       expect(result).toBeTruthy();
 
