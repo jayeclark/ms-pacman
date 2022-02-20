@@ -5,7 +5,7 @@ export default class GhostBox extends Element {
   constructor(board) {
     super();
     this.board = board;
-    this.element = this.makeElement('div', 'outer-ghostbox', this.makeStyle());
+    this.element = this.makeElement('div', 'outer-ghostbox', this.makeStyle(), 'outer-ghost-box');
     this.addInner();
     this.addGate();
   }
@@ -29,10 +29,10 @@ export default class GhostBox extends Element {
 
   addInner() {
     const innerStyle = {
-      top: this.tileW / 3 - 3,
-      left: this.tileW / 3 - 3,
-      height: (this.tileW * 10) / 3,
-      width: (this.tileW * 19) / 3,
+      top: `${(this.tileW / 3 - 3)}px`,
+      left: `${(this.tileW / 3 - 3)}px`,
+      height: `${((this.tileW * 10) / 3)}px`,
+      width: `${((this.tileW * 19) / 3)}px`,
     };
     const inner = this.makeElement(
       'div',
@@ -45,9 +45,9 @@ export default class GhostBox extends Element {
 
   addGate() {
     const gateStyle = {
-      left: (this.tileW * 9) / 4,
-      height: this.tileW / 3 + 3,
-      width: this.tileW * 2 + 3,
+      left: `${((this.tileW * 9) / 4)}px`,
+      height: `${(this.tileW / 3 + 3)}px`,
+      width: `${(this.tileW * 2 + 3)}px`,
     };
     const gate = this.makeElement('div', 'door', gateStyle, 'ghost-gate');
     this.element.appendChild(gate);

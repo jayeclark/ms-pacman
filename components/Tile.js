@@ -1,8 +1,5 @@
-function isHall(str) { return str === 'hall'; }
-function isWall(str) { return str === 'wall'; }
-function isBetween(val, [a, b]) {
-  return a < b ? val >= a && val <= b : val >= b && val <= a;
-}
+/* eslint-disable import/extensions */
+import { isHall, isWall, isBetween } from '../utilities/helpers.js';
 
 export default class Tile {
   static adjacentTiles(position) {
@@ -19,6 +16,9 @@ export default class Tile {
   }
 
   static at(position) {
+    if (!position) {
+      throw Error('Position: RcPos is required!');
+    }
     const {
       row,
       col,
