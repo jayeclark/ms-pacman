@@ -1,6 +1,6 @@
 # Ms Pacman
 
-This project replicates a board of a Ms. Pac-Man style game using vanilla JavasScript & CSS.
+This project replicates a Ms. Pac-Man style game using vanilla JavaScript & CSS.
 
 ## Description
 
@@ -13,7 +13,7 @@ This project demonstrates the ability to use JavaScript to dynamically display d
 
 ### How to Run
 
-This will run locally in your browser from index.html if you download all files and ensure they're located in the same directory as each other and have the same file structure (i.e. images folder with separately stored images.) Alternately, you can see it in action <a href="https://jayeclark.github.io/ms-pacman/index.html" target="_blank">here</a>.
+This will run locally in your browser from index.html if you download all files and ensure they're located in the same directory as each other and have the same file structure (i.e. images folder with separately stored images.) Alternately, you can see it in action <a href="https://jayeclark.github.io/ms-pacman/" target="_blank">here</a>.
 
 ### Planned Future Improvements
 
