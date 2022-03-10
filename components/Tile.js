@@ -17,7 +17,7 @@ export default class Tile {
 
   static at(position) {
     if (!position) {
-      throw Error('Position: RcPos is required!');
+      throw Error('Position: Coordinates position is required!');
     }
     const {
       row,

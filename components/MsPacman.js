@@ -9,11 +9,12 @@ export default class MsPacMan extends GamePiece {
     // Add image
     const {
       position: { x, y },
-      rcPos: {
+      coordinates: {
         board: { tileW },
       },
     } = this;
     const style = { left: x - tileW / 2, top: y };
+
     this.element = this.makeElement('img', 'ms-pac-man', style, 'mspacman');
     this.element.src = './images/mspacman1.png';
     this.addTo('game');

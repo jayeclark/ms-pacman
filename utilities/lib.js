@@ -25,22 +25,14 @@ export const kebabCase = (str) => {
   return newStr[0].toLowerCase() + newStr.slice(1);
 };
 
-export const endEntry = (item, finalDirection) => {
-  const ghost = item;
-  ghost.setDirection(finalDirection);
-  ghost.speed = 0;
-  ghost.spawn(ghost.isInBox ? 'notfree' : 'free');
-};
-
 export const ghostGateCoords = (board) => {
   const {
     tileW: t,
     ghostContainer: {
-      gateStart: { x, y },
-      gateEnd: { y: yE },
+      channelTop: { x: xS, y: yS },
+      channelBottom: { y: yE },
     },
   } = board;
-  const [xS, yS] = [x + (t / 2), y - t * 2];
   const [leftPos, rightPos] = [xS - t * 2, xS - t * 2];
   return {
     xS, yS, yE, leftPos, rightPos,
@@ -48,11 +40,10 @@ export const ghostGateCoords = (board) => {
 };
 
 export const startEntry = (item) => {
-  const { xS } = ghostGateCoords(item.board);
   const ghost = item;
-  const { element: { id }, board: { ghostsInBox } } = item;
+  const { element: { id }, board: { ghostsInBox } } = ghost;
   ghost.setDirection('down');
-  ghost.position.x = xS;
+  ghost.position.x = ghostGateCoords(ghost.board).xS;
   ghost.element.style.left = `${ghost.position.x}px`;
   ghost.status.mode = 'reentering';
 

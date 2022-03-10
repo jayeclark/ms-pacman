@@ -22,14 +22,13 @@ game.appendChild(ghostGate);
 const {
   camelCase,
   kebabCase,
-  endEntry,
   ghostGateCoords,
   startEntry,
   startReshuffle,
 } = require('../../utilities/lib.js');
 const { default: Ghost } = require('../../components/Ghost.js');
 const { default: Board } = require('../../components/Board.js');
-const { default: RcPos } = require('../../components/RcPos.js');
+const { default: Coordinates } = require('../../components/Coordinates.js');
 
 const array = [
   'XXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
@@ -173,32 +172,6 @@ describe(format('Shared Utilities'), () => {
     });
   });
 
-  describe('\nendEntry(item, finalDirection)', () => {
-    it('accepts two arguments - item: Ghost, finalDirection: string', () => {
-      expect(endEntry.length).toBe(2);
-    });
-    it('changes two properties on the item object and calls one class method', () => {
-      const ghosts = [];
-      const ghost = new Ghost(
-        new RcPos({ row: 5, col: 5, board }),
-        'left',
-        'red',
-        'testGhost',
-        'free',
-      );
-      const spawn = jest.spyOn(ghost, 'spawn');
-      expect(ghost.direction).toBe('left');
-      expect(ghost.speed).toBe(-board.speed);
-      expect(spawn).not.toHaveBeenCalled();
-      endEntry(ghost, 'up');
-      expect(ghost.direction).toBe('up');
-      expect(ghost.speed).toBe(0);
-      expect(spawn).toHaveBeenCalled();
-      expect(spawn).toHaveBeenCalledWith(ghost.isInBox ? 'notfree' : 'free');
-      expect(ghost.status.mode).toBe('spawning');
-    });
-  });
-
   describe('\nghostGateCoords(board)', () => {
     it('accepts one argument - board: Board', () => {
       expect(ghostGateCoords.length).toBe(1);
@@ -215,12 +188,12 @@ describe(format('Shared Utilities'), () => {
 
   describe('\nstartEntry(item)', () => {
     it('accepts one argument - item: Ghost', () => {
-      expect(endEntry.length).toBe(2);
+      expect(startEntry.length).toBe(2);
     });
     it('changes four properties on the item object and updates one DOM element', async () => {
       const ghosts = [];
       const ghost = new Ghost(
-        new RcPos({ row: 5, col: 5, board }),
+        new Coordinates({ row: 5, col: 5, board }),
         'left',
         'red',
         'testGhost',
@@ -257,7 +230,7 @@ describe(format('Shared Utilities'), () => {
     it('changes two properties on the item object', () => {
       const ghosts = [];
       const ghost = new Ghost(
-        new RcPos({ row: 5, col: 5, board }),
+        new Coordinates({ row: 5, col: 5, board }),
         'down',
         'red',
         'testGhost',
