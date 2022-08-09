@@ -7,12 +7,23 @@ import MsPacMan from './components/MsPacman.js';
 import Tile from './components/Tile.js';
 import Directions from './components/Directions.js';
 import loadBoards from './data/boards.js';
+import { useGameState } from './utilities/gameState.js';
 
-const dots = { dotCount: 0 };
-let [count, dCount, powerCount, eatenCount, score] = [0, 0, 0, 0, 0, 0];
-let [munchModeActive, stop, started, restarted, restartGhosts, restartRelease] = [
-  false, false, false, false, false, false,
-];
+// Set game states
+const [getMunchMode, setMunchMode] = useGameState(false);
+const [getState, setState] = useGameState('loading');
+const [getPaused, setPaused] = useGameState(null);
+const [getRestartProps, setRestartProps] = useGameState(
+  { restarted: false, restartGhosts: false, restartRelease: false },
+);
+const [getCounts, setCounts] = useGameState({
+  count: 0,
+  dCount: 0,
+  powerCount: 0,
+  eatenCount: 0,
+  score: 0,
+  dotCount: 0,
+});
 
 function isOpen(pos) {
   return pos !== 'wall' && pos !== 'ghostbox';
@@ -45,27 +56,23 @@ const board = new Board(layout, speed);
 document.getElementById('game').style.top = board.tileW * 3;
 document.getElementById('game').style.width = board.boardWidth;
 document.getElementById('header').style.width = board.boardWidth;
-board.addToGame(dots);
+board.addToGame(getCounts());
 
 const [row, col] = [
   layout.findIndex((x) => x.match`P`),
   layout.find((x) => x.match`P`).indexOf`P`,
 ];
-// eslint-disable-next-line import/prefer-default-export
+
 let msPacMan = new MsPacMan(new RcPos({ row, col, board }), 'right');
 
 // Redraws board and restarts the game
 function restartGame() {
-  started = false;
-  stop = false;
-  restartGhosts = false;
-  restarted = true;
-  restartRelease = true;
+  setState('loading');
 
   // erase board, score, ghosts, and msPacMan
   document.getElementById('game').innerHTML = '';
   document.getElementById('score').innerHTML = 0;
-  score = 0;
+  setCounts({ ...getCounts(), score: 0 });
 
   ghosts.splice(0, ghosts.length);
   const msPacKeys = Object.keys(msPacMan);
@@ -74,18 +81,27 @@ function restartGame() {
   });
 
   function redraw() {
-    board.addToGame(dots);
+    board.addToGame(getCounts());
     const [rowP, colP] = [
       layout.findIndex((x) => x.match`P`),
       layout.find((x) => x.match`P`).indexOf`P`,
     ];
-    msPacMan = new MsPacMan(new RcPos({ rowP, colP, board }), 'right');
+    const newPosition = new RcPos({ row: rowP, col: colP, board });
+    msPacMan = new MsPacMan(newPosition, 'right');
   }
 
-  setTimeout(redraw, 500);
+  setTimeout(redraw, 400);
 
-  document.getElementById('restart').style.display = 'none';
-  document.getElementById('start').style.display = '';
+  document.getElementById('restart-button').style.display = 'none';
+  document.getElementById('start-button').style.display = '';
+
+  setRestartProps({
+    restartGhosts: false,
+    restarted: true,
+    restartRelease: true,
+  });
+  setState('ready');
+  setPaused(false);
 }
 
 // Check proximity to edges and reverse direction and image if needed
@@ -168,9 +184,10 @@ function checkCollisions(el) {
 
 // Activates munchmode
 function munchMode() {
-  if (stop === false) {
-    if (munchModeActive === false) {
-      munchModeActive = true;
+  if (!getPaused()) {
+    if (getMunchMode() === false) {
+      setMunchMode(true);
+      // Apply munchmode styling to free ghosts only
       ghosts.forEach((ghost) => {
         const item = ghost;
         if (item.status.mode === 'free') {
@@ -179,10 +196,10 @@ function munchMode() {
       });
     }
 
+    const { powerCount } = getCounts();
     // make free ghosts blue, turn off their eyes and turn on their frowns
     if (powerCount === 0) {
       const filteredGhosts = ghosts.filter(({ status }) => status.munchModeActive === true);
-      console.log(filteredGhosts);
       filteredGhosts.forEach((item) => {
         const ghost = item;
         if (ghost.element.style.backgroundColor !== 'transparent') {
@@ -291,8 +308,8 @@ function munchMode() {
       });
 
       // stop function
-      powerCount = 0;
-      munchModeActive = false;
+      setCounts({ ...getCounts(), powerCount: 0 });
+      setMunchMode(false);
       ghosts.forEach((item) => {
         const ghost = item;
         ghost.status.munchModeActive = false;
@@ -300,7 +317,7 @@ function munchMode() {
       return true;
     }
 
-    powerCount += 1;
+    setCounts({ ...getCounts(), powerCount: powerCount + 1 });
   }
 
   setTimeout(munchMode, 50);
@@ -327,17 +344,17 @@ function checkDots(item) {
       .removeChild(document.getElementById(id));
     const isBig = removedDot.classList.contains('big');
 
-    if (removedDot && isBig && munchModeActive) {
-      score += 50;
-      powerCount = 0;
+    const { score } = getCounts();
+    if (removedDot && isBig && getMunchMode()) {
+      setCounts({ ...getCounts(), score: score + 50, powerCount: 0 });
     } else if (removedDot && isBig) {
-      score += 50;
+      setCounts({ ...getCounts(), score: score + 50 });
       munchMode();
     } else {
-      score += 10;
+      setCounts({ ...getCounts(), score: score + 10 });
     }
 
-    document.getElementById('score').innerHTML = score;
+    document.getElementById('score').innerHTML = getCounts().score;
   }
 
   if (direction === 'right') {
@@ -370,9 +387,11 @@ function checkDots(item) {
 
     if (left > pacL && right < pacR && top > pacT && bottom < pacB) {
       removeDot(dot.id);
-      eatenCount += 1;
-      if (eatenCount === dots.dotCount) {
-        stop = true;
+      const { eatenCount } = getCounts();
+      setCounts({ ...getCounts(), eatenCount: eatenCount + 1 });
+      if (getCounts().eatenCount === getCounts().dotCount) {
+        setPaused(true);
+        setState('levelup');
 
         // disappear ghosts
         ghosts.forEach(({ element, status: { mode } }) => {
@@ -425,11 +444,18 @@ function checkGhostCollision() {
     }
   });
 
-  if (collidedGhosts.length > 0 && powerCount === 0) {
+  if (collidedGhosts.length > 0 && getCounts().powerCount === 0) {
     // stop all movement
-    stop = true;
-    eatenCount = 0;
-    dots.dotCount = 0;
+    setState('lost');
+    setPaused(true);
+    setCounts({
+      count: 0,
+      dCount: 0,
+      powerCount: 0,
+      eatenCount: 0,
+      score: 0,
+      dotCount: 0,
+    });
 
     // disappear msPacMan
     const handleReappearance = (item) => {
@@ -444,7 +470,7 @@ function checkGhostCollision() {
     // change button to 'restart'
     document.getElementById('stop-button').style.display = 'none';
     document.getElementById('restart-button').style.display = '';
-  } else if (collidedGhosts.length > 0 && powerCount > 0) {
+  } else if (collidedGhosts.length > 0 && getCounts().powerCount > 0) {
     collidedGhosts.forEach((id) => {
       const ghostEl = document.getElementById(id);
       const {
@@ -479,8 +505,9 @@ function checkGhostCollision() {
             x: parseFloat(ghost.element.style.left),
             y: parseFloat(ghost.element.style.top),
           });
-          score += 200;
-          document.getElementById('score').innerHTML = score;
+          const { score } = getCounts();
+          setCounts({ ...getCounts(), score: score + 200 });
+          document.getElementById('score').innerHTML = getCounts().score;
         }
       }
     });
@@ -489,11 +516,11 @@ function checkGhostCollision() {
 
 // Updates the position of Ms PacMan
 function update() {
-  if (restarted === true) {
+  if (getRestartProps().restarted) {
     return false;
   }
-  count += 1;
-  dCount += 1;
+  const { count, dCount } = getCounts();
+  setCounts({ ...getCounts(), count: count + 1, dCount: dCount + 1 });
   const { speed: pSpeed, cache: pCache, element } = msPacMan;
 
   function checkKey(e) {
@@ -508,7 +535,7 @@ function update() {
     }
   }
 
-  if (stop === false) {
+  if (!getPaused()) {
     document.onkeydown = checkKey;
     checkGhostCollision();
     if (pSpeed || pCache) {
@@ -518,20 +545,20 @@ function update() {
     }
   }
 
-  if (count === 3) {
+  if (getCounts().count === 3) {
     element.src = element.src.includes('man1')
       ? './images/mspacman2.png'
       : './images/mspacman1.png';
-    count = 0;
+    setCounts({ ...getCounts(), count: 0 });
   }
 
-  if (dCount === 9) {
+  if (getCounts().dCount === 9) {
     const bigDots = [...document.getElementsByClassName('big')];
     bigDots.forEach((item) => {
       const style = item;
       style.display = (!item.style.display && 'none') || '';
     });
-    dCount = 0;
+    setCounts({ ...getCounts(), dCount: 0 });
   }
 
   setTimeout(update, 50);
@@ -540,7 +567,7 @@ function update() {
 
 // Updates the position of free and returning ghosts
 function updateGhosts() {
-  if (restarted === true && restartGhosts === false) {
+  if (getRestartProps().restarted && !getRestartProps().restartGhosts) {
     return false;
   }
 
@@ -557,7 +584,7 @@ function updateGhosts() {
     }
   });
 
-  if (stop === false) {
+  if (!getPaused()) {
     const filteredGhosts = ghosts.filter(({ status: { mode } }) => (
       mode.match(/^free|returning|reentering|reshuffling/)
     ));
@@ -574,13 +601,13 @@ function updateGhosts() {
 // releases new ghosts from the box as applicable
 function release() {
   // stop function if the game is restarted
-  if (restarted === true || restartRelease === true) {
+  if (getRestartProps().restarted || getRestartProps().restartRelease) {
     return false;
   }
 
   function reArrange(ghost) {
     const result = ghost.reshuffle();
-    if (result || restarted) {
+    if (result || getRestartProps().restarted) {
       return false;
     }
     setTimeout(() => reArrange(ghost), 50);
@@ -588,7 +615,7 @@ function release() {
   }
 
   function leave(ghost) {
-    if (restarted === true) { return false; }
+    if (getRestartProps().restarted) { return false; }
 
     if (ghost.status.mode === 'free') {
       // recalculate box positions
@@ -639,20 +666,20 @@ function buttonSwap() {
 
 // Starts the game
 function startGame() {
-  if (stop === false && started === false) {
-    restarted = false;
+  if (getState() === 'ready' && !getPaused()) {
+    setRestartProps({ ...getRestartProps(), restarted: false });
     update();
     setTimeout(updateGhosts, 1000);
     setTimeout(() => {
-      restartRelease = false;
+      setRestartProps({ ...getRestartProps(), restartRelease: false });
       release(board);
     }, 7000);
 
     const readyDiv = document.getElementById('ready');
     readyDiv.style.display = 'none';
-    started = true;
-  } else {
-    stop = !stop;
+    setState('active');
+  } else if (getState() === 'active') {
+    setPaused(!getPaused());
     ghosts.forEach((ghost) => {
       ghost.setStatus('stop', !ghost.status.stop);
     });
@@ -693,3 +720,5 @@ document
 document
   .getElementById('right-arrow')
   .addEventListener('click', (e) => cache(e.currentTarget.id, msPacMan));
+
+setState('ready');
