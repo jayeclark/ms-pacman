@@ -4,7 +4,7 @@
 
 const { useGameState } = require('../utilities/gameState.js');
 
-describe('\nuseGameState', () => {
+describe('\nuseGameState(init)', () => {
   test('accepts one argument of any type', () => {
     expect(useGameState.length).toBe(1);
   });

@@ -179,8 +179,8 @@ export default class Ghost extends GamePiece {
     } = this;
     return {
       backgroundColor: color,
-      top: tileW * row,
-      left: tileW * col - tileW / 2,
+      top: `${(tileW * row)}px`,
+      left: `${(tileW * col - tileW / 2)}px`,
     };
   }
 
