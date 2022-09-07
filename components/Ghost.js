@@ -4,10 +4,7 @@ import Directions from './Directions.js';
 import {
   startEntry, endEntry, startReshuffle, ghostGateCoords,
 } from '../utilities/lib.js';
-
-function isOpen(str) {
-  return str !== 'wall' && str !== 'ghostbox';
-}
+import { isOpen } from '../utilities/helpers.js';
 
 export const ghosts = [];
 

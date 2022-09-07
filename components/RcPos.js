@@ -1,18 +1,7 @@
 /* eslint-disable import/extensions */
 import Directions from './Directions.js';
 import Tile from './Tile.js';
-
-function isOpen(str) {
-  return str !== 'wall' && str !== 'ghostbox';
-}
-
-function isBlocked(str) {
-  return str === 'wall' || str === 'ghostbox';
-}
-
-function isBetween(val, [a, b]) {
-  return a < b ? val >= a && val <= b : val >= b && val <= a;
-}
+import { isOpen, isBlocked, isBetween } from '../utilities/helpers.js';
 
 export default class RcPos {
   constructor({ row, col, board }) {

@@ -8,6 +8,12 @@ import Tile from './components/Tile.js';
 import Directions from './components/Directions.js';
 import loadBoards from './data/boards.js';
 import { useGameState } from './utilities/gameState.js';
+import {
+  isOpen,
+  isBlocked,
+  isBetween,
+  get,
+} from './utilities/helpers.js';
 
 // Set game states
 const [getMunchMode, setMunchMode] = useGameState(false);
@@ -24,24 +30,6 @@ const [getCounts, setCounts] = useGameState({
   score: 0,
   dotCount: 0,
 });
-
-function isOpen(pos) {
-  return pos !== 'wall' && pos !== 'ghostbox';
-}
-function isBlocked(pos) {
-  return pos === 'wall' || pos === 'ghostbox';
-}
-
-function isBetween(val, [a, b]) {
-  return a < b ? val >= a && val <= b : val >= b && val <= a;
-}
-
-function get(str) {
-  if (str.startsWith('#')) {
-    return document.getElementById(str.replace('#', ''));
-  }
-  return document.getElementsByClassName(str.replace(/\./, ''));
-}
 
 // create initial board
 const { array: layout, speed } = await loadBoards().then((res) => res.board1);
