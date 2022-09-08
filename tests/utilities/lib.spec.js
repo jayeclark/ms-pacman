@@ -25,10 +25,10 @@ const {
   ghostGateCoords,
   startEntry,
   startReshuffle,
-} = require('../utilities/lib.js');
-const { default: Ghost } = require('../components/Ghost.js');
-const { default: Board } = require('../components/Board.js');
-const { default: RcPos } = require('../components/RcPos.js');
+} = require('../../utilities/lib.js');
+const { default: Ghost } = require('../../components/Ghost.js');
+const { default: Board } = require('../../components/Board.js');
+const { default: RcPos } = require('../../components/RcPos.js');
 
 const array = [
   'XXXXXXXXXXXXXXXXXXXXXXXXXXXXX',

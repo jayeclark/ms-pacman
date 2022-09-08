@@ -2,7 +2,7 @@
 /* eslint-disable no-undef */
 /* eslint-disable import/extensions */
 
-const { useGameState } = require('../utilities/gameState.js');
+const { useGameState } = require('../../utilities/gameState.js');
 
 describe('\nuseGameState(init)', () => {
   test('accepts one argument of any type', () => {
