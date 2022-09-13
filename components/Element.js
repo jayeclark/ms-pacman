@@ -24,7 +24,12 @@ export default class Element {
   }
 
   addTo(id) {
-    const element = document.getElementById(id);
-    element.appendChild(this.element);
+    const parentElement = document.getElementById(id);
+    if (!parentElement) {
+      throw Error('an element with that id does not exist in the document!');
+    }
+    const elementToAppend = this.element;
+    parentElement.appendChild(elementToAppend);
+    return true;
   }
 }

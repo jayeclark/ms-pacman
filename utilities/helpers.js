@@ -11,7 +11,15 @@ export function isBetween(val, [a, b]) {
 
 export function get(str) {
   if (str.startsWith('#')) {
+    if (!document.getElementById(str.replace('#', ''))) {
+      return false;
+    }
     return document.getElementById(str.replace('#', ''));
   }
-  return document.getElementsByClassName(str.replace(/\./, ''));
+  const collection = document.getElementsByClassName(str.replace(/\./, ''));
+  if (collection.length === 0) { return false; }
+  return [...document.getElementsByClassName(str.replace(/\./, ''))];
 }
+
+export function isHall(str) { return str === 'hall'; }
+export function isWall(str) { return str === 'wall'; }
