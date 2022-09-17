@@ -12,6 +12,19 @@ const config = {
     'node_modules/',
     'cypress/',
   ],
+  collectCoverage: true,
+  collectCoverageFrom: [
+    'mspacman.js',
+    '**/components/**',
+    '**/data/boards.js',
+    '**/utilities/**',
+  ],
+  coverageProvider: 'v8',
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/cypress/',
+    '/data/.+.json',
+  ],
 };
 
 module.exports = config;
