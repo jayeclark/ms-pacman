@@ -19,7 +19,7 @@ document.head.appendChild(stylesheet);
 document.body.appendChild(game);
 game.appendChild(ghostGate);
 
-const { default: RcPos } = require('../../components/RcPos.js');
+const { default: Coordinates } = require('../../components/Coordinates.js');
 const { default: Board } = require('../../components/Board.js');
 
 const array = [
@@ -59,8 +59,8 @@ const array = [
 
 const board = new Board(array, 6);
 
-describe(format('RcPos'), () => {
-  const testPos = new RcPos({ row: 8, col: 8, board });
+describe(format('Coordinates'), () => {
+  const testPos = new Coordinates({ row: 8, col: 8, board });
 
   it('has a constructor that accepts one argument - { row: number, col: number, board: Board }: Object', () => {
     expect(testPos.constructor.length).toBe(1);
@@ -71,7 +71,7 @@ describe(format('RcPos'), () => {
     expect(Object.getOwnPropertyNames(testPos).length).toBe(3);
     const props = ['row', 'col', 'board'];
     expect(Object.getOwnPropertyNames(testPos).every((name) => props.includes(name))).toBeTruthy();
-    expect(getClassMethodNames(RcPos, testPos).length).toBe(2);
+    expect(getClassMethodNames(Coordinates, testPos).length).toBe(2);
   });
 
   it('properties "row" and "col" are numbers', () => {
@@ -86,39 +86,39 @@ describe(format('RcPos'), () => {
 
   describe('\n  CLASS GETTERS', () => {
     describe('\n    get left()', () => {
-      it('returns an object of class RcPos', () => {
+      it('returns an object of class Coordinates', () => {
         expect(typeof testPos.left).toBe('object');
-        expect(testPos.left.constructor.name).toBe('RcPos');
+        expect(testPos.left.constructor.name).toBe('Coordinates');
       });
     });
     describe('\n    get right()', () => {
-      it('returns an object of class RcPos', () => {
+      it('returns an object of class Coordinates', () => {
         expect(typeof testPos.left).toBe('object');
-        expect(testPos.left.constructor.name).toBe('RcPos');
+        expect(testPos.left.constructor.name).toBe('Coordinates');
       });
     });
     describe('\n    get down()', () => {
-      it('returns an object of class RcPos', () => {
+      it('returns an object of class Coordinates', () => {
         expect(typeof testPos.left).toBe('object');
-        expect(testPos.left.constructor.name).toBe('RcPos');
+        expect(testPos.left.constructor.name).toBe('Coordinates');
       });
     });
     describe('\n    get up()', () => {
-      it('returns an object of class RcPos', () => {
+      it('returns an object of class Coordinates', () => {
         expect(typeof testPos.left).toBe('object');
-        expect(testPos.left.constructor.name).toBe('RcPos');
+        expect(testPos.left.constructor.name).toBe('Coordinates');
       });
     });
     describe('\n    get bottom()', () => {
-      it('returns an object of class RcPos', () => {
+      it('returns an object of class Coordinates', () => {
         expect(typeof testPos.left).toBe('object');
-        expect(testPos.left.constructor.name).toBe('RcPos');
+        expect(testPos.left.constructor.name).toBe('Coordinates');
       });
     });
     describe('\n    get top()', () => {
-      it('returns an object of class RcPos', () => {
+      it('returns an object of class Coordinates', () => {
         expect(typeof testPos.left).toBe('object');
-        expect(testPos.left.constructor.name).toBe('RcPos');
+        expect(testPos.left.constructor.name).toBe('Coordinates');
       });
     });
   });

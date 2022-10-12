@@ -1,5 +1,5 @@
 /* eslint-disable import/extensions */
-import RcPos from './RcPos.js';
+import Coordinates from './Coordinates.js';
 import Element from './Element.js';
 import Directions from './Directions.js';
 
@@ -12,12 +12,12 @@ export default class GamePiece extends Element {
     this.direction = startingDirection;
   }
 
-  get rcPos() {
+  get coordinates() {
     const {
       position: { x, y },
       board: { tileW },
     } = this;
-    return new RcPos({
+    return new Coordinates({
       row: Math.floor(y / tileW),
       col: Math.floor(x / tileW),
       board: this.board,
@@ -64,7 +64,7 @@ export default class GamePiece extends Element {
   teleport() {
     const {
       position: { x },
-      rcPos: { row },
+      coordinates: { row },
       direction,
       board: { cols, tileW, portals },
       speed,

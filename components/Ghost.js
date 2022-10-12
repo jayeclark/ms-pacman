@@ -2,27 +2,47 @@
 import GamePiece from './GamePiece.js';
 import Directions from './Directions.js';
 import {
-  startEntry, endEntry, startReshuffle, ghostGateCoords,
+  startEntry, ghostGateCoords,
 } from '../utilities/lib.js';
 import { isOpen } from '../utilities/helpers.js';
+// eslint-disable-next-line no-unused-vars
+import Coordinates from './Coordinates.js';
 
 export const ghosts = [];
 
 export default class Ghost extends GamePiece {
+  /**
+   * Represents a ghost in the game
+   * @constructor
+   * @param {Coordinates} position - the position of the ghost
+   * @param {string} startingDirection - the direction the ghost is traveling
+   * @param {string} color - the color of the ghost
+   * @param {string} id - unique identifier for the ghost
+   * @param {string} mode - what mode the ghost should be in when created
+   */
   constructor(position, startingDirection, color, id, mode) {
     super(position, startingDirection);
     this.color = color;
-    this.element = this.makeElement('div', 'ghost', this.makeStyle(), id);
-    this.addFringe().addEyes().addBlueFeatures();
     this.status = {
       munchModeActive: false,
       restarted: false,
       stop: false,
       mode,
     };
+
+    this.element = this.makeElement('div', 'ghost', this.makeStyle(), id);
+    this.addFringe().addEyes().addBlueFeatures();
+
     ghosts.push(this);
   }
 
+  /**
+   * Function to determine what ghosts occupy the three available slots in the
+   * ghost box at the center of the board
+   * @param {Array} ghostArray - the set of ghosts whose positions should be evaluated
+   * @returns an object with the three box positions (left, center, right) and,
+   * if applicable, what ghost is in them (or 'none' if unoccupied)
+   */
   static boxPositions(ghostArray) {
     const positions = {};
     ghostArray.forEach((ghost) => {
@@ -35,14 +55,19 @@ export default class Ghost extends GamePiece {
     return positions;
   }
 
+  /**
+   * Gets the position of the ghost inside the ghostbox
+   * @getter
+   * @returns {string} left, center, right, or none
+   */
   get boxPosition() {
     const {
-      rcPos: { board },
+      coordinates: { board },
       position: { x },
     } = this;
     const {
       ghostContainer: {
-        gateStart: { x: xS },
+        channelBottom: { x: xS },
       },
       tileW,
     } = board;
@@ -58,10 +83,15 @@ export default class Ghost extends GamePiece {
     return 'none';
   }
 
+  /**
+   * Gets whether the ghost is inside the ghostbox
+   * @getter
+   * @returns {boolean}
+   */
   get isInBox() {
     const {
       position: { x, y },
-      rcPos: {
+      coordinates: {
         board: {
           ghostContainer: { start, end },
         },
@@ -70,6 +100,10 @@ export default class Ghost extends GamePiece {
     return y >= start.y && y < end.y && x >= start.x && x <= end.x;
   }
 
+  /**
+   * Creates divs for the lower 'fringe' of a ghost, and appends it to the parent div
+   * @returns {Ghost} - returns the same object to allow for chaining methods
+   */
   addFringe() {
     const {
       board: { tileW, fringeW },
@@ -107,6 +141,10 @@ export default class Ghost extends GamePiece {
     return this;
   }
 
+  /**
+   * Creates divs for the eyes of a ghost, and appends them to the parent div
+   * @returns {Ghost} - returns the same object to allow for chaining methods
+   */
   addEyes() {
     const {
       eyeTop, eyeLeft, pupilTop, pupilLeft,
@@ -139,6 +177,11 @@ export default class Ghost extends GamePiece {
     return this;
   }
 
+  /**
+   * Creates divs for the features that are visible when a ghost is munchable, and
+   * appends them to the parent div
+   * @returns {Ghost} - returns the same object to allow for chaining methods
+   */
   addBlueFeatures() {
     const {
       makeElement,
@@ -163,12 +206,28 @@ export default class Ghost extends GamePiece {
         }),
       );
     }
+    return this;
   }
 
+  /**
+   * Marks the end of the ghost's re-entry into the ghost box.
+   * @returns {boolean} - returns true if the code executes successfully
+   */
+  endBoxEntry(finalDirection) {
+    this.setDirection(finalDirection);
+    this.speed = 0;
+    this.spawn(this.isInBox ? 'notfree' : 'free');
+    return true;
+  }
+
+  /**
+   * Creates a style object for the ghost element constructor.
+   * @returns {object} - returns true if the code executes successfully
+   */
   makeStyle() {
     const {
       color,
-      rcPos: {
+      coordinates: {
         row,
         col,
         board: { tileW },
@@ -181,66 +240,80 @@ export default class Ghost extends GamePiece {
     };
   }
 
+  /**
+   * Initiates the process of a ghost leaving the box.
+   * @returns {boolean} - returns true if the code executes successfully
+   */
   leaveBox() {
-    if (this.status.restarted === true) {
+    // If the function is called while the board is resetting or stopped, return false
+    if (this.status.restarted === true || this.status.stop) {
       return false;
     }
 
-    if (this.status.stop === false) {
-      const {
-        speed,
-        board,
-        position: { x: xG, y: yG },
-        status: { mode },
-      } = this;
-      const {
-        tileW,
-        ghostContainer: {
-          gateStart: { x, y },
-        },
-      } = board;
-      const [xS, yS] = [x + tileW / 2, y - tileW * 2];
-      if (xG === xS && yG > yS && mode === 'notfree') {
-        this.setDirection('up');
-        this.speed = new Directions(this.board).up.speed;
-        this.move();
-      } else if (
-        (xG > xS || xG > xS)
-        && xS - xG < parseInt(speed, 10)
-        && mode === 'notfree'
-      ) {
-        this.position.x = xS;
+    // Extract details on the speed, board, position, and mode of the ghost
+    const {
+      speed,
+      board,
+      position: { x: xG, y: yG },
+      status: { mode },
+    } = this;
+
+    // Extract information on the tile dimension and the start of the gate on the board
+    const {
+      tileW,
+      ghostContainer: {
+        channelTop: { x: xS, y: yS },
+      },
+    } = board;
+
+    if (xG === xS && yG > yS && mode === 'notfree') {
+      // If the ghost is in position to leave, move him up til he's at the top of the exit channel
+      this.setDirection('up');
+      this.speed = new Directions(this.board).up.speed;
+      this.move();
+    } else if (
+      (xG > xS || xG < xS)
+      && xS - xG < parseInt(speed, 10)
+      && mode === 'notfree'
+    ) {
+      // If the ghost is almost in position, put him in position
+      this.position.x = xS;
+      this.element.style.left = this.position.x;
+    } else if (xG === xS && yG === yS && mode === 'notfree') {
+      // If the ghost has finished leaving, remove it from the ghostsInBox array and change mode
+      const index = this.board.ghostsInBox.findIndex((g) => g === this.element.id);
+      this.board.ghostsInBox.splice(index, 1);
+      this.setMode('free');
+
+      // If the ghost isn't squarely on a tile, adjust position
+      if (this.position.x % tileW > 0) {
+        this.position.x -= this.position.x % board.tileW;
         this.element.style.left = this.position.x;
-      } else if (xG === xS && yG === yS && mode === 'notfree') {
-        this.status.mode = 'free';
-        this.board.ghostsInBox.splice(
-          this.board.ghostsInBox.indexOf(this.element.id),
-          1,
-        );
-
-        if (this.position.x % tileW > 0) {
-          this.position.x -= this.position.x % board.tileW;
-          this.element.style.left = this.position.x;
-        }
-
-        setTimeout(() => {
-          const ghostGate = document.getElementById('ghost-gate');
-          ghostGate.style.backgroundColor = '#e1e1fb';
-        }, 500);
-      } else if (mode === 'notfree') {
-        const options = new Directions(this.board);
-        this.setDirection(xG < xS ? 'right' : 'left');
-        this.speed = xG < xS ? options.right.speed : options.left.speed;
-        this.move();
       }
+
+      // Close the gate to the box, after a delay
+      setTimeout(() => {
+        const ghostGate = document.getElementById('ghost-gate');
+        ghostGate.style.backgroundColor = '#e1e1fb';
+      }, 500);
+    } else if (mode === 'notfree') {
+      // If the host is not near the exit channel, move toward the center to exit.
+      const options = new Directions(this.board);
+      this.setDirection(xG < xS ? 'right' : 'left');
+      this.speed = xG < xS ? options.right.speed : options.left.speed;
+      this.move();
     }
 
     return true;
   }
 
+  /**
+   * Redistributes ghosts inside the ghost box.
+   * @returns {boolean} - returns true if the ghost is finished moving and false if not
+   */
   reShuffle(ghostArray) {
     const { board } = this;
-    const xS = board.ghostGateX;
+    const { x: xS } = board.ghostContainer.channelTop;
     const right = xS + board.tileW * 2;
     const left = xS - board.tileW * 2;
 
@@ -259,6 +332,11 @@ export default class Ghost extends GamePiece {
     return false;
   }
 
+  /**
+   * Determines the x/y coordinates of the ghost's target position. Target position will
+   * very based on what mode the ghost is in
+   * @returns {object} - returns true if the ghost is finished moving and false if not
+   */
   targetCoordinates(player) {
     // Destructure this' properties
     const {
@@ -297,29 +375,73 @@ export default class Ghost extends GamePiece {
     return { x: xP, y: yP };
   }
 
+  /**
+   * Sets the ghost's direction
+   * @returns {boolean} - returns true if the direction changed and false if not
+   */
   setDirection(direction) {
     if (this.direction !== direction && this.direction !== 'same') {
       this.moveEyes(direction);
       this.direction = direction;
       this.speed = new Directions(this.board)[direction].speed;
+      return true;
     }
+    return false;
   }
 
+  /**
+   * Filters an array of available directions to move based on the location of walls on the board
+   * @returns {Array} - returns an array of strings
+   */
   filterDirections(options = ['left', 'right', 'up', 'down']) {
     const d = new Directions(this.board);
-    const nextArray = options.map((x) => this.rcPos.check(x, 2, 2));
+    const nextArray = options.map((x) => this.coordinates.check(x, 2, 2));
     return options.filter((dir, i) => (
       nextArray[i].every((tile) => isOpen(tile))
       && dir !== d[this.direction].reverse
     ));
   }
 
+  /**
+   * Decides which way a ghost should turn when reentering the box
+   * @returns {boolean} - returns true if a direction was picked, and false if not
+   */
+  pickReenteringDir() {
+    // figure out if ghost has hit the end on the y axis. if so pick left, right, or stay
+    const { xS, yE } = ghostGateCoords(this.board);
+    const { x: xG, y: yG } = this.position;
+    if (xG === xS && yG >= yE) {
+      // decide which way to turn based on whether another ghost is in that area
+      let [leftOccupied, rightOccupied] = [false, false];
+
+      ghosts.forEach(({ element: { id }, isInBox, position: { x: xPos } }) => {
+        if (id !== this.element.id && isInBox && xPos > xS) {
+          rightOccupied = true;
+        } else if (id !== this.element.id && isInBox && xPos < xS) {
+          leftOccupied = true;
+        }
+      });
+
+      if (!rightOccupied || !leftOccupied) {
+        this.startReshuffle(!rightOccupied ? 'right' : 'left');
+      } else {
+        this.endBoxEntry('up');
+      }
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Decides which way a ghost should turn
+   * @returns {bool} - returns true if completed
+   */
   pickDir(player) {
     const pacDir = player.direction;
     const {
       status: { mode },
       position: { x: currX, y: currY },
-      rcPos: { row },
+      coordinates: { row },
       board: {
         tileW,
         boardWidth: { boardW },
@@ -331,42 +453,20 @@ export default class Ghost extends GamePiece {
     if (currX === targX && currY === targY && mode === 'returning') {
       // If the box is full, spawn in place - otherwise, enter the box
       if (ghostsInBox.length >= 3) {
-        endEntry(this, 'left');
+        this.endBoxEntry('left');
       } else {
         startEntry(this);
       }
     } else if (mode === 'reentering') {
-      // figure out if ghost has hit the end on the y axis. if so pick left, right, or stay
-      const { xS, yE } = ghostGateCoords(this.board);
-      const { x: xG, y: yG } = this.position;
-      if (xG === xS && mode === 'reentering' && yG >= yE) {
-        // decide which way to turn based on whether another ghost is in that area
-        let [leftOccupied, rightOccupied] = [false, false];
-
-        ghosts.forEach(({ element: { id }, isInBox, position: { x: xPos } }) => {
-          if (id !== this.element.id && isInBox && xPos > xS) {
-            rightOccupied = true;
-          } else if (id !== this.element.id && isInBox && xPos < xS) {
-            leftOccupied = true;
-          }
-        });
-
-        if (rightOccupied === false) {
-          startReshuffle(this, 'right');
-        } else if (leftOccupied === false) {
-          startReshuffle(this, 'left');
-        } else {
-          endEntry(this, 'up');
-        }
-      }
+      this.pickReenteringDir();
     } else if (mode === 'reshuffling') {
       // Determing if ghost has hit the edge of the box and, if so, stop
       const { leftPos, rightPos } = ghostGateCoords(this.board);
       const { x: xG } = this.position;
       if (this.direction === 'left' && xG <= leftPos) {
-        endEntry(this, 'right');
+        this.endBoxEntry('right');
       } else if (this.direction === 'right' && xG >= rightPos) {
-        endEntry(this, 'left');
+        this.endBoxEntry('left');
       }
     } else if (
       currX % tileW === 0
@@ -391,10 +491,10 @@ export default class Ghost extends GamePiece {
       }
 
       const {
-        rcPos,
+        coordinates,
         element: { id },
       } = this;
-      const dirPreference = rcPos.resolveDirection(yDir, xDir);
+      const dirPreference = coordinates.resolveDirection(yDir, xDir);
 
       if (
         mode !== 'returning'
@@ -430,10 +530,15 @@ export default class Ghost extends GamePiece {
         }, 25);
       }
     }
+    return true;
   }
 
+  /**
+   * Makes a ghost transparent except for its eyes
+   * @returns {bool} - returns true if completed
+   */
   disAppear() {
-    this.status.mode = 'returning';
+    this.setMode('returning');
     this.element.style.backgroundColor = 'transparent';
     const classes = ['fringe', 'eyeball', 'pupil', 'blue-frown', 'blue-pupil'];
     classes.forEach((type) => {
@@ -443,58 +548,50 @@ export default class Ghost extends GamePiece {
           style.display = div.style.display === 'none' ? '' : 'none';
         });
     });
+    return true;
   }
 
+  /**
+   * Makes a ghost no longer transparent
+   * @returns {bool} - returns true if completed
+   */
   reAppear() {
-    const { element } = this;
-    let [{ color }, divs] = [
-      this,
-      {
-        eyeball: '',
-        pupil: '',
-        fringe: '',
-        'blue-frown': 'none',
-        'blue-pupil': 'none',
-      },
-    ];
-    if (this.status.munchModeActive === true) {
-      [color, divs] = [
-        'blue',
-        {
-          eyeball: 'none',
-          pupil: 'none',
-          fringe: '',
-          'blue-frown': '',
-          'blue-pupil': '',
-        },
-      ];
-    }
+    const { element, munchModeActive } = this;
+    const color = munchModeActive ? 'blue' : this.color;
+    const classes = ['eyeball', 'pupil', 'blue-frown', 'blue-pupil'];
+    const display = munchModeActive ? ['none', 'none', '', ''] : ['', '', 'none', 'none'];
 
     this.element.style.backgroundColor = color;
-    const fringes = Array.from(this.element.getElementsByClassName('fringe'));
-    fringes.forEach((item) => {
-      const { style } = item;
-      if (style.backgroundColor !== 'transparent') {
-        style.backgroundColor = color;
+
+    const fringes = this.element.getElementsByClassName('fringe');
+    for (let i = 0; i < fringes.length; i += 1) {
+      if (fringes.item(i).style.backgroundColor !== 'transparent') {
+        fringes.item(i).style.backgroundColor = color;
       } else {
-        style.backgroundImage = style.backgroundImage.replace(
+        fringes.item(i).style.backgroundImage = fringes.item(i).style.backgroundImage.replace(
           /blue|white/,
           color,
         );
       }
-    });
+    }
 
-    Object.keys(divs).forEach((key) => {
-      [...element.getElementsByClassName(key)].forEach((item) => {
+    for (let i = 0; i < classes.length; i += 1) {
+      [...element.getElementsByClassName(classes[i])].forEach((item) => {
         const { style } = item;
-        style.display = divs[key];
+        style.display = display[i];
       });
-    });
+    }
+
+    return true;
   }
 
+  /**
+   * Initiates the spawn sequence for a ghost
+   * @returns {bool} - returns true if completed
+   */
   spawn(freeStatusOnSpawn) {
     // Change appearance back to normal
-    this.status.mode = 'spawning';
+    this.setMode('spawning');
     this.status.munchModeActive = false;
     this.element.style.backgroundColor = this.color;
 
@@ -527,13 +624,18 @@ export default class Ghost extends GamePiece {
     const handleReappearance = (x) => {
       const item = x;
       item.speed = new Directions(this.board)[item.direction].speed;
-      item.setStatus('mode', freeStatusOnSpawn);
+      item.setMode(freeStatusOnSpawn);
       item.reAppear();
     };
 
     this.blink(handleReappearance);
+    return true;
   }
 
+  /**
+   * Changes the direction of a ghost's eyes
+   * @returns {bool} - returns true if completed
+   */
   moveEyes(dir) {
     const {
       element,
@@ -553,9 +655,60 @@ export default class Ghost extends GamePiece {
       style.left = `${(pupilLeft + f * 5 * i)}px`;
       style.top = `${pupilTop}px`;
     });
+    return true;
   }
 
-  setStatus(prop, val) {
-    this.status[prop] = val;
+  /**
+   * Sets the mode that the ghost is in
+   * @returns {bool} - returns true if mode changed, false if not
+   */
+  setMode(val) {
+    if (this.status.mode === val) {
+      return false;
+    }
+    this.status.mode = val;
+    return true;
+  }
+
+  /**
+   * Toggles status.stop to the opposite value
+   * @returns {bool} - returns the value of status.stop
+   */
+  toggleStop() {
+    this.status.stop = !this.status.stop;
+    return this.status.stop;
+  }
+
+  /**
+   * Initiates the process of reentering the bo
+   * @returns {bool} - returns true if completed
+   */
+  startEntry() {
+    const { xS } = ghostGateCoords(this.board);
+    this.setDirection('down');
+    this.position.x = xS;
+    this.element.style.left = `${xS}px`;
+    this.setMode('reentering');
+    document.getElementById('ghost-gate').style.backgroundColor = 'black';
+
+    const { element: { id }, board: { ghostsInBox } } = this;
+    if (ghostsInBox.includes(id) === false) {
+      ghostsInBox.push(id);
+    }
+
+    setTimeout(() => {
+      document.getElementById('ghost-gate').style.backgroundColor = '#e1e1fb';
+    }, 500);
+    return true;
+  }
+
+  /**
+   * Initiates the reshuffling process
+   * @returns {bool} - returns true if completed
+   */
+  startReshuffle(direction) {
+    this.setDirection(direction);
+    this.setMode('reshuffling');
+    return true;
   }
 }

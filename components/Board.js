@@ -7,7 +7,7 @@ import ExtraLives from './ExtraLives.js';
 import GhostBox from './GhostBox.js';
 import MessageDiv from './MessageDiv.js';
 import ScoreDiv from './ScoreDiv.js';
-import RcPos from './RcPos.js';
+import Coordinates from './Coordinates.js';
 import Wall from './Wall.js';
 import Tile from './Tile.js';
 import PacDot from './PacDot.js';
@@ -129,7 +129,7 @@ export default class Board {
     this.layout.forEach((cols, row) => {
       for (let col = 0; col < cols.length; col += 1) {
         const [pos, char, { cornerTypesAt }] = [
-          new RcPos({ row, col, board: this }),
+          new Coordinates({ row, col, board: this }),
           cols.charAt(col),
           Tile,
         ];
@@ -194,10 +194,10 @@ export default class Board {
     msgs.forEach((msg) => new MessageDiv(...msg).addTo('game'));
 
     // Add the ghosts
-    const inky = new RcPos({ row: 11, col: 14, board: this });
-    const blinky = new RcPos({ row: 14, col: 12, board: this });
-    const pinky = new RcPos({ row: 14, col: 14, board: this });
-    const clyde = new RcPos({ row: 14, col: 16, board: this });
+    const inky = new Coordinates({ row: 11, col: 14, board: this });
+    const blinky = new Coordinates({ row: 14, col: 12, board: this });
+    const pinky = new Coordinates({ row: 14, col: 14, board: this });
+    const clyde = new Coordinates({ row: 14, col: 16, board: this });
     new Ghost(inky, 'left', 'red', 'inky', 'free').addTo('game');
     new Ghost(blinky, 'up', 'aqua', 'blinky', 'notfree').addTo('game');
     new Ghost(pinky, 'down', 'plum', 'pinky', 'notfree').addTo('game');
@@ -265,14 +265,17 @@ export default class Board {
       }
     });
 
-    const gateStart = { x: (start.x + end.x - tileW * 3) / 2, y: start.y };
-    const gateEnd = {
-      x: (start.x + end.x + tileW * 3) / 2,
+    const channelTop = {
+      x: (start.x + end.x) / 2 - tileW,
+      y: start.y - tileW * 2,
+    };
+    const channelBottom = {
+      x: (start.x + end.x) / 2 - tileW,
       y: start.y + tileW,
     };
 
     return {
-      start, end, gateStart, gateEnd,
+      start, end, channelTop, channelBottom,
     };
   }
 

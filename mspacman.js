@@ -1,7 +1,7 @@
 /* eslint-disable import/extensions */
 /* eslint-disable no-extend-native */
 import Board from './components/Board.js';
-import RcPos from './components/RcPos.js';
+import Coordinates from './components/Coordinates.js';
 import Ghost, { ghosts } from './components/Ghost.js';
 import MsPacMan from './components/MsPacman.js';
 import Tile from './components/Tile.js';
@@ -41,8 +41,9 @@ document.head.appendChild(styleSheet);
 
 // make a board out of the layout
 const board = new Board(layout, speed);
-document.getElementById('game').style.top = board.tileW * 3;
+document.getElementById('game').style.top = Math.max(board.tileW * 3, 54);
 document.getElementById('game').style.width = board.boardWidth;
+document.getElementById('game').style.height = board.boardHeight;
 document.getElementById('header').style.width = board.boardWidth;
 board.addToGame(getCounts());
 
@@ -51,7 +52,7 @@ const [row, col] = [
   layout.find((x) => x.match`P`).indexOf`P`,
 ];
 
-let msPacMan = new MsPacMan(new RcPos({ row, col, board }), 'right');
+let msPacMan = new MsPacMan(new Coordinates({ row, col, board }), 'right');
 
 // Redraws board and restarts the game
 function restartGame() {
@@ -74,7 +75,7 @@ function restartGame() {
       layout.findIndex((x) => x.match`P`),
       layout.find((x) => x.match`P`).indexOf`P`,
     ];
-    const newPosition = new RcPos({ row: rowP, col: colP, board });
+    const newPosition = new Coordinates({ row: rowP, col: colP, board });
     msPacMan = new MsPacMan(newPosition, 'right');
   }
 
@@ -98,14 +99,14 @@ function checkCollisions(el) {
   if (item.cache !== '') {
     // if no wall, AND the item is at a transition point, change direction + speed and clear cache
 
-    const canTurn = ({ position: { x, y }, rcPos: { xyCoordinates } }) => (
+    const canTurn = ({ position: { x, y }, coordinates: { xyCoordinates } }) => (
       x === xyCoordinates.x && y === xyCoordinates.y
     );
     const canReverse = ({ cache: pacCache, direction, board: currentBoard }) => (
       pacCache === new Directions(currentBoard)[direction].reverse
     );
 
-    const nextPositionOf = ({ cache: pacCache, rcPos }) => rcPos.check(pacCache, 2, 2);
+    const nextPositionOf = ({ cache: pacCache, coordinates }) => coordinates.check(pacCache, 2, 2);
     const positions = nextPositionOf(item);
 
     if (
@@ -151,12 +152,12 @@ function checkCollisions(el) {
   }
 
   // if there is no cache, or it wasn't cleared, check whether Ms PacMan is up against a wall
-  const { direction, rcPos } = item;
-  let next = rcPos[direction];
+  const { direction, coordinates } = item;
+  let next = coordinates[direction];
   if (direction.includes('right') || (direction.includes('down'))) {
     next = next[direction];
   }
-  const [{ x, y }, { typeOf }] = [rcPos.xyCoordinates, Tile];
+  const [{ x, y }, { typeOf }] = [coordinates.xyCoordinates, Tile];
   if (
     isBlocked(typeOf(Tile.at(next)))
     && x === item.position.x
@@ -315,16 +316,16 @@ function munchMode() {
 // Tests if player has encountered a dot that should be eaten, and removes the dot if so
 function checkDots(item) {
   const {
-    rcPos,
+    coordinates,
     direction,
     element: {
       style: { top: itemT, left: itemL },
     },
   } = item;
-  const { board: currentBoard } = rcPos;
+  const { board: currentBoard } = coordinates;
   // find all dots in the current cell
-  const classCode = `dot-${rcPos.col}-${rcPos.row}`;
-  const next = rcPos[item.direction];
+  const classCode = `dot-${coordinates.col}-${coordinates.row}`;
+  const next = coordinates[item.direction];
   let classCode2 = `dot-${next.col}-${next.row}`;
   function removeDot(id) {
     const removedDot = document
@@ -669,7 +670,7 @@ function startGame() {
   } else if (getState() === 'active') {
     setPaused(!getPaused());
     ghosts.forEach((ghost) => {
-      ghost.setStatus('stop', !ghost.status.stop);
+      ghost.toggleStop();
     });
   }
   buttonSwap();
