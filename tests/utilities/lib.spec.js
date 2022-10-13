@@ -188,7 +188,7 @@ describe(format('Shared Utilities'), () => {
 
   describe('\nstartEntry(item)', () => {
     it('accepts one argument - item: Ghost', () => {
-      expect(startEntry.length).toBe(2);
+      expect(startEntry.length).toBe(1);
     });
     it('changes four properties on the item object and updates one DOM element', async () => {
       const ghosts = [];
