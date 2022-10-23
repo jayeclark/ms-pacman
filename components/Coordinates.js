@@ -1,6 +1,6 @@
 /* eslint-disable import/extensions */
 import Directions from './Directions.js';
-import Tile from './Tile.js';
+import Tile from './board/Tile.js';
 import { isOpen, isBlocked, isBetween } from '../utilities/helpers.js';
 
 export default class Coordinates {
@@ -88,21 +88,14 @@ export default class Coordinates {
       const newPos = pos;
       const d = new Directions(pos.board);
       let [stop, canTurn, length] = [false, false, 0];
-      const { board: { cols } } = pos;
+      const {
+        board: { cols },
+      } = pos;
 
-      while (
-        canTurn === false
-        && stop === false
-        && isBetween(newPos.col, [0, cols - 1])
-      ) {
-        if (
-          newPos.check(otherDirection, 2, 2).every((tile) => isOpen(tile))
-          && length > 1
-        ) {
+      while (canTurn === false && stop === false && isBetween(newPos.col, [0, cols - 1])) {
+        if (newPos.check(otherDirection, 2, 2).every((tile) => isOpen(tile)) && length > 1) {
           canTurn = true;
-        } else if (
-          newPos.check(direction, 2, 2).some((tile) => isBlocked(tile))
-        ) {
+        } else if (newPos.check(direction, 2, 2).some((tile) => isBlocked(tile))) {
           stop = true;
         } else {
           length += 1;

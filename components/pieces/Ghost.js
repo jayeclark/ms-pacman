@@ -1,12 +1,10 @@
 /* eslint-disable import/extensions */
 import GamePiece from './GamePiece.js';
-import Directions from './Directions.js';
-import {
-  startEntry, ghostGateCoords,
-} from '../utilities/lib.js';
-import { isOpen } from '../utilities/helpers.js';
+import Directions from '../Directions.js';
+import { startEntry, ghostGateCoords } from '../../utilities/lib.js';
+import { isOpen } from '../../utilities/helpers.js';
 // eslint-disable-next-line no-unused-vars
-import Coordinates from './Coordinates.js';
+import Coordinates from '../Coordinates.js';
 
 export const ghosts = [];
 
@@ -30,7 +28,12 @@ export default class Ghost extends GamePiece {
       mode,
     };
 
-    this.element = this.makeElement('div', 'ghost', this.makeStyle(), id);
+    this.element = this.makeElement({
+      tag: 'div',
+      classNames: 'ghost',
+      style: this.makeStyle(),
+      id,
+    });
     this.addFringe().addEyes().addBlueFeatures();
 
     ghosts.push(this);
@@ -117,9 +120,10 @@ export default class Ghost extends GamePiece {
       const style = {
         backgroundColor: i % 2 === 0 ? 'transparent' : this.color,
         backgroundImage: i % 2 === 0 ? fringeImage : 'none',
-        width: ((i === 1 || i === 7) && `${fringeW}px`)
-                || (i === 4 && `${fringeMiddle}px`)
-                || `${fringeW * 2}px`,
+        width:
+          ((i === 1 || i === 7) && `${fringeW}px`)
+          || (i === 4 && `${fringeMiddle}px`)
+          || `${fringeW * 2}px`,
         left: leftPosition,
       };
 
@@ -135,7 +139,7 @@ export default class Ghost extends GamePiece {
           classNames.push('fringe-inner');
       }
 
-      this.element.appendChild(makeElement('div', classNames, style));
+      this.element.appendChild(makeElement({ tag: 'div', classNames, style }));
       leftPosition += parseFloat(style.width);
     }
     return this;
@@ -148,30 +152,44 @@ export default class Ghost extends GamePiece {
   addEyes() {
     const {
       eyeTop, eyeLeft, pupilTop, pupilLeft,
-    } = new Directions(this.board)[
-      this.direction
-    ];
+    } = new Directions(this.board)[this.direction];
     const {
       makeElement,
       board: { fringeW },
     } = this;
 
     this.element.appendChild(
-      makeElement('div', 'eyeball', { top: eyeTop, left: eyeLeft }),
-    );
-    this.element.appendChild(
-      makeElement('div', 'eyeball', {
-        top: eyeTop,
-        left: fringeW * 5 + eyeLeft,
+      makeElement({
+        tag: 'div',
+        classNames: 'eyeball',
+        style: { top: eyeTop, left: eyeLeft },
       }),
     );
     this.element.appendChild(
-      makeElement('div', 'pupil', { top: pupilTop, left: pupilLeft }),
+      makeElement({
+        tag: 'div',
+        classNames: 'eyeball',
+        style: {
+          top: eyeTop,
+          left: fringeW * 5 + eyeLeft,
+        },
+      }),
     );
     this.element.appendChild(
-      makeElement('div', 'pupil', {
-        top: pupilTop,
-        left: fringeW * 5 + pupilLeft,
+      makeElement({
+        tag: 'div',
+        classNames: 'pupil',
+        style: { top: pupilTop, left: pupilLeft },
+      }),
+    );
+    this.element.appendChild(
+      makeElement({
+        tag: 'div',
+        classNames: 'pupil',
+        style: {
+          top: pupilTop,
+          left: fringeW * 5 + pupilLeft,
+        },
       }),
     );
     return this;
@@ -190,19 +208,31 @@ export default class Ghost extends GamePiece {
 
     // eyes and mouth for munch mode, display = none
     this.element.appendChild(
-      makeElement('div', 'blue-pupil', { display: 'none', left: fringeW * 3 }),
+      makeElement({
+        tag: 'div',
+        classNames: 'blue-pupil',
+        style: { display: 'none', left: fringeW * 3 },
+      }),
     );
     this.element.appendChild(
-      makeElement('div', 'blue-pupil', { display: 'none', left: fringeW * 8 }),
+      makeElement({
+        tag: 'div',
+        classNames: 'blue-pupil',
+        style: { display: 'none', left: fringeW * 8 },
+      }),
     );
 
     // frown for munch mode, display = none
     const adjustment = Math.round(tileW * 0.75 - fringeW * 5) / 4;
     for (let i = 1; i < 5; i += 1) {
       this.element.appendChild(
-        makeElement('div', 'blue-frown', {
-          display: 'none',
-          left: adjustment * (3 - i) + fringeW * (3 * i - 2),
+        makeElement({
+          tag: 'div',
+          classNames: 'blue-frown',
+          style: {
+            display: 'none',
+            left: adjustment * (3 - i) + fringeW * (3 * i - 2),
+          },
         }),
       );
     }
@@ -235,8 +265,8 @@ export default class Ghost extends GamePiece {
     } = this;
     return {
       backgroundColor: color,
-      top: `${(tileW * row)}px`,
-      left: `${(tileW * col - tileW / 2)}px`,
+      top: `${tileW * row}px`,
+      left: `${tileW * col - tileW / 2}px`,
     };
   }
 
@@ -271,11 +301,7 @@ export default class Ghost extends GamePiece {
       this.setDirection('up');
       this.speed = new Directions(this.board).up.speed;
       this.move();
-    } else if (
-      (xG > xS || xG < xS)
-      && xS - xG < parseInt(speed, 10)
-      && mode === 'notfree'
-    ) {
+    } else if ((xG > xS || xG < xS) && xS - xG < parseInt(speed, 10) && mode === 'notfree') {
       // If the ghost is almost in position, put him in position
       this.position.x = xS;
       this.element.style.left = this.position.x;
@@ -396,10 +422,9 @@ export default class Ghost extends GamePiece {
   filterDirections(options = ['left', 'right', 'up', 'down']) {
     const d = new Directions(this.board);
     const nextArray = options.map((x) => this.coordinates.check(x, 2, 2));
-    return options.filter((dir, i) => (
-      nextArray[i].every((tile) => isOpen(tile))
-      && dir !== d[this.direction].reverse
-    ));
+    return options.filter(
+      (dir, i) => nextArray[i].every((tile) => isOpen(tile)) && dir !== d[this.direction].reverse,
+    );
   }
 
   /**
@@ -468,11 +493,7 @@ export default class Ghost extends GamePiece {
       } else if (this.direction === 'right' && xG >= rightPos) {
         this.endBoxEntry('left');
       }
-    } else if (
-      currX % tileW === 0
-      && currY % tileW === 0
-      && /^free|returning/.test(mode)
-    ) {
+    } else if (currX % tileW === 0 && currY % tileW === 0 && /^free|returning/.test(mode)) {
       const options = this.filterDirections();
 
       // find target row and column direction relative to ghost
@@ -496,11 +517,7 @@ export default class Ghost extends GamePiece {
       } = this;
       const dirPreference = coordinates.resolveDirection(yDir, xDir);
 
-      if (
-        mode !== 'returning'
-        && options.includes(pacDir)
-        && id.match(/blinky|pinky/)
-      ) {
+      if (mode !== 'returning' && options.includes(pacDir) && id.match(/blinky|pinky/)) {
         this.setDirection(pacDir);
       } else if (options.includes(yDir) && options.includes(xDir)) {
         this.setDirection(dirPreference);
@@ -517,11 +534,7 @@ export default class Ghost extends GamePiece {
 
       if (
         this.status.mode === 'returning'
-        && !(
-          targY === currY
-          && currX > targX - 2 * tileW
-          && currX < targX + 2 * tileW
-        )
+        && !(targY === currY && currX > targX - 2 * tileW && currX < targX + 2 * tileW)
       ) {
         const item = this;
         setTimeout(() => {
@@ -542,11 +555,10 @@ export default class Ghost extends GamePiece {
     this.element.style.backgroundColor = 'transparent';
     const classes = ['fringe', 'eyeball', 'pupil', 'blue-frown', 'blue-pupil'];
     classes.forEach((type) => {
-      Array.from(this.element.getElementsByClassName(type))
-        .forEach((div) => {
-          const { style } = div;
-          style.display = div.style.display === 'none' ? '' : 'none';
-        });
+      Array.from(this.element.getElementsByClassName(type)).forEach((div) => {
+        const { style } = div;
+        style.display = div.style.display === 'none' ? '' : 'none';
+      });
     });
     return true;
   }
@@ -568,10 +580,9 @@ export default class Ghost extends GamePiece {
       if (fringes.item(i).style.backgroundColor !== 'transparent') {
         fringes.item(i).style.backgroundColor = color;
       } else {
-        fringes.item(i).style.backgroundImage = fringes.item(i).style.backgroundImage.replace(
-          /blue|white/,
-          color,
-        );
+        fringes.item(i).style.backgroundImage = fringes
+          .item(i)
+          .style.backgroundImage.replace(/blue|white/, color);
       }
     }
 
@@ -598,10 +609,7 @@ export default class Ghost extends GamePiece {
     const fringes = Array.from(this.element.getElementsByClassName('fringe'));
     fringes.forEach((fringe) => {
       const { style } = fringe;
-      if (
-        style.backgroundColor !== ''
-        && style.backgroundColor !== 'transparent'
-      ) {
+      if (style.backgroundColor !== '' && style.backgroundColor !== 'transparent') {
         style.backgroundColor = this.color;
         style.display = '';
       } else {
@@ -648,11 +656,11 @@ export default class Ghost extends GamePiece {
     ];
     eyes.forEach((eye, i) => {
       const { style } = eye;
-      style.left = `${(eyeLeft + f * 5 * i)}px`;
+      style.left = `${eyeLeft + f * 5 * i}px`;
     });
     pupils.forEach((pupil, i) => {
       const { style } = pupil;
-      style.left = `${(pupilLeft + f * 5 * i)}px`;
+      style.left = `${pupilLeft + f * 5 * i}px`;
       style.top = `${pupilTop}px`;
     });
     return true;
@@ -691,7 +699,10 @@ export default class Ghost extends GamePiece {
     this.setMode('reentering');
     document.getElementById('ghost-gate').style.backgroundColor = 'black';
 
-    const { element: { id }, board: { ghostsInBox } } = this;
+    const {
+      element: { id },
+      board: { ghostsInBox },
+    } = this;
     if (ghostsInBox.includes(id) === false) {
       ghostsInBox.push(id);
     }

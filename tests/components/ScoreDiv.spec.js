@@ -10,10 +10,15 @@ const dom = new JSDOM();
 global.document = dom.window.document;
 global.window = dom.window;
 
-const { default: ScoreDiv } = require('../../components/ScoreDiv.js');
+const { default: ScoreDiv } = require('../../components/screen/ScoreDiv.js');
 
 describe(format('ScoreDiv'), () => {
-  const sampleScore = new ScoreDiv('score-div', { backgroundColor: 'black' }, 'test-msg', '<div>This is a message</div>');
+  const sampleScore = new ScoreDiv(
+    'score-div',
+    { backgroundColor: 'black' },
+    'test-msg',
+    '<div>This is a message</div>',
+  );
 
   it('extends class Element', () => {
     const instance = Object.getPrototypeOf(sampleScore.constructor).name;
@@ -36,7 +41,12 @@ describe(format('ScoreDiv'), () => {
   it('property "element" is an HTMLDivElement with one or zero child elements', () => {
     expect(sampleScore.element.constructor.name).toBe('HTMLDivElement');
     expect(sampleScore.element.children.length).toBe(1);
-    const sampleScore2 = new ScoreDiv('score-div-2', { backgroundColor: 'black' }, 'test-msg', 'This is a text node message');
+    const sampleScore2 = new ScoreDiv(
+      'score-div-2',
+      { backgroundColor: 'black' },
+      'test-msg',
+      'This is a text node message',
+    );
     expect(sampleScore2.element.children.length).toBe(0);
   });
 });

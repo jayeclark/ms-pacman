@@ -9,7 +9,7 @@ const dom = new JSDOM();
 global.document = dom.window.document;
 global.window = dom.window;
 
-const { default: Arrow } = require('../../components/Arrow.js');
+const { default: Arrow } = require('../../components/screen/Arrow.js');
 
 describe(format('Arrow'), () => {
   const sampleArrow = new Arrow('test-class', { background: 'red' }, 'my-arrow', 'test');

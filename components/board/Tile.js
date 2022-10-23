@@ -1,5 +1,5 @@
 /* eslint-disable import/extensions */
-import { isHall, isWall, isBetween } from '../utilities/helpers.js';
+import { isHall, isWall, isBetween } from '../../utilities/helpers.js';
 
 export default class Tile {
   static adjacentTiles(position) {
@@ -36,26 +36,14 @@ export default class Tile {
       bottomLeft: '',
       bottomRight: '',
     };
-    const [cornerTypeOf, { typeOf }, tile] = [
-      cornerTypes,
-      Tile,
-      Tile.adjacentTiles(position),
-    ];
+    const [cornerTypeOf, { typeOf }, tile] = [cornerTypes, Tile, Tile.adjacentTiles(position)];
 
     Object.keys(cornerTypes).forEach((thisCorner) => {
-      const [inYDirection, inXDirection] = thisCorner
-        .split(/(?=[LR])/)
-        .map((x) => x.toLowerCase());
+      const [inYDirection, inXDirection] = thisCorner.split(/(?=[LR])/).map((x) => x.toLowerCase());
       if (isHall(typeOf(tile[thisCorner]))) {
-        if (
-          isHall(typeOf(tile[inYDirection]))
-          && isHall(typeOf(tile[inXDirection]))
-        ) {
+        if (isHall(typeOf(tile[inYDirection])) && isHall(typeOf(tile[inXDirection]))) {
           cornerTypeOf[thisCorner] = 'outer';
-        } else if (
-          isWall(typeOf(tile[inYDirection]))
-          && isWall(typeOf(tile[inXDirection]))
-        ) {
+        } else if (isWall(typeOf(tile[inYDirection])) && isWall(typeOf(tile[inXDirection]))) {
           cornerTypeOf[thisCorner] = 'inner';
         }
       } else {

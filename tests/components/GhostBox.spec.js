@@ -19,8 +19,8 @@ document.head.appendChild(stylesheet);
 document.body.appendChild(game);
 game.appendChild(ghostGate);
 
-const { default: GhostBox } = require('../../components/GhostBox.js');
-const { default: Board } = require('../../components/Board.js');
+const { default: GhostBox } = require('../../components/board/GhostBox.js');
+const { default: Board } = require('../../components/board/Board.js');
 
 const array = [
   'XXXXXXXXXXXXXXXXXXXXXXXXXXXXX',

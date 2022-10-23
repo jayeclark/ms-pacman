@@ -20,7 +20,7 @@ document.body.appendChild(game);
 game.appendChild(ghostGate);
 
 const { default: Directions } = require('../../components/Directions.js');
-const { default: Board } = require('../../components/Board.js');
+const { default: Board } = require('../../components/board/Board.js');
 const { getClassStaticMethodNames } = require('../jestHelpers.js');
 
 const array = [
@@ -74,8 +74,9 @@ describe(format('Directions'), () => {
   });
 
   it('property "left", "right", "up", and "down" are all objects', () => {
-    const props = Object.getOwnPropertyNames(sampleDirections)
-      .filter((e) => typeof sampleDirections.e !== 'function');
+    const props = Object.getOwnPropertyNames(sampleDirections).filter(
+      (e) => typeof sampleDirections.e !== 'function',
+    );
     expect(props.every((x) => typeof sampleDirections[x] === 'object')).toBeTruthy();
   });
 
