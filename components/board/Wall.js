@@ -2,6 +2,7 @@
 import Element from './Element.js';
 import Tile from './Tile.js';
 import { camelCase } from '../../utilities/lib.js';
+import { HTMLTag } from '../pieces/constants.js';
 
 const game = document.getElementById('game');
 let ref = 0;
@@ -10,11 +11,10 @@ export default class Wall extends Element {
   constructor(position) {
     super();
     this.position = position;
-    this.element = this.makeElement({
-      tag: 'div',
-      classNames: 'wall',
-      style: this.makeStyle(position),
-    });
+    this.htmlTag = HTMLTag.DIV;
+    this.classNames = 'wall';
+    this.style = this.makeStyle(position);
+    this.makeElement({ parentElement: this });
     ref += 1;
     this.ref = ref;
     this.innerCorners = this.addInnerCorners(position);
@@ -56,7 +56,7 @@ export default class Wall extends Element {
         style[camelCase(`border-${adjacent}`)] = 'none';
       }
     });
-
+    console.log(style);
     return style;
   }
 

@@ -22,15 +22,22 @@ export default class Element {
     } else if (classes) {
       classes.forEach((className) => element.classList.add(className));
     }
-    Object.keys(style).forEach((key) => {
-      element.style[key] = style[key];
-    });
+    if (style) {
+      Object.keys(style).forEach((key) => {
+        element.style[key] = style[key];
+      });
+    } else if (this.style) {
+      Object.keys(this.style).forEach((key) => {
+        element.style[key] = this.style[key];
+      });
+    }
 
     if (id) {
       element.id = id;
     } else if (this?.id) {
       element.id = this.id;
     }
+
     if (parentElement && parentElement === this) {
       this.element = element;
     } else if (parentElement) {

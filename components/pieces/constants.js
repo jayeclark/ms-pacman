@@ -3,4 +3,9 @@ const GamePieceType = {
   Static: 'static',
 };
 
-export default GamePieceType;
+const HTMLTag = {
+  DIV: 'div',
+  IMG: 'img',
+};
+
+export { GamePieceType, HTMLTag };
