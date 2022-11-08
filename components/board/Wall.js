@@ -56,7 +56,6 @@ export default class Wall extends Element {
         style[camelCase(`border-${adjacent}`)] = 'none';
       }
     });
-    console.log(style);
     return style;
   }
 

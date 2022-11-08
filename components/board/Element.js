@@ -11,34 +11,27 @@ export default class Element {
   }
 
   // TODO: Convert to static method
-  makeElement({
-    tag, classNames, style, id, parentElement,
-  }) {
-    const element = document.createElement(tag || this.htmlTag);
+  makeElement(props) {
+    const tag = props.tag || this?.htmlTag;
+    const classNames = props.classNames || this?.classNames;
+    const style = props.style || this?.style;
+    const id = props.id || this?.id;
+    const parentElement = props.parentElement || this?.parentElement;
 
-    const classes = classNames || this.classNames;
-    if (classes && typeof classes === 'string') {
-      element.classList.add(classes);
-    } else if (classes) {
-      classes.forEach((className) => element.classList.add(className));
-    }
-    if (style) {
-      Object.keys(style).forEach((key) => {
-        element.style[key] = style[key];
-      });
-    } else if (this.style) {
-      Object.keys(this.style).forEach((key) => {
-        element.style[key] = this.style[key];
-      });
+    if (!tag || !classNames || !style) {
+      throw new Error('Unable to make element - missing required property!');
     }
 
+    const element = document.createElement(tag);
+    (typeof classNames === 'string' ? [classNames] : classNames).forEach((className) => element.classList.add(className));
+    Object.keys(style).forEach((key) => {
+      element.style[key] = style[key];
+    });
     if (id) {
       element.id = id;
-    } else if (this?.id) {
-      element.id = this.id;
     }
 
-    if (parentElement && parentElement === this) {
+    if (this && parentElement === this) {
       this.element = element;
     } else if (parentElement) {
       parentElement.appendChild(element);
