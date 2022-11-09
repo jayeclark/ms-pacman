@@ -3,6 +3,7 @@ import Element from './Element.js';
 import Tile from './Tile.js';
 import { camelCase } from '../../utilities/lib.js';
 import { HTMLTag } from '../pieces/constants.js';
+import WallInnerCorner from './Wall_InnerCorner.js';
 
 const game = document.getElementById('game');
 let ref = 0;
@@ -14,7 +15,7 @@ export default class Wall extends Element {
     this.htmlTag = HTMLTag.DIV;
     this.classNames = 'wall';
     this.style = this.makeStyle(position);
-    this.makeElement({ parentElement: this });
+    this.element = this.makeElement();
     ref += 1;
     this.ref = ref;
     this.innerCorners = this.addInnerCorners(position);
@@ -60,24 +61,14 @@ export default class Wall extends Element {
   }
 
   addInnerCorners(position) {
-    const [{ cornerTypesAt }, { tileW }] = [Tile, position.board];
+    const { cornerTypesAt } = Tile;
     const innerCorners = Object.entries(cornerTypesAt(position)).filter(
       (item) => item[1] === 'inner',
     );
     innerCorners.forEach((item) => {
       const [yDirection, xDirection] = item[0].split(/(?=[LR])/).map((x) => x.toLowerCase());
-      const style = {
-        margin: '-1px',
-        top: yDirection === 'top' ? `${this.top - tileW / 2 + 3}px` : `${this.top + tileW - 2}px`,
-        left:
-          xDirection === 'left' ? `${this.left - tileW / 2 + 3}px` : `${this.left + tileW - 2}px`,
-      };
-      const innerCorner = this.makeElement({
-        tag: 'div',
-        classNames: ['inner-corner', `inner-${yDirection}-${xDirection}`],
-        style,
-      });
-      game.appendChild(innerCorner);
+      const innerCorner = new WallInnerCorner(this.position, xDirection, yDirection, this.element);
+      game.appendChild(innerCorner.element);
     });
   }
 }

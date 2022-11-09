@@ -12,11 +12,11 @@ export default class Element {
 
   // TODO: Convert to static method
   makeElement(props) {
-    const tag = props.tag || this?.htmlTag;
-    const classNames = props.classNames || this?.classNames;
-    const style = props.style || this?.style;
-    const id = props.id || this?.id;
-    const parentElement = props.parentElement || this?.parentElement;
+    const tag = props?.tag || this?.htmlTag;
+    const classNames = props?.classNames || this?.classNames;
+    const style = props?.style || this?.style;
+    const id = props?.id || this?.id;
+    const parentElement = props?.parentElement || this?.parentElement;
 
     if (!tag || !classNames || !style) {
       throw new Error('Unable to make element - missing required property!');
@@ -31,9 +31,7 @@ export default class Element {
       element.id = id;
     }
 
-    if (this && parentElement === this) {
-      this.element = element;
-    } else if (parentElement) {
+    if (parentElement) {
       parentElement.appendChild(element);
     }
     return element;
