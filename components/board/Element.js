@@ -10,7 +10,31 @@ export default class Element {
     this.htmlTag = null;
   }
 
-  // TODO: Convert to static method
+  static make(props) {
+    if ((!props.tag && !props.htmlTag) || !props.classNames || !props.style) {
+      throw new Error('Unable to make element - missing required property!');
+    }
+    const tag = props.tag || props.htmlTag;
+    const classNames = props?.classNames;
+    const style = props?.style;
+    const id = props?.id;
+    const parentElement = props?.parentElement;
+
+    const element = document.createElement(tag);
+    (typeof classNames === 'string' ? [classNames] : classNames).forEach((className) => element.classList.add(className));
+    Object.keys(style).forEach((key) => {
+      element.style[key] = style[key];
+    });
+    if (id) {
+      element.id = id;
+    }
+
+    if (parentElement) {
+      parentElement.appendChild(element);
+    }
+    return element;
+  }
+
   makeElement(props) {
     const tag = props?.tag || this?.htmlTag;
     const classNames = props?.classNames || this?.classNames;
