@@ -19,8 +19,8 @@ document.head.appendChild(stylesheet);
 document.body.appendChild(game);
 game.appendChild(ghostGate);
 
-const { default: ExtraLives } = require('../../components/ExtraLives.js');
-const { default: Board } = require('../../components/Board.js');
+const { default: ExtraLives } = require('../../components/pieces/ExtraLives.js');
+const { default: Board } = require('../../components/board/Board.js');
 
 const array = [
   'XXXXXXXXXXXXXXXXXXXXXXXXXXXXX',

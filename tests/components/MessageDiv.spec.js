@@ -10,10 +10,14 @@ const dom = new JSDOM();
 global.document = dom.window.document;
 global.window = dom.window;
 
-const { default: MessageDiv } = require('../../components/MessageDiv.js');
+const { default: MessageDiv } = require('../../components/screen/MessageDiv.js');
 
 describe(format('MessageDiv'), () => {
-  const sampleMsg = new MessageDiv({ backgroundColor: 'black' }, 'test-msg', '<div>This is a message</div>');
+  const sampleMsg = new MessageDiv(
+    { backgroundColor: 'black' },
+    'test-msg',
+    '<div>This is a message</div>',
+  );
 
   it('extends class Element', () => {
     const instance = Object.getPrototypeOf(sampleMsg.constructor).name;
@@ -36,7 +40,11 @@ describe(format('MessageDiv'), () => {
   it('property "element" is an HTMLDivElement with one or zero child elements', () => {
     expect(sampleMsg.element.constructor.name).toBe('HTMLDivElement');
     expect(sampleMsg.element.children.length).toBe(1);
-    const sampleMsg2 = new MessageDiv({ backgroundColor: 'black' }, 'test-msg', 'This is a text node message');
+    const sampleMsg2 = new MessageDiv(
+      { backgroundColor: 'black' },
+      'test-msg',
+      'This is a text node message',
+    );
     expect(sampleMsg2.element.children.length).toBe(0);
   });
 });

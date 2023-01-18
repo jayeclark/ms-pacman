@@ -5,7 +5,9 @@ export default class Element {
   }
 
   // TODO: Convert to static method
-  makeElement(tag, classNames, style, id = null) {
+  makeElement({
+    tag, classNames, style, id = null, append = false,
+  }) {
     const element = document.createElement(tag);
 
     if (typeof classNames === 'string') {
@@ -19,6 +21,9 @@ export default class Element {
 
     if (id) {
       element.id = id;
+    }
+    if (append) {
+      this.element = element;
     }
     return element;
   }

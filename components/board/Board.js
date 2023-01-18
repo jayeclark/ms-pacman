@@ -1,16 +1,16 @@
 /* eslint-disable import/extensions */
-import Directions from './Directions.js';
-import Ghost, { ghosts } from './Ghost.js';
-import Arrow from './Arrow.js';
-import ArrowImg from './ArrowImg.js';
-import ExtraLives from './ExtraLives.js';
+import Directions from '../Directions.js';
+import Ghost, { ghosts } from '../pieces/Ghost.js';
+import Arrow from '../screen/Arrow.js';
+import ArrowImg from '../screen/ArrowImg.js';
+import ExtraLives from '../pieces/ExtraLives.js';
 import GhostBox from './GhostBox.js';
-import MessageDiv from './MessageDiv.js';
-import ScoreDiv from './ScoreDiv.js';
-import Coordinates from './Coordinates.js';
+import MessageDiv from '../screen/MessageDiv.js';
+import ScoreDiv from '../screen/ScoreDiv.js';
+import Coordinates from '../Coordinates.js';
 import Wall from './Wall.js';
 import Tile from './Tile.js';
-import PacDot from './PacDot.js';
+import PacDot from '../pieces/PacDot.js';
 
 export default class Board {
   constructor(arr, speed) {
@@ -50,24 +50,16 @@ export default class Board {
   }
 
   get rowHeight() {
-    return (
-      Math.floor((+window.innerHeight - 40) / ((this.rows + 6) * this.speed))
-      * this.speed
-    );
+    return Math.floor((+window.innerHeight - 40) / ((this.rows + 6) * this.speed)) * this.speed;
   }
 
   get colHeight() {
-    return (
-      Math.floor((+window.innerWidth - 40) / (this.cols * this.speed))
-      * this.speed
-    );
+    return Math.floor((+window.innerWidth - 40) / (this.cols * this.speed)) * this.speed;
   }
 
   get portalPositions() {
     return this.layout
-      .map((cols, row) => (
-        cols.startsWith('-') || cols.endsWith('-') ? row : null
-      ))
+      .map((cols, row) => (cols.startsWith('-') || cols.endsWith('-') ? row : null))
       .filter((x) => x);
   }
 
@@ -103,23 +95,13 @@ export default class Board {
     });
 
     innerHTML += `.pac-dot {width: ${p}px;height: ${p}px}`;
-    innerHTML += `.ms-pac-man {width: ${t * 1.5};margin: ${Math.floor(
-      (t * 0.5) / 2,
-    )}px}`;
-    innerHTML += `.ghost {width: ${t * 1.5}px; height: ${
-      t * 1.5 - f * 2
-    }px; margin: ${t / 4}px}`;
-    innerHTML += `.fringe {width: ${f * 2}px; height: ${f * 2}px; top: ${
-      t * 1.75 - f * 4
-    }px}`;
+    innerHTML += `.ms-pac-man {width: ${t * 1.5};margin: ${Math.floor((t * 0.5) / 2)}px}`;
+    innerHTML += `.ghost {width: ${t * 1.5}px; height: ${t * 1.5 - f * 2}px; margin: ${t / 4}px}`;
+    innerHTML += `.fringe {width: ${f * 2}px; height: ${f * 2}px; top: ${t * 1.75 - f * 4}px}`;
     innerHTML += `.eyeball {width: ${f * 3}px;height:${f * 4}px}`;
     innerHTML += `.pupil {width: ${f * 2}px;height:${f * 2}px}`;
-    innerHTML += `.blue-pupil {width: ${f * 2}px;height: ${f * 2}px; top: ${
-      t / 6 + f * 2
-    }px}`;
-    innerHTML += `.blue-frown {width: ${side}px; height: ${side}px; top: ${
-      t / 6 + f * 6
-    }px}`;
+    innerHTML += `.blue-pupil {width: ${f * 2}px;height: ${f * 2}px; top: ${t / 6 + f * 2}px}`;
+    innerHTML += `.blue-frown {width: ${side}px; height: ${side}px; top: ${t / 6 + f * 6}px}`;
     sheet.innerHTML = innerHTML;
   }
 
@@ -135,21 +117,10 @@ export default class Board {
         ];
         if (char === 'X') {
           new Wall(pos).addTo('game'); /* Add a wall */
-        } else if (
-          char.match(/[^GSP]/)
-          && cornerTypesAt(pos).bottomRight === 'outer'
-        ) {
+        } else if (char.match(/[^GSP]/) && cornerTypesAt(pos).bottomRight === 'outer') {
           // Add a pacDot
-          const [current, right, below] = [
-            Tile.at(pos),
-            Tile.at(pos.right),
-            Tile.at(pos.down),
-          ];
-          if (
-            current.match(/[^P]/)
-            && right.match(/[^SP]/)
-            && below.match(/[^S]/)
-          ) {
+          const [current, right, below] = [Tile.at(pos), Tile.at(pos.right), Tile.at(pos.down)];
+          if (current.match(/[^P]/) && right.match(/[^SP]/) && below.match(/[^S]/)) {
             new PacDot(pos, current === 'B').addTo('game');
             tempDots.dotCount += 1;
           }
@@ -171,21 +142,32 @@ export default class Board {
     const msgs = [
       [
         {
-          fontSize: '2rem', top, width, height,
+          fontSize: '2rem',
+          top,
+          width,
+          height,
         },
         'ready',
         '<div class="message-inner"><br><br><br><br>READY!</div>',
       ],
       [
         {
-          fontSize: '3rem', display: 'none', top, width, height,
+          fontSize: '3rem',
+          display: 'none',
+          top,
+          width,
+          height,
         },
         'game-over',
         '<div class="message-inner message-inner-shadow">GAME&nbsp;OVER!</div>',
       ],
       [
         {
-          fontSize: '3.5rem', display: 'none', top, width, height,
+          fontSize: '3.5rem',
+          display: 'none',
+          top,
+          width,
+          height,
         },
         'winner',
         '<div class="message-inner message-inner-shadow">WINNER!!</div>',
@@ -213,7 +195,7 @@ export default class Board {
 
     // Make arrow divs and put them below the main game
     const arrowAreaStyle = {
-      top: `${(boardHeight + tileW * 2)}px`,
+      top: `${boardHeight + tileW * 2}px`,
       width: `${width}px`,
     };
     new Arrow('arrow-div', arrowAreaStyle, 'arrow-div-area').addTo('game');
@@ -235,7 +217,7 @@ export default class Board {
     Object.keys(positions).forEach((dir) => {
       const arrowStyle = {
         left: `${positions[dir]}px`,
-        top: `${(arrowH + new Directions(this)[dir].row * 1.75 * arrowH)}px`,
+        top: `${arrowH + new Directions(this)[dir].row * 1.75 * arrowH}px`,
       };
       new Arrow('arrow', arrowStyle, `${dir}-arrow`).addTo('arrow-div-area');
       const imgStyle = {
@@ -257,10 +239,7 @@ export default class Board {
     layout.forEach((cols, row) => {
       if (cols.includes('G') && !start) {
         start = { y: row * tileW, x: cols.indexOf('G') * tileW };
-      } else if (
-        cols.includes('G')
-        && layout[row + 1].includes('G') === false
-      ) {
+      } else if (cols.includes('G') && layout[row + 1].includes('G') === false) {
         end = { y: (row + 1) * tileW, x: (cols.lastIndexOf('G') + 1) * tileW };
       }
     });
@@ -275,7 +254,10 @@ export default class Board {
     };
 
     return {
-      start, end, channelTop, channelBottom,
+      start,
+      end,
+      channelTop,
+      channelBottom,
     };
   }
 
@@ -286,12 +268,7 @@ export default class Board {
       left: x,
       top: y,
     };
-    const ghostScore = new ScoreDiv(
-      'ghost-score',
-      style,
-      'ghost-score-div',
-      '200',
-    );
+    const ghostScore = new ScoreDiv('ghost-score', style, 'ghost-score-div', '200');
     ghostScore.addTo('game');
     setTimeout(() => {
       document.getElementById('game').removeChild(ghostScore.element);

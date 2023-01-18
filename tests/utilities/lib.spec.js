@@ -26,8 +26,8 @@ const {
   startEntry,
   startReshuffle,
 } = require('../../utilities/lib.js');
-const { default: Ghost } = require('../../components/Ghost.js');
-const { default: Board } = require('../../components/Board.js');
+const { default: Ghost } = require('../../components/pieces/Ghost.js');
+const { default: Board } = require('../../components/board/Board.js');
 const { default: Coordinates } = require('../../components/Coordinates.js');
 
 const array = [
@@ -83,14 +83,18 @@ describe(format('Shared Utilities'), () => {
       let result = '';
       try {
         result = camelCase('some-string-goes-here');
-      } catch (error) { errorMsg = error.message; }
+      } catch (error) {
+        errorMsg = error.message;
+      }
       expect(errorMsg).toBeFalsy();
       expect(result).toBe('someStringGoesHere');
 
       result = '';
       try {
         result = camelCase(120);
-      } catch (error) { errorMsg = error.message; }
+      } catch (error) {
+        errorMsg = error.message;
+      }
       expect(errorMsg).toBeTruthy();
       expect(result).toBe('');
     });
@@ -135,14 +139,18 @@ describe(format('Shared Utilities'), () => {
       let result = '';
       try {
         result = kebabCase('someStringGoesHere');
-      } catch (error) { errorMsg = error.message; }
+      } catch (error) {
+        errorMsg = error.message;
+      }
       expect(errorMsg).toBeFalsy();
       expect(result).toBe('some-string-goes-here');
       errorMsg = '';
       result = '';
       try {
         result = kebabCase({ name: 'myname' });
-      } catch (error) { errorMsg = error.message; }
+      } catch (error) {
+        errorMsg = error.message;
+      }
       expect(errorMsg).toBeTruthy();
       expect(result).toBe('');
     });
@@ -201,14 +209,14 @@ describe(format('Shared Utilities'), () => {
       );
       expect(ghost.direction).toBe('left');
       expect(ghost.position.x).toBe(5 * board.tileW);
-      expect(ghost.element.style.left).toBe(`${(ghost.position.x - board.tileW / 2)}px`);
+      expect(ghost.element.style.left).toBe(`${ghost.position.x - board.tileW / 2}px`);
       expect(ghost.status.mode).toBe('free');
       expect(ghostGate.style?.backgroundColor).toBe('');
 
       startEntry(ghost);
       expect(ghost.direction).toBe('down');
       expect(ghost.position.x).toBe(ghostGateCoords(board).xS);
-      expect(ghost.element.style.left).toBe(`${(ghost.position.x)}px`);
+      expect(ghost.element.style.left).toBe(`${ghost.position.x}px`);
       expect(ghost.status.mode).toBe('reentering');
       expect(ghostGate.style?.backgroundColor).toBe('black');
 

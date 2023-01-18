@@ -1,27 +1,26 @@
 /* eslint-disable import/extensions */
 /* eslint-disable no-extend-native */
-import Board from './components/Board.js';
+import Board from './components/architecture/Board.js';
 import Coordinates from './components/Coordinates.js';
-import Ghost, { ghosts } from './components/Ghost.js';
-import MsPacMan from './components/MsPacman.js';
-import Tile from './components/Tile.js';
+import Ghost, { ghosts } from './components/gamePieces/Ghost.js';
+import MsPacMan from './components/gamePieces/MsPacman.js';
+import Tile from './components/architecture/Tile.js';
 import Directions from './components/Directions.js';
 import loadBoards from './data/boards.js';
 import { useGameState } from './utilities/gameState.js';
 import {
-  isOpen,
-  isBlocked,
-  isBetween,
-  get,
+  isOpen, isBlocked, isBetween, get,
 } from './utilities/helpers.js';
 
 // Set game states
 const [getMunchMode, setMunchMode] = useGameState(false);
 const [getState, setState] = useGameState('loading');
 const [getPaused, setPaused] = useGameState(null);
-const [getRestartProps, setRestartProps] = useGameState(
-  { restarted: false, restartGhosts: false, restartRelease: false },
-);
+const [getRestartProps, setRestartProps] = useGameState({
+  restarted: false,
+  restartGhosts: false,
+  restartRelease: false,
+});
 const [getCounts, setCounts] = useGameState({
   count: 0,
   dCount: 0,
@@ -47,10 +46,7 @@ document.getElementById('game').style.height = board.boardHeight;
 document.getElementById('header').style.width = board.boardWidth;
 board.addToGame(getCounts());
 
-const [row, col] = [
-  layout.findIndex((x) => x.match`P`),
-  layout.find((x) => x.match`P`).indexOf`P`,
-];
+const [row, col] = [layout.findIndex((x) => x.match`P`), layout.find((x) => x.match`P`).indexOf`P`];
 
 let msPacMan = new MsPacMan(new Coordinates({ row, col, board }), 'right');
 
@@ -99,24 +95,21 @@ function checkCollisions(el) {
   if (item.cache !== '') {
     // if no wall, AND the item is at a transition point, change direction + speed and clear cache
 
-    const canTurn = ({ position: { x, y }, coordinates: { xyCoordinates } }) => (
-      x === xyCoordinates.x && y === xyCoordinates.y
-    );
-    const canReverse = ({ cache: pacCache, direction, board: currentBoard }) => (
-      pacCache === new Directions(currentBoard)[direction].reverse
-    );
+    const canTurn = ({ position: { x, y }, coordinates: { xyCoordinates } }) => x === xyCoordinates.x && y === xyCoordinates.y;
+    const canReverse = ({ cache: pacCache, direction, board: currentBoard }) => pacCache === new Directions(currentBoard)[direction].reverse;
 
     const nextPositionOf = ({ cache: pacCache, coordinates }) => coordinates.check(pacCache, 2, 2);
     const positions = nextPositionOf(item);
 
-    if (
-      positions.every((pos) => isOpen(pos))
-      && (canTurn(item) || canReverse(item))
-    ) {
+    if (positions.every((pos) => isOpen(pos)) && (canTurn(item) || canReverse(item))) {
       const { cache: pacCache, direction: dir } = item;
       const downLeft = 'rotate(270deg) rotateY(180deg)';
       const upLeft = 'rotate(90deg) rotateY(180deg)';
-      const { element: { style: { transform } } } = item;
+      const {
+        element: {
+          style: { transform },
+        },
+      } = item;
 
       switch ((pacCache, dir, transform)) {
         case pacCache === 'down' && dir === 'left':
@@ -138,9 +131,7 @@ function checkCollisions(el) {
           item.element.style.transform = 'rotate(90deg)';
           break;
         default:
-          item.element.style.transform = new Directions(item.board)[
-            pacCache
-          ].transform;
+          item.element.style.transform = new Directions(item.board)[pacCache].transform;
       }
 
       item.speed = new Directions(item.board)[pacCache].speed;
@@ -154,15 +145,11 @@ function checkCollisions(el) {
   // if there is no cache, or it wasn't cleared, check whether Ms PacMan is up against a wall
   const { direction, coordinates } = item;
   let next = coordinates[direction];
-  if (direction.includes('right') || (direction.includes('down'))) {
+  if (direction.includes('right') || direction.includes('down')) {
     next = next[direction];
   }
   const [{ x, y }, { typeOf }] = [coordinates.xyCoordinates, Tile];
-  if (
-    isBlocked(typeOf(Tile.at(next)))
-    && x === item.position.x
-    && y === item.position.y
-  ) {
+  if (isBlocked(typeOf(Tile.at(next))) && x === item.position.x && y === item.position.y) {
     item.speed = 0;
     item.cache = '';
   }
@@ -194,9 +181,7 @@ function munchMode() {
         if (ghost.element.style.backgroundColor !== 'transparent') {
           ghost.element.style.backgroundColor = 'blue';
 
-          const fringes = Array.from(
-            ghost.element.getElementsByClassName('fringe'),
-          );
+          const fringes = Array.from(ghost.element.getElementsByClassName('fringe'));
           fringes.forEach((x) => {
             const fringe = x;
             const { backgroundColor: color, backgroundImage: image } = fringe.style;
@@ -238,9 +223,7 @@ function munchMode() {
             if (backgroundColor.match(/blue|white/)) {
               ghost.element.style.backgroundColor = tempColor;
             }
-            const fringes = Array.from(
-              ghost.element.getElementsByClassName('fringe'),
-            );
+            const fringes = Array.from(ghost.element.getElementsByClassName('fringe'));
 
             fringes.forEach((item) => {
               const fringe = item;
@@ -250,10 +233,7 @@ function munchMode() {
               } else {
                 const gradient = fringe.style.backgroundImage;
                 if (gradient.includes(tempColor) === false) {
-                  fringe.style.backgroundImage = gradient.replace(
-                    /blue|white/,
-                    tempColor,
-                  );
+                  fringe.style.backgroundImage = gradient.replace(/blue|white/, tempColor);
                 }
               }
             });
@@ -268,19 +248,14 @@ function munchMode() {
         if (ghost.element.style.backgroundColor !== 'transparent') {
           ghost.element.style.backgroundColor = ghost.color;
 
-          const fringes = Array.from(
-            ghost.element.getElementsByClassName('fringe'),
-          );
+          const fringes = Array.from(ghost.element.getElementsByClassName('fringe'));
           fringes.forEach((el) => {
             const fringe = el;
             const { backgroundColor, backgroundImage } = fringe.style;
             if (backgroundColor.match(/blue|white/)) {
               fringe.style.backgroundColor = ghost.color;
             } else {
-              fringe.style.backgroundImage = backgroundImage.replace(
-                /blue|white/,
-                ghost.color,
-              );
+              fringe.style.backgroundImage = backgroundImage.replace(/blue|white/, ghost.color);
             }
           });
           const divs = [
@@ -328,9 +303,7 @@ function checkDots(item) {
   const next = coordinates[item.direction];
   let classCode2 = `dot-${next.col}-${next.row}`;
   function removeDot(id) {
-    const removedDot = document
-      .getElementById('game')
-      .removeChild(document.getElementById(id));
+    const removedDot = document.getElementById('game').removeChild(document.getElementById(id));
     const isBig = removedDot.classList.contains('big');
 
     const { score } = getCounts();
@@ -353,10 +326,9 @@ function checkDots(item) {
     classCode2 = `dot-${next.col}-${next.row + 1}`;
   }
 
-  const pacDots = [
-    document.getElementById(classCode),
-    document.getElementById(classCode2),
-  ].filter((x) => x !== null);
+  const pacDots = [document.getElementById(classCode), document.getElementById(classCode2)].filter(
+    (x) => x !== null,
+  );
 
   // check if any are in the mouth
   for (let i = 0; i < pacDots.length; i += 1) {
@@ -365,14 +337,8 @@ function checkDots(item) {
     const [left, top] = [parseFloat(dot.style.left), parseFloat(dot.style.top)];
     const [right, bottom] = [left + pacDotW, top + pacDotW];
 
-    const bounds = (pos) => [
-      pos + tileW - pacWidth / 2,
-      pos + tileW + pacWidth / 2,
-    ];
-    const [pacL, pacR, pacT, pacB] = [
-      ...bounds(parseFloat(itemL)),
-      ...bounds(parseFloat(itemT)),
-    ];
+    const bounds = (pos) => [pos + tileW - pacWidth / 2, pos + tileW + pacWidth / 2];
+    const [pacL, pacR, pacT, pacB] = [...bounds(parseFloat(itemL)), ...bounds(parseFloat(itemT))];
 
     if (left > pacL && right < pacR && top > pacT && bottom < pacB) {
       removeDot(dot.id);
@@ -429,7 +395,9 @@ function checkGhostCollision() {
       } else if (isBetween(bottom, [pacT, pacB]) || isBetween(top, [pacT, pacB])) {
         ghostCollision = isBetween(left, [pacL, pacR]) || isBetween(right, [pacL, pacR]);
       }
-      if (ghostCollision) { collidedGhosts.push(ghost.element.id); }
+      if (ghostCollision) {
+        collidedGhosts.push(ghost.element.id);
+      }
     }
   });
 
@@ -462,11 +430,7 @@ function checkGhostCollision() {
   } else if (collidedGhosts.length > 0 && getCounts().powerCount > 0) {
     collidedGhosts.forEach((id) => {
       const ghostEl = document.getElementById(id);
-      const {
-        margin: gMargin,
-        left: gLeft,
-        top: gTop,
-      } = window.getComputedStyle(ghostEl);
+      const { margin: gMargin, left: gLeft, top: gTop } = window.getComputedStyle(ghostEl);
 
       const ghostL = parseFloat(gLeft) + parseFloat(gMargin);
       const ghostT = parseFloat(gTop) + parseFloat(gMargin);
@@ -562,8 +526,14 @@ function updateGhosts() {
 
   // correct starting position if applicable
   ghosts.forEach((ghost) => {
-    const { element, speed: gSpeed, status: { mode } } = ghost;
-    let { position: { x, y } } = ghost;
+    const {
+      element,
+      speed: gSpeed,
+      status: { mode },
+    } = ghost;
+    let {
+      position: { x, y },
+    } = ghost;
     if (mode === 'free' && x % gSpeed > 0) {
       x += x % gSpeed;
       element.style.left = `${x}px`;
@@ -574,9 +544,7 @@ function updateGhosts() {
   });
 
   if (!getPaused()) {
-    const filteredGhosts = ghosts.filter(({ status: { mode } }) => (
-      mode.match(/^free|returning|reentering|reshuffling/)
-    ));
+    const filteredGhosts = ghosts.filter(({ status: { mode } }) => mode.match(/^free|returning|reentering|reshuffling/));
     filteredGhosts.forEach((ghost) => {
       ghost.pickDir(msPacMan);
       ghost.move();
@@ -604,15 +572,14 @@ function release() {
   }
 
   function leave(ghost) {
-    if (getRestartProps().restarted) { return false; }
+    if (getRestartProps().restarted) {
+      return false;
+    }
 
     if (ghost.status.mode === 'free') {
       // recalculate box positions
       const newPos = Ghost.boxPositions(ghosts);
-      if (
-        newPos.center !== ''
-        && (newPos.left === false || newPos.right === false)
-      ) {
+      if (newPos.center !== '' && (newPos.left === false || newPos.right === false)) {
         // find and move center ghost
         const otherGhost = ghosts.filter((g) => g.boxPosition === 'center')[0];
         reArrange(otherGhost);
@@ -629,9 +596,7 @@ function release() {
   if (Object.values(positions).some((val) => val)) {
     // center leaves first, followed by left and then right
     const { center, left, right } = positions;
-    const targetBoxPosition = (center && 'center')
-      || (left && 'left')
-      || (right && 'right');
+    const targetBoxPosition = (center && 'center') || (left && 'left') || (right && 'right');
 
     // get the ghost in the target position
     const ghost = ghosts.filter((g) => g.boxPosition === targetBoxPosition)[0];

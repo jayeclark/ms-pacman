@@ -1,7 +1,7 @@
 /* eslint-disable import/extensions */
 import Element from './Element.js';
 import Tile from './Tile.js';
-import { camelCase } from '../utilities/lib.js';
+import { camelCase } from '../../utilities/lib.js';
 
 const game = document.getElementById('game');
 let ref = 0;
@@ -10,7 +10,11 @@ export default class Wall extends Element {
   constructor(position) {
     super();
     this.position = position;
-    this.element = this.makeElement('div', 'wall', this.makeStyle(position));
+    this.element = this.makeElement({
+      tag: 'div',
+      classNames: 'wall',
+      style: this.makeStyle(position),
+    });
     ref += 1;
     this.ref = ref;
     this.innerCorners = this.addInnerCorners(position);
@@ -34,16 +38,16 @@ export default class Wall extends Element {
     const style = {
       top: this.top,
       left: this.left,
-      width: `${(tileW + 1)}px`,
-      height: `${(tileW + 1)}px`,
+      width: `${tileW + 1}px`,
+      height: `${tileW + 1}px`,
     };
 
     // Add outer corners
-    const outerCorners = Object
-      .entries(cornerTypesAt(position))
-      .filter((item) => item[1] === 'outer');
+    const outerCorners = Object.entries(cornerTypesAt(position)).filter(
+      (item) => item[1] === 'outer',
+    );
     outerCorners.forEach((item) => {
-      style[camelCase(`border-${item[0]}-radius`)] = `${(tileW / 2)}px`;
+      style[camelCase(`border-${item[0]}-radius`)] = `${tileW / 2}px`;
     });
 
     // Remove unneeded borders
@@ -58,29 +62,22 @@ export default class Wall extends Element {
 
   addInnerCorners(position) {
     const [{ cornerTypesAt }, { tileW }] = [Tile, position.board];
-    const innerCorners = Object
-      .entries(cornerTypesAt(position))
-      .filter((item) => item[1] === 'inner');
+    const innerCorners = Object.entries(cornerTypesAt(position)).filter(
+      (item) => item[1] === 'inner',
+    );
     innerCorners.forEach((item) => {
-      const [yDirection, xDirection] = item[0]
-        .split(/(?=[LR])/)
-        .map((x) => x.toLowerCase());
+      const [yDirection, xDirection] = item[0].split(/(?=[LR])/).map((x) => x.toLowerCase());
       const style = {
         margin: '-1px',
-        top:
-          yDirection === 'top'
-            ? `${(this.top - tileW / 2 + 3)}px`
-            : `${(this.top + tileW - 2)}px`,
+        top: yDirection === 'top' ? `${this.top - tileW / 2 + 3}px` : `${this.top + tileW - 2}px`,
         left:
-          xDirection === 'left'
-            ? `${(this.left - tileW / 2 + 3)}px`
-            : `${(this.left + tileW - 2)}px`,
+          xDirection === 'left' ? `${this.left - tileW / 2 + 3}px` : `${this.left + tileW - 2}px`,
       };
-      const innerCorner = this.makeElement(
-        'div',
-        ['inner-corner', `inner-${yDirection}-${xDirection}`],
+      const innerCorner = this.makeElement({
+        tag: 'div',
+        classNames: ['inner-corner', `inner-${yDirection}-${xDirection}`],
         style,
-      );
+      });
       game.appendChild(innerCorner);
     });
   }

@@ -20,7 +20,7 @@ document.body.appendChild(game);
 game.appendChild(ghostGate);
 
 const { default: Coordinates } = require('../../components/Coordinates.js');
-const { default: Board } = require('../../components/Board.js');
+const { default: Board } = require('../../components/board/Board.js');
 
 const array = [
   'XXXXXXXXXXXXXXXXXXXXXXXXXXXXX',

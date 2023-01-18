@@ -19,8 +19,8 @@ document.head.appendChild(stylesheet);
 document.body.appendChild(game);
 game.appendChild(ghostGate);
 
-const { default: Tile } = require('../../components/Tile.js');
-const { default: Board } = require('../../components/Board.js');
+const { default: Tile } = require('../../components/board/Tile.js');
+const { default: Board } = require('../../components/board/Board.js');
 const { default: Coordinates } = require('../../components/Coordinates.js');
 
 const array = [
@@ -78,7 +78,16 @@ describe(format('Tile'), () => {
       it('returns an object with 8 properties: top, topRight, right, bottomRight, bottom, bottomLeft, left, topLeft', () => {
         const result = Tile.adjacentTiles(new Coordinates({ row: 5, col: 5, board }));
         expect(typeof result).toBe('object');
-        const allowedProps = ['top', 'topRight', 'right', 'bottomRight', 'bottom', 'bottomLeft', 'left', 'topLeft'];
+        const allowedProps = [
+          'top',
+          'topRight',
+          'right',
+          'bottomRight',
+          'bottom',
+          'bottomLeft',
+          'left',
+          'topLeft',
+        ];
         const props = Object.getOwnPropertyNames(result);
         expect(props.length).toBe(8);
         expect(props.every((x) => allowedProps.includes(x))).toBeTruthy();
