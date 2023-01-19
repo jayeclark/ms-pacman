@@ -6,7 +6,7 @@ export default class Element {
 
   // TODO: Convert to static method
   makeElement({
-    tag, classNames, style, id = null, append = false,
+    tag, classNames, style, id = null, parentElement = null,
   }) {
     const element = document.createElement(tag);
 
@@ -22,8 +22,10 @@ export default class Element {
     if (id) {
       element.id = id;
     }
-    if (append) {
+    if (parentElement && parentElement === this) {
       this.element = element;
+    } else if (parentElement) {
+      parentElement.appendChild(element);
     }
     return element;
   }
