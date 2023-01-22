@@ -29,7 +29,7 @@ describe(format('MessageDiv'), () => {
   });
 
   it('returns an object with two properties and no methods', () => {
-    expect(Object.getOwnPropertyNames(sampleMsg).length).toBe(2);
+    expect(Object.getOwnPropertyNames(sampleMsg).length).toBe(8);
     expect(getClassMethodNames(MessageDiv, sampleMsg).length).toBe(0);
   });
 

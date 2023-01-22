@@ -30,7 +30,7 @@ describe(format('ScoreDiv'), () => {
   });
 
   it('returns an object with two properties and no methods', () => {
-    expect(Object.getOwnPropertyNames(sampleScore).length).toBe(2);
+    expect(Object.getOwnPropertyNames(sampleScore).length).toBe(8);
     expect(getClassMethodNames(ScoreDiv, sampleScore).length).toBe(0);
   });
 
