@@ -1,10 +1,10 @@
 /* eslint-disable import/extensions */
 /* eslint-disable no-extend-native */
-import Board from './components/architecture/Board.js';
+import Board from './components/board/Board.js';
 import Coordinates from './components/Coordinates.js';
-import Ghost, { ghosts } from './components/gamePieces/Ghost.js';
-import MsPacMan from './components/gamePieces/MsPacman.js';
-import Tile from './components/architecture/Tile.js';
+import Ghost, { ghosts } from './components/pieces/Ghost.js';
+import MsPacMan from './components/pieces/MsPacman.js';
+import Tile from './components/board/Tile.js';
 import Directions from './components/Directions.js';
 import loadBoards from './data/boards.js';
 import { useGameState } from './utilities/gameState.js';
