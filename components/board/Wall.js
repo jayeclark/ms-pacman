@@ -5,6 +5,9 @@ import { camelCase } from '../../utilities/lib.js';
 import { HTMLTag } from '../pieces/constants.js';
 import WallInnerCorner from './Wall_InnerCorner.js';
 
+const WALL_HTML_TAG = HTMLTag.DIV;
+const WALL_CLASS_NAMES = 'wall';
+
 const game = document.getElementById('game');
 let ref = 0;
 
@@ -12,10 +15,10 @@ export default class Wall extends Element {
   constructor(position) {
     super();
     this.position = position;
-    this.htmlTag = HTMLTag.DIV;
-    this.classNames = 'wall';
-    this.style = this.makeStyle(position);
-    this.element = this.makeElement();
+    this.htmlTag = WALL_HTML_TAG;
+    this.classNames = WALL_CLASS_NAMES;
+    this.style = this.makeStyle();
+    this.element = Element.make(this);
     ref += 1;
     this.ref = ref;
     this.innerCorners = this.addInnerCorners(position);
@@ -29,13 +32,9 @@ export default class Wall extends Element {
     return this.position.col * this.position.board.tileW;
   }
 
-  makeStyle(position) {
-    const [
-      {
-        board: { tileW },
-      },
-      { typeOf, cornerTypesAt },
-    ] = [position, Tile];
+  makeStyle() {
+    const { tileW } = this.position.board;
+    const { typeOf, cornerTypesAt } = Tile;
     const style = {
       top: this.top,
       left: this.left,
@@ -44,7 +43,7 @@ export default class Wall extends Element {
     };
 
     // Add outer corners
-    const outerCorners = Object.entries(cornerTypesAt(position)).filter(
+    const outerCorners = Object.entries(cornerTypesAt(this.position)).filter(
       (item) => item[1] === 'outer',
     );
     outerCorners.forEach((item) => {
@@ -53,16 +52,16 @@ export default class Wall extends Element {
 
     // Remove unneeded borders
     ['top', 'bottom', 'left', 'right'].forEach((adjacent) => {
-      if (typeOf(Tile.at(position[adjacent])) !== 'hall') {
+      if (typeOf(Tile.at(this.position[adjacent])) !== 'hall') {
         style[camelCase(`border-${adjacent}`)] = 'none';
       }
     });
     return style;
   }
 
-  addInnerCorners(position) {
+  addInnerCorners() {
     const { cornerTypesAt } = Tile;
-    const innerCorners = Object.entries(cornerTypesAt(position)).filter(
+    const innerCorners = Object.entries(cornerTypesAt(this.position)).filter(
       (item) => item[1] === 'inner',
     );
     innerCorners.forEach((item) => {
