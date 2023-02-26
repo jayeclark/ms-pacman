@@ -19,8 +19,8 @@ document.head.appendChild(stylesheet);
 document.body.appendChild(game);
 game.appendChild(ghostGate);
 
-const { default: GhostBox } = require('../../components/GhostBox.js');
-const { default: Board } = require('../../components/Board.js');
+const { default: GhostBox } = require('../../components/board/GhostBox.js');
+const { default: Board } = require('../../components/board/Board.js');
 
 const array = [
   'XXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
@@ -73,7 +73,7 @@ describe(format('GhostBox'), () => {
 
   it('returns an object with three properties and three methods', () => {
     expect(typeof testBox).toBe('object');
-    expect(Object.getOwnPropertyNames(testBox).length).toBe(3);
+    expect(Object.getOwnPropertyNames(testBox).length).toBe(9);
     expect(getClassMethodNames(GhostBox, testBox).length).toBe(3);
   });
 

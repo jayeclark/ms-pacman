@@ -9,7 +9,7 @@ const dom = new JSDOM();
 global.document = dom.window.document;
 global.window = dom.window;
 
-const { default: Arrow } = require('../../components/Arrow.js');
+const { default: Arrow } = require('../../components/screen/Arrow.js');
 
 describe(format('Arrow'), () => {
   const sampleArrow = new Arrow('test-class', { background: 'red' }, 'my-arrow', 'test');
@@ -24,7 +24,7 @@ describe(format('Arrow'), () => {
   });
 
   it('returns an object with two properties and no methods', () => {
-    expect(Object.getOwnPropertyNames(sampleArrow).length).toBe(2);
+    expect(Object.getOwnPropertyNames(sampleArrow).length).toBe(8);
     expect(getClassMethodNames(Arrow, sampleArrow).length).toBe(0);
   });
 

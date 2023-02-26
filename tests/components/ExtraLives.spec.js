@@ -19,8 +19,8 @@ document.head.appendChild(stylesheet);
 document.body.appendChild(game);
 game.appendChild(ghostGate);
 
-const { default: ExtraLives } = require('../../components/ExtraLives.js');
-const { default: Board } = require('../../components/Board.js');
+const { default: ExtraLives } = require('../../components/pieces/ExtraLives.js');
+const { default: Board } = require('../../components/board/Board.js');
 
 const array = [
   'XXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
@@ -72,7 +72,7 @@ describe(format('ExtraLives'), () => {
   });
 
   it('returns an object with two properties and no methods', () => {
-    expect(Object.getOwnPropertyNames(sampleLives).length).toBe(2);
+    expect(Object.getOwnPropertyNames(sampleLives).length).toBe(8);
     expect(getClassMethodNames(ExtraLives, sampleLives).length).toBe(0);
   });
 

@@ -1,9 +1,9 @@
 /* eslint-disable import/extensions */
 import Directions from './Directions.js';
-import Tile from './Tile.js';
+import Tile from './board/Tile.js';
 import { isOpen, isBlocked, isBetween } from '../utilities/helpers.js';
 
-export default class RcPos {
+export default class Coordinates {
   constructor({ row, col, board }) {
     this.row = row;
     this.col = col;
@@ -12,22 +12,22 @@ export default class RcPos {
 
   get left() {
     const { col: c, ...props } = this;
-    return new RcPos({ ...props, col: c - 1 });
+    return new Coordinates({ ...props, col: c - 1 });
   }
 
   get right() {
     const { col: c, ...props } = this;
-    return new RcPos({ ...props, col: c + 1 });
+    return new Coordinates({ ...props, col: c + 1 });
   }
 
   get down() {
     const { row: r, ...props } = this;
-    return new RcPos({ ...props, row: r + 1 });
+    return new Coordinates({ ...props, row: r + 1 });
   }
 
   get up() {
     const { row: r, ...props } = this;
-    return new RcPos({ ...props, row: r - 1 });
+    return new Coordinates({ ...props, row: r - 1 });
   }
 
   get top() {
@@ -48,7 +48,7 @@ export default class RcPos {
   }
 
   check(dir, width = 1, height = 1) {
-    let pos = new RcPos(this);
+    let pos = new Coordinates(this);
     const [results, { typeOf }] = [[], Tile];
     if (dir === 'right' && width > 1) {
       for (let i = 0; i < width; i += 1) {
@@ -88,21 +88,14 @@ export default class RcPos {
       const newPos = pos;
       const d = new Directions(pos.board);
       let [stop, canTurn, length] = [false, false, 0];
-      const { board: { cols } } = pos;
+      const {
+        board: { cols },
+      } = pos;
 
-      while (
-        canTurn === false
-        && stop === false
-        && isBetween(newPos.col, [0, cols - 1])
-      ) {
-        if (
-          newPos.check(otherDirection, 2, 2).every((tile) => isOpen(tile))
-          && length > 1
-        ) {
+      while (canTurn === false && stop === false && isBetween(newPos.col, [0, cols - 1])) {
+        if (newPos.check(otherDirection, 2, 2).every((tile) => isOpen(tile)) && length > 1) {
           canTurn = true;
-        } else if (
-          newPos.check(direction, 2, 2).some((tile) => isBlocked(tile))
-        ) {
+        } else if (newPos.check(direction, 2, 2).some((tile) => isBlocked(tile))) {
           stop = true;
         } else {
           length += 1;
@@ -119,8 +112,8 @@ export default class RcPos {
     }
 
     const [run1, run2] = [
-      walk(new RcPos(this), dirA, dirB),
-      walk(new RcPos(this), dirB, dirA),
+      walk(new Coordinates(this), dirA, dirB),
+      walk(new Coordinates(this), dirB, dirA),
     ];
     if (run1.canTurn !== run2.canTurn) {
       return (run1.canTurn && dirA) || dirB;

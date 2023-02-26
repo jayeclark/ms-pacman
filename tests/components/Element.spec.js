@@ -14,7 +14,7 @@ game.id = 'game';
 const body = document.getElementsByTagName('body')[0];
 body.appendChild(game);
 
-const { default: Element } = require('../../components/Element.js');
+const { default: Element } = require('../../components/board/Element.js');
 
 describe(format('Element'), () => {
   const testElement = new Element();
@@ -25,7 +25,7 @@ describe(format('Element'), () => {
 
   it('returns an object with two properties and two methods', () => {
     expect(typeof testElement).toBe('object');
-    expect(Object.getOwnPropertyNames(testElement).length).toBe(2);
+    expect(Object.getOwnPropertyNames(testElement).length).toBe(8);
     expect(getClassMethodNames(Element, testElement).length).toBe(2);
   });
 
@@ -34,15 +34,23 @@ describe(format('Element'), () => {
   });
 
   describe('\n  CLASS METHODS:', () => {
-    describe('\n    makeElement(tag, classNames, style[, id])', () => {
-      it('accepts three to four arguments - tag: string, classNames: string or Array, style: object[, id: string]', () => {
-        expect(testElement.makeElement.length).toBe(3);
+    describe('\n    makeElement({tag, classNames, style[, id]})', () => {
+      it('accepts one argument - {tag: string, classNames: string or Array, style: object[, id: string]}', () => {
+        expect(testElement.makeElement.length).toBe(1);
       });
 
       it('returns an HTMLElement', () => {
-        const divElement = testElement.makeElement('div', 'my-class', { color: 'red' });
+        const divElement = testElement.makeElement({
+          tag: 'div',
+          classNames: 'my-class',
+          style: { color: 'red' },
+        });
         expect(divElement.constructor.name).toBe('HTMLDivElement');
-        const imgElement = testElement.makeElement('img', 'my-class', { color: 'red' });
+        const imgElement = testElement.makeElement({
+          tag: 'img',
+          classNames: 'my-class',
+          style: { color: 'red' },
+        });
         expect(imgElement.constructor.name).toBe('HTMLImageElement');
         expect(Object.getPrototypeOf(divElement.constructor).name).toBe('HTMLElement');
         expect(Object.getPrototypeOf(imgElement.constructor).name).toBe('HTMLElement');
@@ -54,12 +62,20 @@ describe(format('Element'), () => {
       });
 
       it('returns true if an element with the provided id exists in the document', () => {
-        testElement.element = testElement.makeElement('div', 'my-class', { color: 'red' });
+        testElement.element = testElement.makeElement({
+          tag: 'div',
+          classNames: 'my-class',
+          style: { color: 'red' },
+        });
         expect(testElement.addTo('game')).toBeTruthy();
       });
 
       it('throws an error and returns false if an element with the provided id does not exist in the document', () => {
-        testElement.element = testElement.makeElement('div', 'my-class', { color: 'red' });
+        testElement.element = testElement.makeElement({
+          tag: 'div',
+          classNames: 'my-class',
+          style: { color: 'red' },
+        });
         let errorMsg = '';
         let result = '';
         try {

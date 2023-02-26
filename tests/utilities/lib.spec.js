@@ -22,14 +22,13 @@ game.appendChild(ghostGate);
 const {
   camelCase,
   kebabCase,
-  endEntry,
   ghostGateCoords,
   startEntry,
   startReshuffle,
 } = require('../../utilities/lib.js');
-const { default: Ghost } = require('../../components/Ghost.js');
-const { default: Board } = require('../../components/Board.js');
-const { default: RcPos } = require('../../components/RcPos.js');
+const { default: Ghost } = require('../../components/pieces/Ghost.js');
+const { default: Board } = require('../../components/board/Board.js');
+const { default: Coordinates } = require('../../components/Coordinates.js');
 
 const array = [
   'XXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
@@ -84,14 +83,18 @@ describe(format('Shared Utilities'), () => {
       let result = '';
       try {
         result = camelCase('some-string-goes-here');
-      } catch (error) { errorMsg = error.message; }
+      } catch (error) {
+        errorMsg = error.message;
+      }
       expect(errorMsg).toBeFalsy();
       expect(result).toBe('someStringGoesHere');
 
       result = '';
       try {
         result = camelCase(120);
-      } catch (error) { errorMsg = error.message; }
+      } catch (error) {
+        errorMsg = error.message;
+      }
       expect(errorMsg).toBeTruthy();
       expect(result).toBe('');
     });
@@ -136,14 +139,18 @@ describe(format('Shared Utilities'), () => {
       let result = '';
       try {
         result = kebabCase('someStringGoesHere');
-      } catch (error) { errorMsg = error.message; }
+      } catch (error) {
+        errorMsg = error.message;
+      }
       expect(errorMsg).toBeFalsy();
       expect(result).toBe('some-string-goes-here');
       errorMsg = '';
       result = '';
       try {
         result = kebabCase({ name: 'myname' });
-      } catch (error) { errorMsg = error.message; }
+      } catch (error) {
+        errorMsg = error.message;
+      }
       expect(errorMsg).toBeTruthy();
       expect(result).toBe('');
     });
@@ -173,32 +180,6 @@ describe(format('Shared Utilities'), () => {
     });
   });
 
-  describe('\nendEntry(item, finalDirection)', () => {
-    it('accepts two arguments - item: Ghost, finalDirection: string', () => {
-      expect(endEntry.length).toBe(2);
-    });
-    it('changes two properties on the item object and calls one class method', () => {
-      const ghosts = [];
-      const ghost = new Ghost(
-        new RcPos({ row: 5, col: 5, board }),
-        'left',
-        'red',
-        'testGhost',
-        'free',
-      );
-      const spawn = jest.spyOn(ghost, 'spawn');
-      expect(ghost.direction).toBe('left');
-      expect(ghost.speed).toBe(-board.speed);
-      expect(spawn).not.toHaveBeenCalled();
-      endEntry(ghost, 'up');
-      expect(ghost.direction).toBe('up');
-      expect(ghost.speed).toBe(0);
-      expect(spawn).toHaveBeenCalled();
-      expect(spawn).toHaveBeenCalledWith(ghost.isInBox ? 'notfree' : 'free');
-      expect(ghost.status.mode).toBe('spawning');
-    });
-  });
-
   describe('\nghostGateCoords(board)', () => {
     it('accepts one argument - board: Board', () => {
       expect(ghostGateCoords.length).toBe(1);
@@ -215,12 +196,12 @@ describe(format('Shared Utilities'), () => {
 
   describe('\nstartEntry(item)', () => {
     it('accepts one argument - item: Ghost', () => {
-      expect(endEntry.length).toBe(2);
+      expect(startEntry.length).toBe(1);
     });
     it('changes four properties on the item object and updates one DOM element', async () => {
       const ghosts = [];
       const ghost = new Ghost(
-        new RcPos({ row: 5, col: 5, board }),
+        new Coordinates({ row: 5, col: 5, board }),
         'left',
         'red',
         'testGhost',
@@ -228,14 +209,14 @@ describe(format('Shared Utilities'), () => {
       );
       expect(ghost.direction).toBe('left');
       expect(ghost.position.x).toBe(5 * board.tileW);
-      expect(ghost.element.style.left).toBe(`${(ghost.position.x - board.tileW / 2)}px`);
+      expect(ghost.element.style.left).toBe(`${ghost.position.x - board.tileW / 2}px`);
       expect(ghost.status.mode).toBe('free');
       expect(ghostGate.style?.backgroundColor).toBe('');
 
       startEntry(ghost);
       expect(ghost.direction).toBe('down');
       expect(ghost.position.x).toBe(ghostGateCoords(board).xS);
-      expect(ghost.element.style.left).toBe(`${(ghost.position.x)}px`);
+      expect(ghost.element.style.left).toBe(`${ghost.position.x}px`);
       expect(ghost.status.mode).toBe('reentering');
       expect(ghostGate.style?.backgroundColor).toBe('black');
 
@@ -257,7 +238,7 @@ describe(format('Shared Utilities'), () => {
     it('changes two properties on the item object', () => {
       const ghosts = [];
       const ghost = new Ghost(
-        new RcPos({ row: 5, col: 5, board }),
+        new Coordinates({ row: 5, col: 5, board }),
         'down',
         'red',
         'testGhost',

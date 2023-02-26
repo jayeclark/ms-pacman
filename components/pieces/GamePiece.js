@@ -1,7 +1,7 @@
 /* eslint-disable import/extensions */
-import RcPos from './RcPos.js';
-import Element from './Element.js';
-import Directions from './Directions.js';
+import Coordinates from '../Coordinates.js';
+import Element from '../board/Element.js';
+import Directions from '../Directions.js';
 
 export default class GamePiece extends Element {
   constructor(position, startingDirection) {
@@ -12,12 +12,12 @@ export default class GamePiece extends Element {
     this.direction = startingDirection;
   }
 
-  get rcPos() {
+  get coordinates() {
     const {
       position: { x, y },
       board: { tileW },
     } = this;
-    return new RcPos({
+    return new Coordinates({
       row: Math.floor(y / tileW),
       col: Math.floor(x / tileW),
       board: this.board,
@@ -52,10 +52,10 @@ export default class GamePiece extends Element {
 
   move() {
     const { direction, speed } = this;
-    if (direction.includes('left') || (direction.includes('right'))) {
+    if (direction.includes('left') || direction.includes('right')) {
       this.position.x += parseInt(speed, 10);
       this.element.style.left = this.position.x;
-    } else if (direction.includes('up') || (direction.includes('down'))) {
+    } else if (direction.includes('up') || direction.includes('down')) {
       this.position.y += parseInt(speed, 10);
       this.element.style.top = this.position.y;
     }
@@ -64,18 +64,14 @@ export default class GamePiece extends Element {
   teleport() {
     const {
       position: { x },
-      rcPos: { row },
+      coordinates: { row },
       direction,
       board: { cols, tileW, portals },
       speed,
     } = this;
     if (x <= 0 && direction === 'left' && portals.includes(row)) {
       this.position.x = (cols - 2) * tileW - speed;
-    } else if (
-      x > (cols - 2) * tileW
-      && direction === 'right'
-      && portals.includes(row)
-    ) {
+    } else if (x > (cols - 2) * tileW && direction === 'right' && portals.includes(row)) {
       this.position.x = 0;
     }
   }

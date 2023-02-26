@@ -1,28 +1,31 @@
 /* eslint-disable import/extensions */
-import Element from './Element.js';
+import Element from '../board/Element.js';
 
 export default class PacDot extends Element {
   constructor(position, big = false) {
     super();
     this.position = position;
     this.big = big;
-    const {
-      row,
-      col,
-    } = position;
+    const { row, col } = position;
 
     const classNames = ['pac-dot', `pac-dot-${col}-${row}`];
     if (big) {
       classNames.push('big');
     }
-    const dot = this.makeElement('div', classNames, this.makeStyle(big));
+    const dot = this.makeElement({
+      tag: 'div',
+      classNames,
+      style: this.makeStyle(big),
+    });
     dot.id = `dot-${col}-${row}`;
     this.element = dot;
   }
 
   makeStyle(big) {
     const { row, col } = this.position;
-    const { board: { pacDotW, tileW } } = this.position;
+    const {
+      board: { pacDotW, tileW },
+    } = this.position;
 
     const style = {
       top: big ? (row + 1) * tileW - pacDotW * 2 : (row + 1) * tileW - pacDotW / 2,

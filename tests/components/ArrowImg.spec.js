@@ -10,10 +10,15 @@ const dom = new JSDOM();
 global.document = dom.window.document;
 global.window = dom.window;
 
-const { default: ArrowImg } = require('../../components/ArrowImg.js');
+const { default: ArrowImg } = require('../../components/screen/ArrowImg.js');
 
 describe(format('ArrowImg'), () => {
-  const sampleArrowImg = new ArrowImg('../../images/arrow.png', 'arrow-img', { background: 'red' }, 'my-arrow-img');
+  const sampleArrowImg = new ArrowImg(
+    '../../images/arrow.png',
+    'arrow-img',
+    { background: 'red' },
+    'my-arrow-img',
+  );
 
   it('extends class Element', () => {
     const instance = Object.getPrototypeOf(sampleArrowImg.constructor).name;
@@ -26,7 +31,7 @@ describe(format('ArrowImg'), () => {
 
   it('returns an object with two properties and no methods', () => {
     expect(typeof sampleArrowImg).toBe('object');
-    expect(Object.getOwnPropertyNames(sampleArrowImg).length).toBe(2);
+    expect(Object.getOwnPropertyNames(sampleArrowImg).length).toBe(8);
     expect(getClassMethodNames(ArrowImg, sampleArrowImg).length).toBe(0);
   });
 

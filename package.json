@@ -1,0 +1,32 @@
+{
+  "dependencies": {
+    "@jest/globals": "^27.4.4",
+    "esbuild": "^0.14.25",
+    "esbuild-runner": "^2.2.1",
+    "express": "^4.17.2",
+    "jest": "^27.4.5",
+    "jsdom": "^19.0.0",
+    "prettier": "^2.5.1"
+  },
+  "devDependencies": {
+    "cypress": "^9.1.1",
+    "eslint": "^8.4.1",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.25.3"
+  },
+  "description": "This project replicates a board of a Ms. Pac-Man style game using vanilla JavasScript & CSS.",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jayeclark/mspacman.git"
+  },
+  "author": "jay@jayeclark.dev",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jayeclark/mspacman/issues"
+  },
+  "homepage": "https://jayeclark.github.io/mspacman/"
+}
