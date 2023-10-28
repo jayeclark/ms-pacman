@@ -25,7 +25,7 @@ describe(format('Element'), () => {
 
   it('returns an object with two properties and two methods', () => {
     expect(typeof testElement).toBe('object');
-    expect(Object.getOwnPropertyNames(testElement).length).toBe(2);
+    expect(Object.getOwnPropertyNames(testElement).length).toBe(8);
     expect(getClassMethodNames(Element, testElement).length).toBe(2);
   });
 

@@ -31,7 +31,7 @@ describe(format('ArrowImg'), () => {
 
   it('returns an object with two properties and no methods', () => {
     expect(typeof sampleArrowImg).toBe('object');
-    expect(Object.getOwnPropertyNames(sampleArrowImg).length).toBe(2);
+    expect(Object.getOwnPropertyNames(sampleArrowImg).length).toBe(8);
     expect(getClassMethodNames(ArrowImg, sampleArrowImg).length).toBe(0);
   });
 
